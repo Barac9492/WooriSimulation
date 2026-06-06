@@ -481,6 +481,10 @@
     if(nextExam!=null&&nextExam<=3)items.push({u:1,t:'시험기간 '+(nextExam===0?'진행 중':nextExam+'주 뒤')+' → 출석 일시 하락 대비, 시험 후 회복 모임.'});
     if(parentVitality<0.42)items.push({u:1,t:'부모 다락방 활성도 낮음('+Math.round(parentVitality*100)+'%) → 가정 연계·부모 기도, 담임 말씀과 연결.'});
     if(noneA>3&&noneR/noneA>=0.25)items.push({u:1,t:'비신앙 가정 학생이 흔들린다 → 전도형 설교·가정 방문으로 붙들기.'});
+    var hasRetreat=schedule.some(function(e){return e.type==='retreat';})||churchSchedule.some(function(e){return e.type==='allretreat';});
+    var hasSermon=schedule.some(function(e){return e.type==='sermon';});
+    if(!hasRetreat)items.push({u:1,t:'올해 수련회 계획이 없다 → 수련회는 큰 전환점이 된다. 한 번은 잡아 보라(설정 → 주간 계획).'});
+    if(!hasSermon)items.push({u:1,t:'설교 시리즈 계획이 없다 → 초점(양육·회복 등) 있는 설교가 양육을 끌어올린다.'});
     if(!items.length)items.push({u:0,t:'큰 불은 없다 → 코어 제자훈련을 한 걸음 더, 다음 절기·전환을 미리 준비.'});
     items.sort(function(x,y){return y.u-x.u;});
     var col=['#6b8e3b','#9a6c12','#a33232'],lab=['여유','살핌','시급'];
