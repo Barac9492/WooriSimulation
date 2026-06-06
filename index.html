@@ -133,6 +133,21 @@
   <div id="sched"></div>
 </div>
 
+<!-- ── 계획 저장·불러오기(공통) ─────────────────── -->
+<div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
+  <div class="gsec">계획 저장·불러오기</div>
+  <div class="ghint" style="margin-bottom:8px">지금의 운영·연간 계획·교회 설정을 이름 붙여 저장한다. 이 브라우저에 남으니 다음에 다시 열어 이어 가거나 견줄 수 있다.</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
+    <input type="text" id="plan-name" placeholder="예: 2026 상반기" style="flex:1;min-width:120px;font-family:inherit;font-size:12px;border:2px solid #4a3a2a;border-radius:5px;background:#fffaf0;color:#4a3a2a;padding:5px 7px">
+    <button class="gbtn" id="plan-save">저장</button>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <select id="plan-list" style="flex:1;min-width:120px"><option value="">저장된 계획 없음</option></select>
+    <button class="gbtn" id="plan-load">불러오기</button>
+    <button class="gbtn" id="plan-del">삭제</button>
+  </div>
+</div>
+
 <!-- ── 우리 교회 설정(공통) ──────────────────────── -->
 <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
   <div class="gsec">우리 교회 설정 (시작 분포 · 한 부 기준)</div>
@@ -511,6 +526,27 @@
   document.getElementById('cmp-save-a').addEventListener('click',function(){slotA=captureConfig();document.getElementById('cmp-slot-a').textContent=slotText('A',slotA);});
   document.getElementById('cmp-save-b').addEventListener('click',function(){slotB=captureConfig();document.getElementById('cmp-slot-b').textContent=slotText('B',slotB);});
   document.getElementById('cmp-run').addEventListener('click',compareRun);
+
+  // ── 계획 저장·불러오기(localStorage) ──
+  var PLAN_KEY='woori_plans_v1',PLAN_SLIDERS=['p-n','p-g1','p-g2','p-g3','p-mota','p-none','p-core','p-loner','s-sg','s-mt','s-tc','s-in','s-speed'];
+  function loadPlans(){try{return JSON.parse(localStorage.getItem(PLAN_KEY))||{};}catch(e){return {};}}
+  function savePlans(p){try{localStorage.setItem(PLAN_KEY,JSON.stringify(p));}catch(e){}}
+  function refreshPlanList(sel){var p=loadPlans(),names=Object.keys(p).sort(),el=document.getElementById('plan-list');
+    el.innerHTML=names.length?names.map(function(n){return '<option value="'+n.replace(/"/g,'&quot;')+'">'+n+'</option>';}).join(''):'<option value="">저장된 계획 없음</option>';
+    if(sel&&names.indexOf(sel)>=0)el.value=sel;}
+  function planSnapshot(){var sl={};PLAN_SLIDERS.forEach(function(id){sl[id]=document.getElementById(id).value;});return {v:1,sliders:sl,schedule:schedule.map(function(e){var o={};for(var k in e)o[k]=e[k];return o;})};}
+  function applyPlan(snap){
+    PLAN_SLIDERS.forEach(function(id){if(snap.sliders[id]!=null){var el=document.getElementById(id);el.value=snap.sliders[id];el.dispatchEvent(new Event('input'));}});
+    schedule=(snap.schedule||[]).map(function(e){var o={};for(var k in e)o[k]=e[k];return o;});
+    var mx=0;schedule.forEach(function(e){e.id=eid++;if(e.id>mx)mx=e.id;});
+    renderSched();generate();
+  }
+  document.getElementById('plan-save').addEventListener('click',function(){
+    var name=(document.getElementById('plan-name').value||'').trim();if(!name){document.getElementById('plan-name').focus();return;}
+    var p=loadPlans();p[name]=planSnapshot();savePlans(p);refreshPlanList(name);document.getElementById('plan-name').value='';});
+  document.getElementById('plan-load').addEventListener('click',function(){var name=document.getElementById('plan-list').value;if(!name)return;var p=loadPlans();if(p[name])applyPlan(p[name]);});
+  document.getElementById('plan-del').addEventListener('click',function(){var name=document.getElementById('plan-list').value;if(!name)return;var p=loadPlans();delete p[name];savePlans(p);refreshPlanList();});
+  refreshPlanList();
 
   // ── 기본 연간 계획(분당우리 한 부 예시) ──
   schedule.push({id:eid++,type:'sermon',start:4,focus:'nurture',weeks:8,repeat:0});

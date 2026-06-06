@@ -43,6 +43,7 @@
 - `compareRun()` / `renderPair()` / `drawPairChart()` : 두 시나리오(A/B 또는 계획/기본)를 추이 그래프와 지표 델타 표로 그린다.
 - `draw(t)`, `drawSpark()`, `record()` : 관찰 모드의 캔버스·추이 그래프·지표 카드를 갱신한다.
 - `setMode(m)` / `syncFields()` : 관찰(`observe`, 기본)·시나리오(`scenario`) 토글, 일정 추가 폼의 종류별 입력 표시.
+- `planSnapshot()` / `applyPlan()` / `loadPlans()` 등 : 운영·연간 계획·교회 설정을 이름 붙여 `localStorage`(`woori_plans_v1`)에 저장·불러오기·삭제. 슬라이더 원시값과 일정을 그대로 직렬화한다.
 
 라이브(`step`/`tick`)와 헤드리스(`simulateOnce`)는 같은 `tick`·`spawn`·`weekEffects`를 쓰므로 모형이 일관된다. 계수를 바꿀 때는 `tick` 한 곳만 고치면 양쪽에 반영된다. **일정의 시작 주차는 절대값(계획 시작=0주 기준 1~)이다.**
 
