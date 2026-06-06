@@ -481,7 +481,8 @@
     if(!items.length)items.push({u:0,t:'큰 불은 없다 → 코어 제자훈련을 한 걸음 더, 다음 절기·전환을 미리 준비.'});
     items.sort(function(x,y){return y.u-x.u;});
     var col=['#6b8e3b','#9a6c12','#a33232'],lab=['여유','살핌','시급'];
-    el.innerHTML=items.slice(0,6).map(function(it,i){return '<div style="font-size:12px;line-height:1.55;padding:4px 0'+(i?';border-top:1px solid #f0ddd5':'')+'"><span style="display:inline-block;min-width:28px;font-size:10px;color:#fff;background:'+col[it.u]+';border-radius:3px;padding:1px 5px;text-align:center;margin-right:7px;vertical-align:middle">'+lab[it.u]+'</span>'+it.t+'</div>';}).join('');
+    el.innerHTML=items.slice(0,6).map(function(it,i){return '<div style="font-size:12px;line-height:1.55;padding:4px 0'+(i?';border-top:1px solid #f0ddd5':'')+'"><span style="display:inline-block;min-width:28px;font-size:10px;color:#fff;background:'+col[it.u]+';border-radius:3px;padding:1px 5px;text-align:center;margin-right:7px;vertical-align:middle">'+lab[it.u]+'</span>'+it.t+'</div>';}).join('')+'<div style="margin-top:7px"><span id="act-detail" style="font-size:11px;color:#3b6d11;cursor:pointer;text-decoration:underline">관련 명단·구성 자세히 보기 ▾</span></div>';
+    var ad=document.getElementById('act-detail');if(ad)ad.addEventListener('click',function(){var d=document.querySelector('#observe details');if(d)d.open=true;var cl=document.getElementById('care-list');if(cl&&cl.hidden)document.getElementById('care-toggle').click();if(d)d.scrollIntoView({block:'start'});});
   }
   // 이번 주 작동 중인 입력(이벤트·설교·수련회·시험)을 칩으로
   function activeInputs(wk){
