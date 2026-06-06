@@ -172,6 +172,7 @@
       <div id="eco" style="font-size:12px;color:#6b5538;line-height:2;margin-bottom:8px"></div>
       <div id="dims" style="font-size:12px;color:#6b5538;line-height:1.6;margin-bottom:2px"></div>
       <div class="ghint" style="margin-bottom:8px">신앙은 한 갈래가 아니다. 설교 결에 따라 갈린다 — 거룩·순결형은 거룩을 올리되 출석·소속을 누르고, 은혜·위로형은 소속·출석을 올리되 거룩은 더디다. 율법과 복음의 긴장.</div>
+      <div id="attrib" style="font-size:12px;color:#6b5538;line-height:1.5;margin-bottom:10px"></div>
       <div id="seg-live" style="font-size:12px;color:#6b5538;line-height:1.6;margin-bottom:8px"></div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="gsec" style="margin:0;flex:1">이번 주 돌봄 명단</span><button class="gbtn" id="care-toggle" style="padding:3px 9px;font-size:12px">펼치기</button></div>
       <div id="care-list" hidden style="margin-bottom:10px"></div>
@@ -335,7 +336,7 @@
   var CHURCH_EVENTS={senior:{label:'담임 말씀 시리즈',color:'#b5651d'},allretreat:{label:'전교인 수련회',color:'#2e8b57'},revival:{label:'부흥회',color:'#c0392b'},season:{label:'절기',color:'#8e7cc3'}};
   var seats=[];for(var r=0;r<12;r++)for(var c=0;c<15;c++)seats.push({x:14+c*20,y:36+r*13,taken:false});
   var students=[],week=0,dropouts=0,playing=false,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null,contagionDeps={};
-  var conta=null,showSpread=false;
+  var conta=null,showSpread=false,lastCtx=null;
   var churchClimate=0.5,parentVitality=0.5,churchSchedule=[],ceid=0;
   var val=function(id){return +document.getElementById(id).value;};
   function freeSeat(){for(var i=0;i<seats.length;i++)if(!seats[i].taken){seats[i].taken=true;return i;}return -1;}
@@ -475,7 +476,7 @@
     var we=weekEffects(schedule,week);
     var cu=advanceChurch(churchClimate,parentVitality,churchSchedule,week,sp,val('s-daracbang')/100);
     churchClimate=cu.cc;parentVitality=cu.pv;
-    var ctx={arr:students,sgFrac:sg,mtFrac:mt,tEff:tEff,speed:sp,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:parentVitality,churchClimate:churchClimate,allRetreat:cu.allRetreat,revival:cu.revival};
+    var ctx={arr:students,sgFrac:sg,mtFrac:mt,tEff:tEff,speed:sp,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:parentVitality,churchClimate:churchClimate,allRetreat:cu.allRetreat,revival:cu.revival};lastCtx=ctx;
     active.forEach(function(s){tick(s,ctx);});
     if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var i=0;i<4;i++){var ns=makeOne(Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){var fnd=inv[Math.floor(Math.random()*inv.length)];ns.friends.push(students.indexOf(fnd));}students.push(ns);}}
     students.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}});
@@ -501,8 +502,35 @@
     var dm=document.getElementById('dims');if(dm)dm.innerHTML='<b style="color:#6b5538">신앙의 결(평균)</b> &nbsp;말씀 <b style="color:#7a5c38">'+Math.round(aw*100)+'%</b> · 거룩 <b style="color:#6b4a8a">'+Math.round(ah*100)+'%</b> · 소속 <b style="color:#2e8b8b">'+Math.round(ab*100)+'%</b>';
     var sl2=document.getElementById('statusline');if(sl2){var rr=(a.length-ac-lo)/(a.length||1),mood=rr>=0.2?'<b style="color:#a33232">여러 학생이 흔들리고 있다</b>':(ac/(a.length||1)>=0.7?'<b style="color:#3b6d11">대체로 건강하다</b>':'보통이다');sl2.innerHTML='지금 '+a.length+'명 중 활발 '+ac+' · 위기 '+(a.length-ac-lo)+' · 평균 신앙 '+Math.round(f*100)+'% — '+mood+'.';}
     updateWeekPanel(week);updateWeekFx(cur,prevMetrics);updatePreview();updateEco();prevMetrics=cur;
-    conta=contagion();updateContagion(conta);
+    conta=contagion();updateContagion(conta);updateAttrib();
     updateStudCard();updateCareList();renderActions();}
+  // 요인 분해: 이번 주 출석힘을 무엇이 끌어올리고 끌어내렸나(팩터 모델·기여도 분해 비유). tick의 항을 그대로 읽는다.
+  function attribution(){
+    if(!lastCtx)return null;var a=students.filter(function(s){return !s.left;});if(!a.length)return null;var ctx=lastCtx;
+    var k={base:0,friend:0,sg:0,mentor:0,fam:0,church:0,sermon:0,event:0};
+    a.forEach(function(s){
+      var fr=s.friends.map(function(j){return students[j];}).filter(function(x){return x&&!x.left;});
+      var pull=fr.length?fr.reduce(function(x,y){return x+y.commit;},0)/fr.length:0.5;
+      k.base+=-0.045;k.friend+=0.11*(pull-0.5);k.sg+=(s.sg?0.06:0)*ctx.tEff;k.mentor+=(s.mentor?0.05:0)*ctx.tEff;
+      k.fam+=0.05*(s.fam-0.5);k.church+=ctx.churchClimate!=null?0.035*(ctx.churchClimate-0.5):0;
+      var dEng=0;ctx.sermon.forEach(function(fo){var E=SERMON_FX[fo];if(E&&E.tgt(s))dEng+=E.eng+((E.seek&&(s.bg==='none'||s.faith<0.4))?E.seek:0);});k.sermon+=dEng*s.sermonAcc;
+      var ev=0;if(ctx.f.smallgroup&&s.sg)ev+=0.06;if(ctx.f.service&&(s.core||s.sg))ev+=0.04;if(ctx.f.outreach)ev+=0.03;if(ctx.revival)ev+=0.05;k.event+=ev;
+    });
+    var n=a.length;Object.keys(k).forEach(function(x){k[x]/=n;});return k;
+  }
+  function updateAttrib(){
+    var el=document.getElementById('attrib');if(!el)return;var k=attribution();
+    if(!k){el.innerHTML='<span style="color:#8a755a">한 주가 흐르면 무엇이 우리를 끌어올리고 끌어내렸는지 여기서 쪼개 본다.</span>';return;}
+    var rows=[['기본 흐름',k.base],['친구',k.friend],['소그룹',k.sg],['멘토',k.mentor],['가정',k.fam],['교회 분위기',k.church],['설교',k.sermon],['행사',k.event]];
+    rows=rows.filter(function(r){return Math.abs(r[1])>=0.0005;}).sort(function(a,b){return Math.abs(b[1])-Math.abs(a[1]);});
+    var net=0;Object.keys(k).forEach(function(x){net+=k[x];});
+    var mx=1;rows.forEach(function(r){mx=Math.max(mx,Math.abs(r[1]));});
+    var seg=function(d){var px=d/mx*46,l=d<0?50+px:50,w=Math.abs(px);return '<div style="position:absolute;top:0;height:100%;left:'+l+'%;width:'+w+'%;background:'+(d<0?'#c0532e':'#3b6d11')+';opacity:.82;border-radius:2px"></div>';};
+    var html='<b style="color:#6b5538">무엇이 우리를 움직였나</b> <span class="ghint">(이번 주 출석힘 기여, 친구·가정 등으로 쪼갬)</span>';
+    rows.forEach(function(r){html+='<div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12px"><span style="width:62px;flex-shrink:0;color:#4a3a2a">'+r[0]+'</span><div style="position:relative;flex:1;height:13px;background:#efe2c4;border-radius:3px">'+seg(r[1])+'<div style="position:absolute;top:-1px;left:50%;width:1px;height:15px;background:#4a3a2a"></div></div></div>';});
+    html+='<div class="ghint" style="margin-top:6px">합쳐 보면 이번 주 출석힘은 '+(net>=0?'<b style="color:#3b6d11">오르는 쪽</b>':'<b style="color:#a33232">내리는 쪽</b>')+'이다. <span style="color:#c0532e">빨강</span>=끌어내림, <span style="color:#3b6d11">초록</span>=끌어올림. 막대 길이는 상대 비교로만 읽으라.</div>';
+    el.innerHTML=html;
+  }
   // ── 전염 진단(비유): 한 아이가 흔들리면 친구도 흔들린다는 렌즈로 본다. 새 가정을 더하지 않고 친구 효과를 읽기만 한다. ──
   function friendObjs(s,arr){var o=[],fr=s.friends;for(var k=0;k<fr.length;k++){var f=arr[fr[k]];if(f&&!f.left)o.push(f);}return o;}
   function liveFriends(s){return friendObjs(s,students);}
