@@ -802,6 +802,7 @@
     lines.push('· '+yrs+'년 뒤 전망('+runs+'회 평균, 계획 vs 기본운영):');
     lines.push('  전체 '+Math.round(L.n)+'명 / 활발 '+Math.round(L.active)+' / 느슨 '+Math.round(L.loose)+' / 위기 '+Math.round(L.risk)+' / 누적이탈 '+Math.round(L.drop)+' / 평균신앙 '+Math.round(L.f*100)+'%');
     lines.push('  계획 효과(기본운영 대비): 활발 '+(L.active-B.active>=0?'+':'')+Math.round(L.active-B.active)+' · 이탈 '+(L.drop-B.drop>=0?'+':'')+Math.round(L.drop-B.drop)+' · 신앙 '+((L.f-B.f)>=0?'+':'')+Math.round((L.f-B.f)*100)+'%p');
+    var S0=hp[0];lines.push('  시작 대비: 활발 '+(L.active-S0.active>=0?'+':'')+Math.round(L.active-S0.active)+' · 위기 '+(L.risk-S0.risk>=0?'+':'')+Math.round(L.risk-S0.risk)+' · 신앙 '+((L.f-S0.f)>=0?'+':'')+Math.round((L.f-S0.f)*100)+'%p');
     lines.push('');
     lines.push('· 취약: 가장 빨리 빠지는 유형은 '+vulnTop(hp.seg)+'.');
     lines.push('· 추천 처방 1순위: '+rx.txt);
