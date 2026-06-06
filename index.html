@@ -104,6 +104,17 @@
     <div id="cmp-slot-b" class="ghint" style="border-left:3px solid #378add;padding-left:8px;margin-bottom:8px">B · 비어 있다</div>
     <div id="cmp-result"></div>
   </div>
+  <div class="zhead">④ 우리 아이들, 몇 년 뒤 — 잔존 곡선</div>
+  <div class="gpanel" style="padding:10px 12px;margin-bottom:8px;border-color:#2e6b8b">
+    <div class="ghint" style="margin-bottom:8px">지금 데리고 있는 아이들을 그대로 몇 년 흘려, "아직 함께 · 졸업으로 떠남 · 이탈로 잃음"을 갈라 본다. 졸업은 자연스러운 떠남이라 손실이 아니다. <b>이탈</b>만 진짜 잃는 것이고, 중3에서 고1로 넘어가는 길목에서 가장 크게 빠진다(보험·계리의 생존곡선을 옮긴 것).</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:#6b5538">기간</span>
+      <select id="sv-years"><option value="3">3년</option><option value="6" selected>6년(중1→고3 한 바퀴)</option></select>
+      <span style="flex:1"></span>
+      <button class="gbtn" id="sv-run" style="background:#2e6b8b;border-color:#1d4458;color:#eaf4f8">잔존 보기</button>
+    </div>
+    <div id="sv-result"><div class="ghint" style="padding-top:2px">"잔존 보기"를 누르면, 지금 명단이 해마다 어떻게 남고 빠지는지 곡선과 마지막 숫자로 나온다.</div></div>
+  </div>
 </div>
 
 <!-- ── 관찰 모드(메인) ───────────────────────────── -->
@@ -1099,6 +1110,51 @@
       drawCurves('sxcv',[none.map(function(p){return p.risk;}),rnd.map(function(p){return p.risk;}),hub.map(function(p){return p.risk;})],cols);
     },30);
   }
+  // ── 잔존(생존) 분석: 지금 명단을 그대로 흘려 아직 함께·졸업·이탈을 갈라 추적(보험 생명표 비유) ──
+  function survivalOnce(cfg,weeks){
+    var D=cfg.dist,arr=[];
+    for(var i=0;i<D.n;i++){var s=spawn(D,pickGrade6(D.mid,D.high));s.init=true;arr.push(s);}
+    arr.forEach(function(s){s.loner?linkIn(s,arr,arr,0,1):linkIn(s,arr,arr,3,5);});
+    var cc=0.5,pv=0.5,dara=cfg.ops.daracbang!=null?cfg.ops.daracbang:0.5,csched=cfg.church||[],surv=[];
+    for(var w=1;w<=weeks;w++){
+      var active=arr.filter(function(s){return !s.left;});
+      var tEff=Math.min(1,(cfg.ops.tc*8)/Math.max(1,active.length));
+      var we=weekEffects(cfg.schedule,w);
+      var cu=advanceChurch(cc,pv,csched,w,cfg.ops.speed,dara);cc=cu.cc;pv=cu.pv;
+      var ctx={arr:arr,sgFrac:cfg.ops.sg,mtFrac:cfg.ops.mt,tEff:tEff,speed:cfg.ops.speed,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:pv,churchClimate:cc,allRetreat:cu.allRetreat,revival:cu.revival};
+      active.forEach(function(s){tick(s,ctx);});
+      if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var k=0;k<4;k++){var ns=spawn(D,Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){ns.friends.push(arr.indexOf(inv[Math.floor(Math.random()*inv.length)]));}arr.push(ns);}}
+      arr.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;}});
+      if(w%WEEKS_PER_YEAR===0){arr.forEach(function(s){if(!s.left){var was=s.grade;s.grade++;if(s.grade>MAX_GRADE)s.left=true;else if(was===3&&Math.random()<cliffProb(s)){s.left=true;s.dropped=true;}}});for(var j=0;j<cfg.ops.intake;j++){var n2=spawn(D,1);var p=arr.filter(function(o){return !o.left&&o.grade<=2;});n2.loner?linkIn(n2,arr,p,0,1):linkIn(n2,arr,p,3,5);arr.push(n2);}}
+      var al=0,dr=0,gr=0;arr.forEach(function(s){if(!s.init)return;if(!s.left)al++;else if(s.dropped)dr++;else gr++;});
+      surv.push({active:al,dropped:dr,grad:gr});
+    }
+    return surv;
+  }
+  function survivalRun(){
+    var box=document.getElementById('sv-result');
+    box.innerHTML='<div class="ghint" style="padding-top:2px">돌리는 중... 지금 명단을 몇 년 흘려 본다.</div>';
+    setTimeout(function(){
+      var plan=captureConfig(),years=val('sv-years'),weeks=years*WEEKS_PER_YEAR,runs=5,acc=null;
+      for(var r=0;r<runs;r++){var sv=survivalOnce(plan,weeks);if(!acc)acc=sv.map(function(p){return {active:p.active,dropped:p.dropped,grad:p.grad};});else sv.forEach(function(p,i){acc[i].active+=p.active;acc[i].dropped+=p.dropped;acc[i].grad+=p.grad;});}
+      acc.forEach(function(p){p.active/=runs;p.dropped/=runs;p.grad/=runs;});
+      var n0=plan.dist.n,L=acc[acc.length-1];
+      var html='<div class="gpanel" style="padding:6px;margin:0 0 8px"><canvas id="svcv" width="320" height="90" style="width:100%;height:auto"></canvas>'+
+        '<div style="display:flex;gap:12px;font-size:11px;color:#6b5538;padding:2px 2px 0;flex-wrap:wrap">'+
+        '<span><span style="display:inline-block;width:10px;height:3px;background:#3b6d11;vertical-align:middle"></span> 아직 함께</span>'+
+        '<span><span style="display:inline-block;width:10px;height:3px;background:#9a8e75;vertical-align:middle"></span> 졸업 누적</span>'+
+        '<span><span style="display:inline-block;width:10px;height:3px;background:#a33232;vertical-align:middle"></span> 이탈 누적</span>'+
+        '<span style="margin-left:auto">지금 '+n0+'명 기준 · '+years+'년 · '+runs+'번 평균</span></div></div>';
+      html+='<div style="font-size:12px;line-height:1.7"><b>'+years+'년 뒤</b> — 아직 함께 <b style="color:#3b6d11">'+Math.round(L.active)+'명</b> · 졸업으로 떠남 <b style="color:#6b5538">'+Math.round(L.grad)+'명</b> · <b style="color:#a33232">이탈로 잃음 '+Math.round(L.dropped)+'명</b>(지금의 '+Math.round(L.dropped/n0*100)+'%)</div>';
+      var yd=[],prev=0;for(var y=1;y<=years;y++){var idx=Math.min(acc.length-1,y*WEEKS_PER_YEAR-1);var cum=acc[idx].dropped;yd.push(Math.round(cum-prev));prev=cum;}
+      html+='<div class="ghint" style="margin-top:6px">해마다 이탈: '+yd.map(function(d,i){return (i+1)+'년 '+d+'명';}).join(' · ')+'. 한 해 이탈이 유난히 큰 구간이 중3→고1 전환과 겹치면, 그 길목에서 잃는 것이다.</div>';
+      box.innerHTML=html;
+      var g=document.getElementById('svcv').getContext('2d');g.clearRect(0,0,320,90);
+      g.strokeStyle='rgba(90,70,50,0.15)';g.lineWidth=1;g.beginPath();g.moveTo(2,86);g.lineTo(318,86);g.stroke();
+      var line=function(key,col){g.strokeStyle=col;g.lineWidth=2;g.beginPath();acc.forEach(function(p,i){var x=i/(acc.length-1)*316+2,yv=86-(p[key]/n0)*80;i?g.lineTo(x,yv):g.moveTo(x,yv);});g.stroke();};
+      line('grad','#9a8e75');line('dropped','#a33232');line('active','#3b6d11');
+    },30);
+  }
   function setMode(m){mode=m;
     ['observe','scenario','config'].forEach(function(x){document.getElementById(x).hidden=(x!==m);document.getElementById('mode-'+x).classList.toggle('on',x===m);});}
   document.getElementById('mode-observe').addEventListener('click',function(){setMode('observe');});
@@ -1118,6 +1174,7 @@
   document.getElementById('pj-advise').addEventListener('click',adviseRun);
   document.getElementById('pj-summary').addEventListener('click',showSummary);
   document.getElementById('sx-run').addEventListener('click',spreadExperiment);
+  document.getElementById('sv-run').addEventListener('click',survivalRun);
   function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
