@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>고등부 목회 계획 시뮬레이터</title>
+<title>중고등부 목회 계획 시뮬레이터</title>
 <style>
   body{margin:0;background:#e7d8b4;font-family:'Pretendard',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#4a3a2a}
   .wrap{max-width:720px;margin:0 auto;padding:16px}
@@ -30,10 +30,10 @@
 </head>
 <body>
 <div class="wrap">
-<h1>고등부 목회 계획 시뮬레이터</h1>
+<h1>중고등부 목회 계획 시뮬레이터</h1>
 <details class="gpanel" style="padding:9px 12px;margin:0 0 10px;background:#f3e7cc;border-color:#9a6c12">
   <summary style="font-size:12px;color:#6b4a16;cursor:pointer;font-weight:600;list-style:none">전제 — 현실 예측이 아니라 "이 전제대로라면 이렇게 흘러간다"는 한 가지 시나리오다. <span style="font-weight:400;color:#8a755a">(자세히 ▾)</span></summary>
-  <div class="ghint" style="color:#6b5538;margin-top:6px">출석과 신앙이 친구 관계와 사역(소그룹·멘토·설교·수련회)으로 천천히 움직인다고 가정한다. 효과 수치는 그럴듯하게 넣은 가정값이지 검증된 사실이 아니다. 분당우리교회 고등부 한 부(약 150명) 기준.</div>
+  <div class="ghint" style="color:#6b5538;margin-top:6px">출석과 신앙이 친구 관계와 사역(소그룹·멘토·설교·수련회)으로 천천히 움직인다고 가정한다. 효과 수치는 그럴듯하게 넣은 가정값이지 검증된 사실이 아니다. 분당우리교회 중고등부 한 부(약 150명) 기준.</div>
 </details>
 <div style="display:flex;align-items:center;gap:10px;margin:0 2px 12px;flex-wrap:wrap">
   <span class="seg"><button id="mode-observe" class="on">관찰</button><button id="mode-scenario">시나리오</button><button id="mode-config">설정</button></span>
@@ -123,7 +123,7 @@
     <span class="gsec" style="margin:0;flex:1">주간 계획 캘린더 — 사역별 트랙 × 주차</span>
     <select id="plan-horizon"><option value="24" selected>1년(24주)</option><option value="48">2년(48주)</option></select>
   </div>
-  <div class="ghint" style="margin-bottom:6px">왼쪽 트랙(담임 설교·어른 행사·고등부 설교·고등부 사역·외부 환경)마다, 주차가 가로로 흐른다. 칸 색은 그 주 그 트랙의 일정이고(올려두면 이름이 뜬다), 칸을 누르면 아래 폼이 그 주로 맞춰진다. 다 짠 뒤 "이 계획대로 돌려보기"로 실행한다.</div>
+  <div class="ghint" style="margin-bottom:6px">왼쪽 트랙(담임 설교·어른 행사·중고등부 설교·중고등부 사역·외부 환경)마다, 주차가 가로로 흐른다. 칸 색은 그 주 그 트랙의 일정이고(올려두면 이름이 뜬다), 칸을 누르면 아래 폼이 그 주로 맞춰진다. 다 짠 뒤 "이 계획대로 돌려보기"로 실행한다.</div>
   <div id="timeline" style="max-height:300px;overflow-y:auto;border:2px solid #4a3a2a;border-radius:5px;background:#fffaf0;padding:2px 8px"></div>
   <button class="gbtn" id="btn-runplan" style="width:100%;margin-top:8px;background:#5fb04e;border-color:#3b6d11;color:#1d3a14">이 계획대로 돌려보기 ▶</button>
 </div>
@@ -140,7 +140,7 @@
 <!-- ── 가정·교회 (다락방·전체 교회) ─────────────────── -->
 <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
   <div class="gsec">가정·교회 (다락방·전체 교회)</div>
-  <div class="ghint" style="margin-bottom:8px">부모 다락방이 살아 있고 전체 교회가 부흥의 계절이면, 가정신앙이 오르고 고등부가 따라 오른다. 청소년 사역만으로는 닿지 못하는 천장이 여기서 정해진다.</div>
+  <div class="ghint" style="margin-bottom:8px">부모 다락방이 살아 있고 전체 교회가 부흥의 계절이면, 가정신앙이 오르고 중고등부가 따라 오른다. 청소년 사역만으로는 닿지 못하는 천장이 여기서 정해진다.</div>
   <div class="grow"><span class="glab">부모 다락방 참여율</span><input type="range" id="s-daracbang" min="0" max="100" step="1" value="50"><span class="gval" id="v-s-daracbang">50%</span></div>
   <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0 6px">
     <select id="cev-type">
@@ -214,7 +214,7 @@
 
 <!-- ── 우리 교회 현재 진단(공통) ─────────────────────── -->
 <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
-  <div class="gsec">우리 교회 현재 진단 (지금 우리 고등부)</div>
+  <div class="gsec">우리 교회 현재 진단 (지금 우리 중고등부)</div>
   <div class="ghint" style="margin-bottom:8px">갱신은 "지금 여기"에서 출발한다. 우리 부의 실제 모습을 있는 그대로 넣어라. 아래 추세 버튼으로 빠르게 잡은 뒤 손볼 수 있다.</div>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
     <span class="ghint" style="align-self:center">추세:</span>
@@ -681,7 +681,7 @@
     var L=hp[hp.length-1],B=hb[hb.length-1],D=plan.dist;
     var rx=topRx(plan,weeks);
     var lines=[];
-    lines.push('[고등부 사역 계획 요약 — 시뮬레이션]');
+    lines.push('[중고등부 사역 계획 요약 — 시뮬레이션]');
     lines.push('※ 효과 수치는 검증되지 않은 가정값. 현실 예측이 아니라 방향·크기의 참고용.');
     lines.push('');
     lines.push('· 우리 부: 전체 '+D.n+'명 · 1/2/3학년 비중 '+D.g1+'/'+D.g2+'/'+D.g3+' · 모태 '+Math.round(D.mota*100)+'% 비신앙가정 '+Math.round(D.none*100)+'% · 코어 '+Math.round(D.core*100)+'% 외톨이 '+Math.round(D.loner*100)+'%');
@@ -744,7 +744,7 @@
     Array.prototype.forEach.call(c.querySelectorAll('[data-cdel]'),function(b){b.addEventListener('click',function(){var id=+this.dataset.cdel;churchSchedule=churchSchedule.filter(function(e){return e.id!==id;});renderCSched();});});renderTimeline();}
   var CEXPLAIN={
     senior:'담임목사의 어른 예배 말씀 시리즈. 교회 전체 분위기를 서서히 끌어올리고, 그것이 부모 다락방을 거쳐 학생 가정신앙으로 흐른다.',
-    allretreat:'전교인 수련회는 온 가족이 함께 참여한다. 교회 분위기를 크게 올리고 학생에게도 직접 큰 힘이 된다(고등부 수련회와 별개).',
+    allretreat:'전교인 수련회는 온 가족이 함께 참여한다. 교회 분위기를 크게 올리고 학생에게도 직접 큰 힘이 된다(중고등부 수련회와 별개).',
     revival:'부흥회는 교회 분위기를 강하게 자극한다. 그 기간 학생 출석·신앙도 함께 솟는다.',
     season:'부활절·맥추·추수감사·성탄 같은 절기는 교회 분위기를 잔잔히 끌어올린다.'
   };
@@ -761,8 +761,8 @@
   var TRACKS=[
     {name:'담임 설교', src:'church', types:['senior']},
     {name:'어른 행사', src:'church', types:['allretreat','revival','season']},
-    {name:'고등부 설교', src:'youth', types:['sermon']},
-    {name:'고등부 사역', src:'youth', types:['retreat','outreach','smallgroup','service']},
+    {name:'중고등부 설교', src:'youth', types:['sermon']},
+    {name:'중고등부 사역', src:'youth', types:['retreat','outreach','smallgroup','service']},
     {name:'외부 환경', src:'youth', types:['exam','sooneung']}
   ];
   function evLabel(ev){return ev.type==='sermon'?('설교·'+SERMON_FOCUS[ev.focus].label):(CHURCH_EVENTS[ev.type]?CHURCH_EVENTS[ev.type].label:EVENTS[ev.type].label);}
