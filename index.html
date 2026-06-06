@@ -162,6 +162,7 @@
       <div id="dims" style="font-size:12px;color:#6b5538;line-height:1.6;margin-bottom:2px"></div>
       <div class="ghint" style="margin-bottom:8px">신앙은 한 갈래가 아니다. 설교 결에 따라 갈린다 — 거룩·순결형은 거룩을 올리되 출석·소속을 누르고, 은혜·위로형은 소속·출석을 올리되 거룩은 더디다. 율법과 복음의 긴장.</div>
       <div id="seg-live" style="font-size:12px;color:#6b5538;line-height:1.6;margin-bottom:8px"></div>
+      <div id="contagion" style="font-size:12px;color:#6b5538;line-height:1.6;margin-bottom:8px"></div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="gsec" style="margin:0;flex:1">이번 주 돌봄 명단</span><button class="gbtn" id="care-toggle" style="padding:3px 9px;font-size:12px">펼치기</button></div>
       <div id="care-list" hidden style="margin-bottom:10px"></div>
       <div style="border:2px solid #4a3a2a;border-radius:5px;padding:6px;background:#fffaf0">
@@ -323,7 +324,7 @@
   };
   var CHURCH_EVENTS={senior:{label:'담임 말씀 시리즈',color:'#b5651d'},allretreat:{label:'전교인 수련회',color:'#2e8b57'},revival:{label:'부흥회',color:'#c0392b'},season:{label:'절기',color:'#8e7cc3'}};
   var seats=[];for(var r=0;r<12;r++)for(var c=0;c<15;c++)seats.push({x:14+c*20,y:36+r*13,taken:false});
-  var students=[],week=0,dropouts=0,playing=false,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null;
+  var students=[],week=0,dropouts=0,playing=false,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null,contagionDeps={};
   var conta=null,showSpread=false;
   var churchClimate=0.5,parentVitality=0.5,churchSchedule=[],ceid=0;
   var val=function(id){return +document.getElementById(id).value;};
@@ -490,7 +491,7 @@
     var dm=document.getElementById('dims');if(dm)dm.innerHTML='<b style="color:#6b5538">신앙의 결(평균)</b> &nbsp;말씀 <b style="color:#7a5c38">'+Math.round(aw*100)+'%</b> · 거룩 <b style="color:#6b4a8a">'+Math.round(ah*100)+'%</b> · 소속 <b style="color:#2e8b8b">'+Math.round(ab*100)+'%</b>';
     var sl2=document.getElementById('statusline');if(sl2){var rr=(a.length-ac-lo)/(a.length||1),mood=rr>=0.2?'<b style="color:#a33232">여러 학생이 흔들리고 있다</b>':(ac/(a.length||1)>=0.7?'<b style="color:#3b6d11">대체로 건강하다</b>':'보통이다');sl2.innerHTML='지금 '+a.length+'명 중 활발 '+ac+' · 위기 '+(a.length-ac-lo)+' · 평균 신앙 '+Math.round(f*100)+'% — '+mood+'.';}
     updateWeekPanel(week);updateWeekFx(cur,prevMetrics);updatePreview();updateEco();prevMetrics=cur;
-    conta=contagion();updateContagion(conta);
+    conta=contagion();updateContagion(conta);updateRelRisk();
     updateStudCard();updateCareList();renderActions();}
   // ── 전염 진단(비유): 한 아이가 흔들리면 친구도 흔들린다는 렌즈로 본다. 새 가정을 더하지 않고 친구 효과를 읽기만 한다. ──
   function friendObjs(s,arr){var o=[],fr=s.friends;for(var k=0;k<fr.length;k++){var f=arr[fr[k]];if(f&&!f.left)o.push(f);}return o;}
@@ -637,13 +638,34 @@
     var stat=s.eng>=0.55?'<span style="color:#3b6d11;font-weight:600">활발</span>':s.eng>=0.3?'<span style="color:#9a6c12;font-weight:600">느슨</span>':'<span style="color:#a33232;font-weight:600">위기</span>';
     var tags=[];if(s.core)tags.push('코어');if(s.loner)tags.push('외톨이');if(s.sg)tags.push('소그룹');if(s.mentor)tags.push('멘토 연결');
     var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
+    var followers=contagionDeps[students.indexOf(s)]||0;
     el.hidden=false;
     el.innerHTML='<div style="font-size:12px;line-height:1.7;color:#4a3a2a">'+
       '<b>고른 아이</b> &nbsp;'+stat+'<br>'+
       GRADE_LABELS[s.grade]+' · '+bgL+(tags.length?' · '+tags.join(' · '):'')+'<br>'+
       '출석 '+Math.round(s.eng*100)+'% · 신앙 관심 '+Math.round(s.faith*100)+'% · 친구 '+fr+'명<br>'+
       '<span style="font-size:11px;color:#6b5538">신앙의 결 — 말씀 '+Math.round(s.word*100)+'% · 거룩 '+Math.round(s.holy*100)+'% · 소속 '+Math.round(s.belong*100)+'%</span>'+
+      (followers>=2?'<br><span style="font-size:11px;color:#a33232">이 아이를 친구로 둔 '+followers+'명 · 이 아이가 흔들리면 함께 흔들릴 수 있다</span>':'')+
       '<div style="color:#6b4a16;margin-top:5px;border-top:1px solid #e0cda0;padding-top:5px">→ '+studNote(s)+'</div></div>';
+  }
+  // 관계 전염·집중 위험: 친구 그래프에서 "누가 누구에게 매여 있나"를 드러낸다(모형 안 건드림)
+  function updateRelRisk(){
+    var depSet={};
+    students.forEach(function(s,si){if(s.left)return;(s.friends||[]).forEach(function(fi){var f=students[fi];if(f&&!f.left){(depSet[fi]=depSet[fi]||[]).push(si);}});});
+    contagionDeps={};Object.keys(depSet).forEach(function(k){contagionDeps[k]=depSet[k].length;});
+    var el=document.getElementById('contagion');if(!el)return;
+    var act=students.filter(function(s){return !s.left;}),N=act.length||1;
+    var hubs=Object.keys(depSet).map(function(k){return {i:+k,s:students[+k],n:depSet[k].length,dep:depSet[k]};}).filter(function(h){return h.s&&!h.s.left;}).sort(function(a,b){return b.n-a.n;});
+    if(!hubs.length){el.innerHTML='<b style="color:#6b5538">관계 전염·집중 위험</b><br>아직 관계망이 옅다.';return;}
+    var top=hubs.slice(0,3),u={};top.forEach(function(h){h.dep.forEach(function(d){u[d]=1;});});
+    var reach=Math.round(Object.keys(u).length/N*100);
+    var risky=hubs.filter(function(h){return h.s.eng<0.5&&h.n>=2;}).slice(0,3);
+    var lab=function(s){return GRADE_LABELS[s.grade]+(s.loner?'·외톨이':'')+(s.bg==='none'?'·비신앙':'')+(s.core?'·코어':'');};
+    var html='<b style="color:#6b5538">관계 전염·집중 위험</b> <span class="ghint">(친구로 함께 흔들리는 정도)</span><br>'+
+      '상위 3 연결점이 전체의 <b>'+reach+'%</b>와 직접 이어져 있다'+(reach>=60?' — 한쪽에 쏠려 있다.':'.');
+    if(risky.length){html+='<div style="margin-top:5px">흔들리는 연결점(먼저 붙들라):</div>'+risky.map(function(h){return '<div data-care="'+h.i+'" style="cursor:pointer;padding:3px 0;border-top:1px solid #e6d6b0"><b style="color:#a33232">▸</b> '+lab(h.s)+' · 의존 '+h.n+'명 · 출석 '+Math.round(h.s.eng*100)+'% → 무너지면 '+h.n+'명이 함께 흔들린다.</div>';}).join('');}
+    else{html+='<div style="margin-top:4px;color:#3b6d11">흔들리는 연결점은 없다 — 허브들이 건강해 관계망이 버틴다.</div>';}
+    el.innerHTML=html;
   }
   document.getElementById('world').addEventListener('click',function(e){
     var rect=this.getBoundingClientRect();
@@ -665,7 +687,7 @@
     }).join('')+(risky.length>12?'<div class="ghint" style="margin-top:4px">외 '+(risky.length-12)+'명 더 있다.</div>':'');
   }
   document.getElementById('care-toggle').addEventListener('click',function(){var el=document.getElementById('care-list');el.hidden=!el.hidden;this.textContent=el.hidden?'펼치기':'접기';updateCareList();});
-  document.getElementById('care-list').addEventListener('click',function(e){var row=e.target.closest('[data-care]');if(!row)return;var s=students[+row.dataset.care];if(s&&!s.left){selStudent=s;updateStudCard();draw(0);var sc=document.getElementById('stud-card');if(sc&&sc.scrollIntoView)sc.scrollIntoView({block:'center',behavior:'smooth'});}});
+  document.getElementById('observe').addEventListener('click',function(e){var row=e.target.closest('[data-care]');if(!row)return;var s=students[+row.dataset.care];if(s&&!s.left){selStudent=s;updateStudCard();draw(0);var sc=document.getElementById('stud-card');if(sc&&sc.scrollIntoView)sc.scrollIntoView({block:'center',behavior:'smooth'});}});
 
   // ── 헤드리스 예측 엔진 ──
   // 확산 차단 실험용 돌봄 정책: 매주 흔들리는 학생(느슨+위기) 중 k명을 골라 그 주만 집중 돌봄(s.cared).
