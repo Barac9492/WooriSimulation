@@ -74,6 +74,19 @@
     <div id="pj-advice" style="margin-top:8px"></div>
     <div id="pj-summary-box" style="margin-top:8px"></div>
   </div>
+  <div class="gpanel" style="padding:10px 12px;margin-bottom:8px;border-color:#a3622a">
+    <div class="gsec" style="color:#a3622a">확산 차단 실험 — 전파 핵을 먼저 돌보면 번짐이 줄어드는가</div>
+    <div class="ghint" style="margin-bottom:8px">같은 양의 집중 돌봄(매주 같은 인원의 심방·연결)을 <b>무작위</b>로 쓸 때와 <b>전파 핵(번짐의 핵)부터</b> 쓸 때를 견준다. 백신을 무작위로 놓을 때보다 전파의 길목에 놓을 때 유행이 더 꺾이는지를 보는 실험이다(비유). 돌봄 양이 같으니 차이는 곧 진단의 값이다.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:#6b5538">주당 돌봄</span>
+      <select id="sx-k"><option value="5">5명</option><option value="8" selected>8명</option><option value="12">12명</option></select>
+      <span style="font-size:12px;color:#6b5538">기간</span>
+      <select id="sx-weeks"><option value="24">1년(24주)</option><option value="48" selected>2년(48주)</option><option value="72">3년(72주)</option></select>
+      <span style="flex:1"></span>
+      <button class="gbtn" id="sx-run" style="background:#a3622a;border-color:#6b3a12;color:#fdf3e6">실험 실행</button>
+    </div>
+    <div id="sx-result"><div class="ghint" style="padding-top:2px">"실험 실행"을 누르면 세 전략(무처치 · 무작위 돌봄 · 핵 우선 돌봄)을 같은 계획·기간으로 여러 번 돌려, 주별 위기(감염) 인원 곡선과 최종 지표를 견준다.</div></div>
+  </div>
   <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
     <div class="gsec">시나리오 비교 (A/B)</div>
     <div class="ghint" style="margin-bottom:8px">두 안을 같은 기간 동안 견준다. 설정 탭에서 한 안을 맞춰 A에 담고, 바꿔서 B에 담은 뒤 비교한다. 예: 수련회를 1년차 vs 2년차.</div>
@@ -285,6 +298,8 @@
   var SP=document.getElementById('spark'),sx=SP.getContext('2d');
   var clamp=function(v,a,b){return v<a?a:v>b?b:v;},rnd=function(a,b){return a+Math.random()*(b-a);};
   var WEEKS_PER_YEAR=24,LEAVE_AFTER=6,MAX_GRADE=6;
+  // 집중 돌봄(심방·연결) 채널: 확산 차단 실험에서 그 주에 지목된 학생(s.cared)에게만 더해지는 힘. 가정값이다.
+  var CARE_FORCE=0.075,CARE_FAITH=0.018;
   var GRADE_LABELS=['','중1','중2','중3','고1','고2','고3'];
   // 중3→고1 전환 절벽: 한국 교회 다음세대 이탈의 큰 지점. 헌신이 약하고 외톨이·비신앙일수록 떠나기 쉽다.
   function cliffProb(s){return clamp((0.55-s.commit)+(s.loner?0.15:0)+(s.bg==='none'?0.10:0)-(s.core?0.25:0),0,0.7);}
@@ -393,7 +408,8 @@
     s.sg=s.rSg<ctx.sgFrac;s.mentor=s.rMt<ctx.mtFrac;var sp=ctx.speed;
     var fr=s.friends.map(function(j){return ctx.arr[j];}).filter(function(x){return x&&!x.left;});
     var pull=fr.length?fr.reduce(function(x,y){return x+y.commit;},0)/fr.length:0.5;
-    var force=-0.045+0.11*(pull-0.5)+(s.sg?0.06:0)*ctx.tEff+(s.mentor?0.05:0)*ctx.tEff+0.05*(s.fam-0.5)+(ctx.churchClimate!=null?0.035*(ctx.churchClimate-0.5):0)+(Math.random()-0.5)*0.03;
+    var care=(s.cared&&ctx.careForce)?ctx.careForce:0; // 지목된 학생에게만(확산 차단 실험)
+    var force=-0.045+0.11*(pull-0.5)+(s.sg?0.06:0)*ctx.tEff+(s.mentor?0.05:0)*ctx.tEff+care*ctx.tEff+0.05*(s.fam-0.5)+(ctx.churchClimate!=null?0.035*(ctx.churchClimate-0.5):0)+(Math.random()-0.5)*0.03;
     var f=ctx.f;
     if(f.smallgroup&&s.sg)force+=0.06;
     if(f.service&&(s.core||s.sg))force+=0.04;
@@ -420,7 +436,7 @@
     s.eng=clamp(s.commit+0.20*s.retreatGlow-s.examPress,0,1);
     s.absent=s.eng<0.12?s.absent+1:Math.max(0,s.absent-1);
     // 신앙(느리게)
-    var fd=(s.eng>0.35?0.014:-0.006)+(s.sg?0.012:0)*ctx.tEff+(s.mentor?0.015:0)*ctx.tEff+0.020*(s.fam-0.5)+(ctx.churchClimate!=null?0.015*(ctx.churchClimate-0.5):0)+dFa*s.sermonAcc+(ctx.revival?0.02:0)+(ctx.allRetreat?0.03:0);
+    var fd=(s.eng>0.35?0.014:-0.006)+(s.sg?0.012:0)*ctx.tEff+(s.mentor?0.015:0)*ctx.tEff+((s.cared&&ctx.careFaith)?ctx.careFaith:0)*ctx.tEff+0.020*(s.fam-0.5)+(ctx.churchClimate!=null?0.015*(ctx.churchClimate-0.5):0)+dFa*s.sermonAcc+(ctx.revival?0.02:0)+(ctx.allRetreat?0.03:0);
     s.faith=clamp(s.faith+sp*fd,0,1);
     // 신앙의 갈래(말씀·거룩·소속): 신앙 쪽으로 천천히 모이되, 설교 결이 갈래마다 다르게 기울인다
     var frC=fr.length;
@@ -469,7 +485,11 @@
   // ── 전염 진단(비유): 흔들림(위기)이 친구 관계를 타고 번진다는 렌즈로 공동체를 읽는다 ──
   // 모형은 이미 친구 평균 헌신으로 출석을 끌어당긴다(tick의 0.11*(pull-0.5)). 여기서는 그 확산을
   // SIR식(면역·취약·감염)으로 진단만 한다 — 새 가정을 더하지 않는다. 현실 예측이 아니라 방향이다.
-  function liveFriends(s){var o=[];for(var k=0;k<s.friends.length;k++){var f=students[s.friends[k]];if(f&&!f.left)o.push(f);}return o;}
+  // 친구 객체(살아 있는)들. arr 기준(라이브=students, 헤드리스=run의 arr). 친구 인덱스는 그 배열 기준이다.
+  function friendObjs(s,arr){var o=[],fr=s.friends;for(var k=0;k<fr.length;k++){var f=arr[fr[k]];if(f&&!f.left)o.push(f);}return o;}
+  function liveFriends(s){return friendObjs(s,students);}
+  // 번짐 점수: 흔들리는 학생(감염1·취약0.4) 곁에 아직 건강한 친구가 많을수록 번질 길이 넓다. 진단·실험이 같은 식을 쓴다.
+  function spreadScore(s,arr){var w=s.eng<0.3?1:s.eng<0.55?0.4:0;if(!w)return 0;var fr=friendObjs(s,arr);return w*(fr.filter(function(o){return o.eng>=0.3&&o.eng<0.55;}).length+0.4*fr.filter(function(o){return o.eng>=0.55;}).length);}
   function studTag(s){var t=[GRADE_LABELS[s.grade]];if(s.loner)t.push('외톨이');if(!s.sg)t.push('소그룹 밖');if(s.bg==='none')t.push('비신앙 가정');if(s.core)t.push('코어');return t.join('·');}
   function contagion(){
     var a=students.filter(function(s){return !s.left;}),n=a.length;if(!n)return null;
@@ -482,9 +502,8 @@
     I.forEach(function(s){var fr=liveFriends(s);if(!fr.length)return;infWithFr++;localSum+=fr.filter(function(o){return o.eng<0.3;}).length/fr.length;});
     var cluster=baseRate>0.001&&infWithFr?(localSum/infWithFr)/baseRate:0;
     // 번짐의 핵: 흔들리는 학생(감염·취약) 곁에 아직 건강한 친구가 많을수록 번질 길이 넓다(먼저 끊을 지점).
-    var spread=a.map(function(s){var w=s.eng<0.3?1:s.eng<0.55?0.4:0;if(!w)return null;var fr=liveFriends(s);
-      var sc=w*(fr.filter(function(o){return o.eng>=0.3&&o.eng<0.55;}).length+0.4*fr.filter(function(o){return o.eng>=0.55;}).length);
-      return sc>0.5?{s:s,v:sc,heal:fr.filter(function(o){return o.eng>=0.3;}).length}:null;}).filter(Boolean).sort(function(x,y){return y.v-x.v;}).slice(0,3);
+    var spread=a.map(function(s){var sc=spreadScore(s,students);if(sc<=0.5)return null;var fr=liveFriends(s);
+      return {s:s,v:sc,heal:fr.filter(function(o){return o.eng>=0.3;}).length};}).filter(Boolean).sort(function(x,y){return y.v-x.v;}).slice(0,3);
     // 면역 거점: 흔들리는 친구를 곁에 둔 활발(면역) 학생. 세우면 곁의 번짐을 잡아준다.
     var anchor=R.map(function(s){var fr=liveFriends(s);var sc=fr.filter(function(o){return o.eng>=0.3&&o.eng<0.55;}).length+1.3*fr.filter(function(o){return o.eng<0.3;}).length;
       return sc>0.5?{s:s,v:sc,shaky:fr.filter(function(o){return o.eng<0.55;}).length}:null;}).filter(Boolean).sort(function(x,y){return y.v-x.v;}).slice(0,3);
@@ -637,17 +656,28 @@
   document.getElementById('care-toggle').addEventListener('click',function(){var el=document.getElementById('care-list');el.hidden=!el.hidden;this.textContent=el.hidden?'펼치기':'접기';updateCareList();});
 
   // ── 헤드리스 예측 엔진 ──
-  function simulateOnce(cfg,weeks){
+  // 확산 차단 실험용 돌봄 정책: 매주 흔들리는 학생(취약+감염) 중 k명을 골라 그 주만 집중 돌봄(s.cared).
+  // mode 'hub'=전파 핵 우선(번짐 점수 상위), 'random'=같은 인원을 무작위로. 둘의 돌봄 양은 같다(공정한 비교).
+  function applyPolicy(arr,policy){
+    var active=arr.filter(function(s){return !s.left;});active.forEach(function(s){s.cared=false;});
+    if(!policy||policy.mode==='none')return;
+    var pool=active.filter(function(s){return s.eng<0.55;}),pick;
+    if(policy.mode==='hub')pick=pool.map(function(s){return {s:s,v:spreadScore(s,arr)};}).filter(function(x){return x.v>0;}).sort(function(a,b){return b.v-a.v;}).slice(0,policy.k).map(function(x){return x.s;});
+    else pick=shuffle(pool.slice()).slice(0,policy.k);
+    pick.forEach(function(s){s.cared=true;});
+  }
+  function simulateOnce(cfg,weeks,policy){
     var D=cfg.dist,arr=[];
     for(var i=0;i<D.n;i++)arr.push(spawn(D,pickGrade6(D.mid,D.high)));
     arr.forEach(function(s){s.loner?linkIn(s,arr,arr,0,1):linkIn(s,arr,arr,3,5);});
     var drop=0,hist=[],cc=0.5,pv=0.5,dara=cfg.ops.daracbang!=null?cfg.ops.daracbang:0.5,csched=cfg.church||[];
     for(var w=1;w<=weeks;w++){
       var active=arr.filter(function(s){return !s.left;});
+      applyPolicy(arr,policy);
       var tEff=Math.min(1,(cfg.ops.tc*8)/Math.max(1,active.length));
       var we=weekEffects(cfg.schedule,w);
       var cu=advanceChurch(cc,pv,csched,w,cfg.ops.speed,dara);cc=cu.cc;pv=cu.pv;
-      var ctx={arr:arr,sgFrac:cfg.ops.sg,mtFrac:cfg.ops.mt,tEff:tEff,speed:cfg.ops.speed,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:pv,churchClimate:cc,allRetreat:cu.allRetreat,revival:cu.revival};
+      var ctx={arr:arr,sgFrac:cfg.ops.sg,mtFrac:cfg.ops.mt,tEff:tEff,speed:cfg.ops.speed,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:pv,churchClimate:cc,allRetreat:cu.allRetreat,revival:cu.revival,careForce:CARE_FORCE,careFaith:CARE_FAITH};
       active.forEach(function(s){tick(s,ctx);});
       if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var k=0;k<4;k++){var ns=spawn(D,Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){ns.friends.push(arr.indexOf(inv[Math.floor(Math.random()*inv.length)]));}arr.push(ns);}}
       arr.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;drop++;}});
@@ -668,9 +698,9 @@
     arr.forEach(function(s){add(by.bg[s.bg],s);add(by.lon[s.loner?'y':'n'],s);add(by.core[s.core?'y':'n'],s);add(by.grade[s.grade<=3?'mid':'high'],s);});
     return by;
   }
-  function simulate(cfg,weeks,runs){
+  function simulate(cfg,weeks,runs,policy){
     var acc=null,segAcc=null,fin=[];
-    for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks);fin.push(h[h.length-1]);
+    for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks,policy);fin.push(h[h.length-1]);
       if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop};});segAcc=h.seg;}
       else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;});
         for(var d in h.seg)for(var g in h.seg[d])for(var k in h.seg[d][g])segAcc[d][g][k]+=h.seg[d][g][k];}}
@@ -752,6 +782,43 @@
     renderPair(document.getElementById('pj-result'),hp,hb,'계획','기본 운영','#5fb04e','#9a8e75',weeks,runs,
       '계획대로 했을 때와, 특별 계획 없이 평소 운영(소그룹·멘토·교사)만 했을 때의 '+weeks+'주 뒤 평균 비교다. 차이는 (계획 − 기본 운영). 수치는 검증되지 않은 가정값이므로 방향과 크기로만 읽으라.');
     document.getElementById('pj-result').insertAdjacentHTML('beforeend',segHTML(hp.seg,weeks));
+  }
+
+  // ── 확산 차단 실험: 같은 돌봄 양을 무작위 vs 전파 핵 우선으로(ring 처방 검증) ──
+  function drawCurves(id,series,cols){
+    var c=document.getElementById(id);if(!c)return;var g=c.getContext('2d');g.clearRect(0,0,320,90);
+    var mx=1;series.forEach(function(arr){arr.forEach(function(v){if(v>mx)mx=v;});});
+    g.strokeStyle='rgba(90,70,50,0.15)';g.lineWidth=1;g.beginPath();g.moveTo(2,86);g.lineTo(318,86);g.stroke();
+    series.forEach(function(arr,i){if(arr.length<2)return;g.strokeStyle=cols[i];g.lineWidth=2;g.beginPath();arr.forEach(function(v,k){var x=k/(arr.length-1)*316+2,y=86-(v/mx)*80;k?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();});
+  }
+  function spreadExperiment(){
+    var box=document.getElementById('sx-result');
+    box.innerHTML='<div class="ghint" style="padding-top:2px">실험 중... 세 전략(무처치·무작위·핵 우선)을 같은 기간 여러 번 돌린다.</div>';
+    setTimeout(function(){
+      var plan=captureConfig(),weeks=val('sx-weeks'),runs=5,K=val('sx-k');
+      var none=simulate(plan,weeks,runs,{mode:'none'}),rnd=simulate(plan,weeks,runs,{mode:'random',k:K}),hub=simulate(plan,weeks,runs,{mode:'hub',k:K});
+      var L0=none[none.length-1],Lr=rnd[rnd.length-1],Lh=hub[hub.length-1];
+      var cols=['#9a8e75','#378add','#a3622a'],labs=['무처치','무작위 돌봄','핵 우선 돌봄'];
+      var html='<div class="gpanel" style="padding:6px;margin:0 0 8px"><canvas id="sxcv" width="320" height="90" style="width:100%;height:auto"></canvas>'+
+        '<div style="display:flex;gap:12px;font-size:11px;color:#6b5538;padding:2px 2px 0;flex-wrap:wrap">'+
+        labs.map(function(l,i){return '<span><span style="display:inline-block;width:10px;height:3px;background:'+cols[i]+';vertical-align:middle"></span> '+l+'</span>';}).join('')+
+        '<span style="margin-left:auto">주별 위기(감염) 인원 · '+weeks+'주 · '+runs+'회 평균</span></div></div>';
+      var rows=[['누적 이탈','drop'],['위기(감염)','risk'],['활발(면역)','active'],['평균 신앙','f']];
+      var cell=function(t,bg,al,cl){return '<div style="padding:5px 8px;background:'+bg+';text-align:'+al+(cl?';color:'+cl:'')+(al==='right'?';font-family:ui-monospace,monospace':'')+'">'+t+'</div>';};
+      var fmt=function(v,pct){return pct?Math.round(v*100)+'%':Math.round(v);};
+      html+='<div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;font-size:12px;border:2px solid #4a3a2a;border-radius:5px;overflow:hidden">';
+      html+=cell('지표','#e7d8b4','left')+cell('무처치','#e7d8b4','right','#7a6a4a')+cell('무작위','#e7d8b4','right','#378add')+cell('핵 우선','#e7d8b4','right','#a3622a');
+      rows.forEach(function(rw,i){var bg=i%2?'#fbf4e4':'#f3e7cc',pct=rw[1]==='f';
+        html+=cell(rw[0],bg,'left')+cell(fmt(L0[rw[1]],pct),bg,'right')+cell(fmt(Lr[rw[1]],pct),bg,'right')+cell(fmt(Lh[rw[1]],pct),bg,'right');});
+      html+='</div>';
+      var dHubRnd=Lr.drop-Lh.drop,dHubNone=L0.drop-Lh.drop,read;
+      if(dHubRnd>=1)read='같은 주당 <b>'+K+'명</b>을 무작위로 돌볼 때보다, <b>전파 핵부터</b> 돌볼 때 누적 이탈이 <b style="color:#3b6d11">'+Math.round(dHubRnd)+'명</b> 적다('+weeks+'주). 진단이 돌봄의 순서를 바꾼다 — 같은 양으로 더 멀리 간다.';
+      else if(dHubRnd<=-1)read='이 설정에선 무작위 돌봄이 핵 우선보다 이탈이 '+Math.round(-dHubRnd)+'명 적게 나온다. 위기가 흩어져 있으면(군집도 낮음) 길목을 골라 잡는 이점이 약하다.';
+      else read='이 설정에선 핵 우선과 무작위의 차이가 뚜렷하지 않다('+Math.round(Math.abs(dHubRnd))+'명 안팎). 위기가 친구 무리에 몰릴수록(군집도 높을수록) 핵 우선의 값이 커진다.';
+      html+='<div style="font-size:12px;color:#4a3a2a;margin-top:8px;line-height:1.6;border-top:1px solid #e0cda0;padding-top:6px">→ '+read+'<br><span class="ghint">무처치 대비로는 핵 우선이 누적 이탈을 약 '+Math.round(dHubNone)+'명 줄인다. 돌봄 효과 수치는 가정값이므로 방향과 크기로만 읽으라.</span></div>';
+      box.innerHTML=html;
+      drawCurves('sxcv',[none.map(function(p){return p.risk;}),rnd.map(function(p){return p.risk;}),hub.map(function(p){return p.risk;})],cols);
+    },30);
   }
 
   // ── 처방 엔진(약점 진단 + 검증된 개입 추천) ──
@@ -968,6 +1035,7 @@
   document.getElementById('pj-run').addEventListener('click',projectRun);
   document.getElementById('pj-advise').addEventListener('click',adviseRun);
   document.getElementById('pj-summary').addEventListener('click',showSummary);
+  document.getElementById('sx-run').addEventListener('click',spreadExperiment);
   function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
