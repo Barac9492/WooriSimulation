@@ -523,7 +523,7 @@
     var el=document.getElementById('conta');if(!el)return;
     if(!c){el.innerHTML='<div class="ghint">아직 시작 전이다. 한 주가 흐르면, 흔들리는 아이가 친구에게 어떻게 번지는지 여기서 살핀다.</div>';return;}
     var html='<div style="font-size:12px;line-height:1.7"><b style="color:#3b6d11">면역</b>(활발) '+c.R+' · <b style="color:#9a6c12">취약</b>(느슨) '+c.S+' · <b style="color:#a33232">감염</b>(위기) '+c.I+' &nbsp;<span class="ghint">출석이 흔들리는 모습을 전염에 빗대 본다.</span></div>';
-    if(c.I===0){html+='<div style="font-size:12px;color:#3b6d11;margin-top:5px">지금은 번지는 흔들림이 없다. 활발한 아이들이 공동체를 받치고 있다.</div>';el.innerHTML=html;return;}
+    if(c.I===0){html+='<div style="font-size:12px;color:#3b6d11;margin-top:5px">지금은 흔들리는 아이가 없다. 활발한 아이들이 공동체를 잘 받쳐 주고 있다.</div>';el.innerHTML=html;return;}
     var sp=c.S?Math.round(c.exposed/c.S*100):0,cl=Math.round(c.cluster*10)/10;
     html+='<div style="font-size:12px;line-height:1.7;margin-top:5px"><b class="tip" style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들리는 친구 곁에 있어 다음에 흔들리기 쉬운 학생이 얼마나 되나">전파압</b> &nbsp;흔들리는 친구를 곁에 둔 취약 학생 <b style="color:#a33232">'+c.exposed+'명</b>'+(c.S?'(취약군의 '+sp+'%)':'')+' · <span class="tip" style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들리는 아이들이 친구 무리에 얼마나 몰렸나. 1배면 흩어져 있고, 2배면 한 무리에 두 배로 몰려 번진다">군집도</span> <b>'+cl+'배</b></div>';
     html+='<div class="ghint" style="margin-top:3px">'+(c.cluster>=1.4?'흔들리는 아이들이 같은 친구 무리에 몰려 있다. 한 명씩 따로 챙기기보다 그 무리를 함께 챙기는 게 낫다.':c.cluster>=1.05?'흔들리는 아이들이 친구를 따라 조금씩 늘고 있다.':'흔들리는 아이들이 여기저기 흩어져 있다. 친구 따라 번지기보다 저마다 사정이 다르니 한 명씩 챙기면 된다.')+'</div>';
