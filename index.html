@@ -206,19 +206,28 @@
   </div>
 </div>
 
-<!-- ── 우리 교회 설정(공통) ──────────────────────── -->
+<!-- ── 우리 교회 현재 진단(공통) ─────────────────────── -->
 <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
-  <div class="gsec">우리 교회 설정 (시작 분포 · 한 부 기준)</div>
+  <div class="gsec">우리 교회 현재 진단 (지금 우리 고등부)</div>
+  <div class="ghint" style="margin-bottom:8px">갱신은 "지금 여기"에서 출발한다. 우리 부의 실제 모습을 있는 그대로 넣어라. 아래 추세 버튼으로 빠르게 잡은 뒤 손볼 수 있다.</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+    <span class="ghint" style="align-self:center">추세:</span>
+    <button class="gbtn" id="pre-decline" style="padding:4px 10px;font-size:12px">쇠퇴 중</button>
+    <button class="gbtn" id="pre-flat" style="padding:4px 10px;font-size:12px">정체</button>
+    <button class="gbtn" id="pre-grow" style="padding:4px 10px;font-size:12px">성장 중</button>
+  </div>
   <div class="grow"><span class="glab">전체 인원</span><input type="range" id="p-n" min="60" max="220" step="1" value="150"><span class="gval" id="v-p-n">150명</span></div>
+  <div class="grow"><span class="glab">현재 활발 비율</span><input type="range" id="p-active" min="0" max="100" step="1" value="55"><span class="gval" id="v-p-active">55%</span></div>
+  <div class="grow"><span class="glab">현재 위기 비율</span><input type="range" id="p-risk" min="0" max="100" step="1" value="12"><span class="gval" id="v-p-risk">12%</span></div>
   <div class="grow"><span class="glab">1학년 비중</span><input type="range" id="p-g1" min="0" max="100" step="1" value="40"><span class="gval" id="v-p-g1">40</span></div>
   <div class="grow"><span class="glab">2학년 비중</span><input type="range" id="p-g2" min="0" max="100" step="1" value="34"><span class="gval" id="v-p-g2">34</span></div>
   <div class="grow"><span class="glab">3학년 비중</span><input type="range" id="p-g3" min="0" max="100" step="1" value="26"><span class="gval" id="v-p-g3">26</span></div>
   <div class="grow"><span class="glab">모태신앙 비율</span><input type="range" id="p-mota" min="0" max="100" step="1" value="40"><span class="gval" id="v-p-mota">40%</span></div>
   <div class="grow"><span class="glab">비신앙 가정</span><input type="range" id="p-none" min="0" max="100" step="1" value="15"><span class="gval" id="v-p-none">15%</span></div>
-  <div class="grow"><span class="glab">코어 비율</span><input type="range" id="p-core" min="0" max="100" step="1" value="30"><span class="gval" id="v-p-core">30%</span></div>
+  <div class="grow"><span class="glab">코어(제자) 비율</span><input type="range" id="p-core" min="0" max="100" step="1" value="30"><span class="gval" id="v-p-core">30%</span></div>
   <div class="grow"><span class="glab">외톨이 비율</span><input type="range" id="p-loner" min="0" max="100" step="1" value="15"><span class="gval" id="v-p-loner">15%</span></div>
   <div id="comp" class="ghint" style="margin:8px 0 10px"></div>
-  <button class="gbtn" id="btn-gen" style="width:100%;background:#e0a52f;border-color:#9a6c12;color:#3a2a08">이 분포로 새로 생성</button>
+  <button class="gbtn" id="btn-gen" style="width:100%;background:#e0a52f;border-color:#9a6c12;color:#3a2a08">이 진단으로 시작</button>
 </div>
 
 </div>
@@ -245,14 +254,25 @@
   // ── 학생 생성(라이브·헤드리스 공유) ──
   function distFromDOM(){
     var mota=val('p-mota')/100,none=Math.min(val('p-none')/100,Math.max(0,1-val('p-mota')/100));
-    return {n:val('p-n'),g1:val('p-g1'),g2:val('p-g2'),g3:val('p-g3'),mota:mota,none:none,core:val('p-core')/100,loner:val('p-loner')/100};
+    return {n:val('p-n'),g1:val('p-g1'),g2:val('p-g2'),g3:val('p-g3'),mota:mota,none:none,core:val('p-core')/100,loner:val('p-loner')/100,active:val('p-active')/100,risk:val('p-risk')/100};
   }
   function spawn(D,grade,forceEng){
     var x=Math.random(),bg=x<D.mota?'mota':x<D.mota+D.none?'none':'normal';
     var core=Math.random()<D.core,loner=Math.random()<D.loner;
     var fam=bg==='mota'?rnd(0.7,0.95):bg==='none'?rnd(0.05,0.35):rnd(0.35,0.65);
-    var c=forceEng!=null?forceEng:(core?rnd(0.78,0.95):rnd(0.45,0.78));
-    return {grade:grade,bg:bg,core:core,loner:loner,commit:c,eng:c,faith:core?rnd(0.5,0.75):rnd(0.22,0.5),fam:fam,
+    var c,fa;
+    if(forceEng!=null){c=forceEng;fa=core?rnd(0.5,0.75):rnd(0.3,0.55);}
+    else{
+      // 현재 진단(활발/위기 비율)대로 시작 건강을 뽑는다. 코어는 활발 쪽, 외톨이·비신앙은 위기 쪽으로 기운다.
+      var wa=clamp((D.active!=null?D.active:0.55)+(core?0.25:0)+(loner?-0.08:0),0.02,0.97);
+      var wr=clamp((D.risk!=null?D.risk:0.12)+(loner?0.15:0)+(bg==='none'?0.08:0)-(core?0.15:0),0.02,0.97);
+      var wl=Math.max(0.02,1-wa-wr),tot=wa+wl+wr,y=Math.random()*tot;
+      if(y<wa){c=rnd(0.60,0.90);fa=rnd(0.45,0.75);}
+      else if(y<wa+wl){c=rnd(0.34,0.56);fa=rnd(0.30,0.55);}
+      else{c=rnd(0.12,0.32);fa=rnd(0.15,0.40);}
+      if(core)fa=clamp(fa+0.12,0,1);if(bg==='mota')fa=clamp(fa+0.06,0,1);if(bg==='none')fa=clamp(fa-0.10,0,1);
+    }
+    return {grade:grade,bg:bg,core:core,loner:loner,commit:c,eng:c,faith:fa,fam:fam,
       rSg:Math.random(),rMt:Math.random(),sermonAcc:0,retreatGlow:0,examPress:0,absent:0,left:false,dropped:false,sg:false,mentor:false,friends:[]};
   }
   function makeOne(grade,forceEng){var s=spawn(distFromDOM(),grade,forceEng);s.phase=Math.random()*6.28;s.seat=freeSeat();return s;}
@@ -267,9 +287,10 @@
     students.forEach(function(s){s.loner?link(s,students,0,1):link(s,students,3,5);});
     showComp();record();
   }
-  function showComp(){var a=students.filter(function(s){return !s.left;});var g=[0,0,0,0],bg={mota:0,normal:0,none:0},core=0,lon=0;
-    a.forEach(function(s){g[s.grade]++;bg[s.bg]++;if(s.core)core++;if(s.loner)lon++;});
-    document.getElementById('comp').innerHTML='구성 → 학년 1/2/3: <b>'+g[1]+'/'+g[2]+'/'+g[3]+'</b> · 모태 <b>'+bg.mota+'</b> 일반 <b>'+bg.normal+'</b> 비신앙 <b>'+bg.none+'</b> · 코어 <b>'+core+'</b> · 외톨이 <b>'+lon+'</b>';}
+  function showComp(){var a=students.filter(function(s){return !s.left;});var g=[0,0,0,0],bg={mota:0,normal:0,none:0},core=0,lon=0,ac=0,lo=0,rk=0,fsum=0;
+    a.forEach(function(s){g[s.grade]++;bg[s.bg]++;if(s.core)core++;if(s.loner)lon++;fsum+=s.faith;if(s.eng>=0.55)ac++;else if(s.eng>=0.3)lo++;else rk++;});
+    var n=a.length||1;
+    document.getElementById('comp').innerHTML='지금 진단 → 활발 <b style="color:#3b6d11">'+ac+'</b> 느슨 <b style="color:#9a6c12">'+lo+'</b> 위기 <b style="color:#a33232">'+rk+'</b> · 평균 신앙 <b>'+Math.round(fsum/n*100)+'%</b><br>구성 → 학년 1/2/3: <b>'+g[1]+'/'+g[2]+'/'+g[3]+'</b> · 모태 <b>'+bg.mota+'</b> 일반 <b>'+bg.normal+'</b> 비신앙 <b>'+bg.none+'</b> · 코어 <b>'+core+'</b> · 외톨이 <b>'+lon+'</b>';}
 
   // ── 일정 → 주간 효과 ──
   function fires(ev,w){if(w<ev.start)return false;if(w===ev.start)return true;return ev.repeat>0&&(w-ev.start)%ev.repeat===0;}
@@ -740,7 +761,7 @@
   document.getElementById('btn-runplan').addEventListener('click',function(){generate();renderTimeline();setMode('observe');window.scrollTo(0,0);});
 
   // ── 입력 동기화 ──
-  var units={'s-sg':'%','s-mt':'%','s-tc':'','s-in':'','s-speed':'%','s-daracbang':'%','p-n':'명','p-g1':'','p-g2':'','p-g3':'','p-mota':'%','p-none':'%','p-core':'%','p-loner':'%','ev-attend':'%','ev-intensity':'%'};
+  var units={'s-sg':'%','s-mt':'%','s-tc':'','s-in':'','s-speed':'%','s-daracbang':'%','p-n':'명','p-active':'%','p-risk':'%','p-g1':'','p-g2':'','p-g3':'','p-mota':'%','p-none':'%','p-core':'%','p-loner':'%','ev-attend':'%','ev-intensity':'%'};
   Object.keys(units).forEach(function(id){var el=document.getElementById(id),out=document.getElementById('v-'+id);el.addEventListener('input',function(){out.textContent=this.value+units[id];if(id.indexOf('p-')===0)showComp();});});
   var EXPLAIN={
     sermon:'설교 시리즈는 초점이 닿는 학생의 신앙을 시차를 두고 서서히 끌어올린다. 양육형은 코어·소그룹원, 전도형은 구도자(낮은 신앙·비신앙 가정), 회복형은 출석이 흔들리는 학생에게 닿는다. 길수록 누적이 깊어지고 끝난 뒤에도 한동안 이어진다.',
@@ -772,6 +793,11 @@
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
   document.getElementById('btn-gen').addEventListener('click',function(){generate();renderSched();});
+  function setSlider(id,v){var e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input'));}
+  function applyPreset(active,risk,dara){setSlider('p-active',active);setSlider('p-risk',risk);setSlider('s-daracbang',dara);}
+  document.getElementById('pre-decline').addEventListener('click',function(){applyPreset(35,30,30);});
+  document.getElementById('pre-flat').addEventListener('click',function(){applyPreset(50,18,50);});
+  document.getElementById('pre-grow').addEventListener('click',function(){applyPreset(68,8,70);});
   document.getElementById('btn-add').addEventListener('click',function(){
     var t=document.getElementById('ev-type').value,start=Math.max(1,val('ev-start'));
     var ev={id:eid++,type:t,start:start};
@@ -786,7 +812,7 @@
   document.getElementById('cmp-run').addEventListener('click',compareRun);
 
   // ── 계획 저장·불러오기(localStorage) ──
-  var PLAN_KEY='woori_plans_v1',PLAN_SLIDERS=['p-n','p-g1','p-g2','p-g3','p-mota','p-none','p-core','p-loner','s-sg','s-mt','s-tc','s-in','s-speed','s-daracbang'];
+  var PLAN_KEY='woori_plans_v1',PLAN_SLIDERS=['p-n','p-active','p-risk','p-g1','p-g2','p-g3','p-mota','p-none','p-core','p-loner','s-sg','s-mt','s-tc','s-in','s-speed','s-daracbang'];
   function loadPlans(){try{return JSON.parse(localStorage.getItem(PLAN_KEY))||{};}catch(e){return {};}}
   function savePlans(p){try{localStorage.setItem(PLAN_KEY,JSON.stringify(p));}catch(e){}}
   function refreshPlanList(sel){var p=loadPlans(),names=Object.keys(p).sort(),el=document.getElementById('plan-list');
