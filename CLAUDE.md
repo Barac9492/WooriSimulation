@@ -82,7 +82,9 @@
 - `commit`(느린 헌신 0~1) : 사역이 천천히 쌓아 올리는 바탕. 친구 효과도 이 값 기준.
 - `eng`(표시 출석) = `clamp(commit + 0.20*retreatGlow - examPress)`. 화면 지표·이탈 판정은 이 값으로 한다.
 
-학생 속성: `grade`, `bg`(mota/normal/none), `core`, `loner`, `commit`, `eng`, `faith`(0~1), `fam`(가정 신앙 0~1), `sg`, `mentor`, `sermonAcc`(설교 양육 누적), `retreatGlow`(수련회 여운), `examPress`(시험 일시 압박), `friends`, `left`, `dropped`(출석 바닥으로 이탈했는지 — 졸업과 구분해 취약 분석 이탈률에 쓴다).
+학생 속성: `grade`, `bg`(mota/normal/none), `core`, `loner`, `commit`, `eng`, `faith`(0~1), `word`·`holy`·`belong`(신앙의 갈래 말씀·거룩·소속 0~1), `fam`(가정 신앙 0~1), `sg`, `mentor`, `sermonAcc`(설교 누적), `retreatGlow`(수련회 여운), `examPress`(시험 일시 압박), `friends`, `left`, `dropped`(출석 바닥으로 이탈했는지 — 졸업과 구분해 취약 분석 이탈률에 쓴다).
+
+**신앙의 갈래(다면 효과)** : `faith`(종합)와 별개로 `word`(말씀)·`holy`(거룩)·`belong`(소속) 세 갈래가 있다. 매주 각 갈래는 `faith` 쪽으로 천천히 모이되(`0.05*(faith-갈래)`), 설교 결이 갈래마다 다르게 기울인다. **`SERMON_FX`** 표가 결마다 `{eng, faith, word, holy, belong}` 효과를 정의한다 — 여기에 트레이드오프가 산다. `faith`와 생태계 계수는 건드리지 않고(안전), 갈래는 그 위에 얹힌 탐색 렌즈다. 관찰의 "신앙의 결" 줄과 "이번 주 효과"의 `결` 줄에 평균·델타가 뜬다.
 
 매주 `commit` 변화량(헌신에 쌓이는 느린 힘):
 ```
@@ -106,7 +108,7 @@ commit += speed * force      // speed=변화 속도 슬라이더(0.2~1.0, 기본
 
 **수련회(상세)** : 일정에 `nights`(1·2·3박), `attendRate`, `intensity`. `factor = (0.45 + 0.22*nights) * (0.5 + 0.6*intensity)`. 그 주에 학생은 `attendRate`(코어·소그룹원 ×1.3) 확률로 참가하고, 참가자만 `retreatGlow = max(현재, factor)`(일시 급등)와 `commit += 0.02*factor`(작은 영속 상승)를 받는다. `retreatGlow`는 매주 `×0.85`로 식는다. 비참가자는 못 받아 격차가 생긴다.
 
-**설교 시리즈** : 일정에 `focus`(nurture/evangel/recovery)와 `weeks`. 즉효가 아니라 시차를 두고 누적된다. 초점이 닿는 학생(양육→코어·소그룹·신앙≥0.5, 전도→비신앙 가정·신앙<0.4, 회복→출석<0.4)에게 `sermonAcc`가 매주 `+= (1-acc)*0.15`로 차오르고, 닿지 않으면 `×0.92`로 식는다. 효과는 누적에 비례해 신앙 `+0.022*acc`, 출석(force) `+(초점별 0.004~0.012)*acc`. 시리즈가 끝나도 여운이 남는다.
+**설교 시리즈** : 일정에 `focus`와 `weeks`. 초점은 여섯 — 양육·전도·회복·**말씀·거룩·은혜**(`SERMON_FOCUS`). 즉효가 아니라 시차를 두고 `sermonAcc`(매주 `+=(1-acc)*0.15`, 안 닿으면 `×0.92`)에 비례해 누적된다. 효과는 결마다 다르다(`SERMON_FX`, 트레이드오프): **거룩·순결형**은 거룩을 크게 올리되 출석(force)·소속을 누르고, **말씀형**은 말씀을 깊게 올리되 출석을 살짝 누르며, **은혜·위로형**은 소속·출석을 올리되 거룩은 더디다. 양육·전도·회복형은 신앙(`+0.022*acc`)과 출석을 함께 올린다(기존과 동일). 시리즈가 끝나도 여운이 남는다.
 
 ### 3층 교회 생태계 (중고등부는 진공이 아니다)
 

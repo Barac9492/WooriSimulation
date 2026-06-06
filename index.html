@@ -117,6 +117,7 @@
     <div class="gcard"><div class="l">누적 이탈</div><div class="v" id="m-drop">0</div></div>
     <div class="gcard"><div class="l">평균 신앙</div><div class="v" id="m-faith">0%</div></div>
   </div>
+  <div id="dims" class="gpanel" style="padding:6px 10px;margin-bottom:8px;font-size:12px;color:#6b5538;line-height:1.6"></div>
   <div id="weekfx" class="gpanel" style="padding:6px 10px;margin-bottom:8px;font-size:12px;line-height:1.6"></div>
   <div id="seg-live" class="gpanel" style="padding:7px 10px;margin-bottom:8px;font-size:12px;color:#6b5538;line-height:1.6"></div>
   <div class="gpanel" style="padding:7px 10px;margin-bottom:8px">
@@ -198,7 +199,7 @@
     <input type="number" id="ev-start" min="1" max="200" value="4" style="width:54px">
     <span style="font-size:12px;color:#6b5538">주차</span>
     <span id="fld-sermon" style="display:flex;gap:6px;align-items:center">
-      <select id="ev-focus"><option value="nurture">양육형</option><option value="evangel">전도형</option><option value="recovery">회복형</option></select>
+      <select id="ev-focus"><option value="nurture">양육형</option><option value="evangel">전도형</option><option value="recovery">회복형</option><option value="word">말씀형</option><option value="holiness">거룩·순결형</option><option value="grace">은혜·위로형</option></select>
       <input type="number" id="ev-weeks" min="1" max="52" value="8" style="width:48px"><span style="font-size:12px;color:#6b5538">주간</span>
     </span>
     <span id="fld-retreat" hidden style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -266,7 +267,16 @@
   // 중3→고1 전환 절벽: 한국 교회 다음세대 이탈의 큰 지점. 헌신이 약하고 외톨이·비신앙일수록 떠나기 쉽다.
   function cliffProb(s){return clamp((0.55-s.commit)+(s.loner?0.15:0)+(s.bg==='none'?0.10:0)-(s.core?0.25:0),0,0.7);}
   var EVENTS={retreat:{label:'수련회',color:'#5fb04e'},outreach:{label:'전도·친구초청',color:'#378add'},smallgroup:{label:'소그룹 집중주간',color:'#7a5cd0'},service:{label:'봉사·단기선교',color:'#1d9e75'},exam:{label:'시험기간',color:'#d65a4f'},sooneung:{label:'수능(고3)',color:'#8a0f1a'},sermon:{label:'설교 시리즈',color:'#c9852b'}};
-  var SERMON_FOCUS={nurture:{label:'양육형',color:'#c9852b'},evangel:{label:'전도형',color:'#378add'},recovery:{label:'회복형',color:'#9a5bd0'}};
+  var SERMON_FOCUS={nurture:{label:'양육형',color:'#c9852b'},evangel:{label:'전도형',color:'#378add'},recovery:{label:'회복형',color:'#9a5bd0'},word:{label:'말씀형',color:'#7a5c38'},holiness:{label:'거룩·순결형',color:'#6b4a8a'},grace:{label:'은혜·위로형',color:'#2e8b8b'}};
+  // 설교 결마다 다른 효과(트레이드오프). eng=출석힘, faith=신앙, word·holy·belong=영적 갈래. seek=구도자 추가 출석 페널티.
+  var SERMON_FX={
+    nurture:{eng:0.004,faith:0.022,word:0.012,holy:0.008,belong:0.010,tgt:function(s){return s.core||s.sg||s.faith>=0.5;}},
+    evangel:{eng:0.010,faith:0.022,word:0.004,holy:0.002,belong:0.012,tgt:function(s){return s.bg==='none'||s.faith<0.4;}},
+    recovery:{eng:0.012,faith:0.022,word:0.004,holy:0.004,belong:0.012,tgt:function(s){return s.eng<0.4;}},
+    word:{eng:-0.004,faith:0.018,word:0.026,holy:0.008,belong:0.000,tgt:function(s){return s.faith>=0.4||s.core||s.sg;}},
+    holiness:{eng:-0.012,faith:0.010,word:0.006,holy:0.028,belong:-0.010,seek:-0.010,tgt:function(s){return true;}},
+    grace:{eng:0.014,faith:0.016,word:0.004,holy:0.000,belong:0.024,tgt:function(s){return true;}}
+  };
   var CHURCH_EVENTS={senior:{label:'담임 말씀 시리즈',color:'#b5651d'},allretreat:{label:'전교인 수련회',color:'#2e8b57'},revival:{label:'부흥회',color:'#c0392b'},season:{label:'절기',color:'#8e7cc3'}};
   var seats=[];for(var r=0;r<12;r++)for(var c=0;c<15;c++)seats.push({x:14+c*20,y:36+r*13,taken:false});
   var students=[],week=0,dropouts=0,playing=false,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null;
@@ -297,6 +307,7 @@
       if(core)fa=clamp(fa+0.12,0,1);if(bg==='mota')fa=clamp(fa+0.06,0,1);if(bg==='none')fa=clamp(fa-0.10,0,1);
     }
     return {grade:grade,bg:bg,core:core,loner:loner,commit:c,eng:c,faith:fa,fam:fam,
+      word:clamp(fa+rnd(-0.08,0.08),0,1),holy:clamp(fa+rnd(-0.10,0.06),0,1),belong:clamp((loner?fa-0.15:fa+0.06)+rnd(-0.08,0.08),0,1),
       rSg:Math.random(),rMt:Math.random(),sermonAcc:0,retreatGlow:0,examPress:0,absent:0,left:false,dropped:false,sg:false,mentor:false,friends:[]};
   }
   function makeOne(grade,forceEng){var s=spawn(distFromDOM(),grade,forceEng);s.phase=Math.random()*6.28;s.seat=freeSeat();return s;}
@@ -365,14 +376,11 @@
     if(f.service&&(s.core||s.sg))force+=0.04;
     if(f.outreach)force+=0.03;
     if(ctx.revival)force+=0.05;
-    // 설교 시리즈: 초점이 닿는 학생에게 양육이 서서히 누적, 시차를 두고 효과가 커지고 끝난 뒤에도 천천히 식는다
-    var nurtured=false,engB=0;
-    ctx.sermon.forEach(function(fo){
-      var m=(fo==='nurture'&&(s.core||s.sg||s.faith>=0.5))||(fo==='evangel'&&(s.bg==='none'||s.faith<0.4))||(fo==='recovery'&&s.eng<0.4);
-      if(m){nurtured=true;engB+=(fo==='recovery')?0.012:(fo==='evangel')?0.010:0.004;}
-    });
-    if(nurtured)s.sermonAcc+=(1-s.sermonAcc)*0.15;else s.sermonAcc*=0.92;if(s.sermonAcc<0.002)s.sermonAcc=0;
-    force+=engB*s.sermonAcc;
+    // 설교 시리즈: 결마다 다른 효과가 시차를 두고 누적. 거룩·말씀형은 출석을 누르고(트레이드오프), 은혜형은 출석·소속을 올린다.
+    var matched=false,dEng=0,dFa=0,dW=0,dH=0,dB=0;
+    ctx.sermon.forEach(function(fo){var E=SERMON_FX[fo];if(E&&E.tgt(s)){matched=true;dEng+=E.eng+((E.seek&&(s.bg==='none'||s.faith<0.4))?E.seek:0);dFa+=E.faith;dW+=E.word;dH+=E.holy;dB+=E.belong;}});
+    if(matched)s.sermonAcc+=(1-s.sermonAcc)*0.15;else s.sermonAcc*=0.92;if(s.sermonAcc<0.002)s.sermonAcc=0;
+    force+=dEng*s.sermonAcc;
     // 느린 헌신: 변화 속도가 낮을수록 천천히 움직인다
     s.commit=clamp(s.commit+sp*force,0,1);
     // 수련회: 참가자만 일시 급등 + 작은 영속 상승, 몇 주 지속
@@ -389,8 +397,13 @@
     s.eng=clamp(s.commit+0.20*s.retreatGlow-s.examPress,0,1);
     s.absent=s.eng<0.12?s.absent+1:Math.max(0,s.absent-1);
     // 신앙(느리게)
-    var fd=(s.eng>0.35?0.014:-0.006)+(s.sg?0.012:0)*ctx.tEff+(s.mentor?0.015:0)*ctx.tEff+0.020*(s.fam-0.5)+(ctx.churchClimate!=null?0.015*(ctx.churchClimate-0.5):0)+0.022*s.sermonAcc+(ctx.revival?0.02:0)+(ctx.allRetreat?0.03:0);
+    var fd=(s.eng>0.35?0.014:-0.006)+(s.sg?0.012:0)*ctx.tEff+(s.mentor?0.015:0)*ctx.tEff+0.020*(s.fam-0.5)+(ctx.churchClimate!=null?0.015*(ctx.churchClimate-0.5):0)+dFa*s.sermonAcc+(ctx.revival?0.02:0)+(ctx.allRetreat?0.03:0);
     s.faith=clamp(s.faith+sp*fd,0,1);
+    // 신앙의 갈래(말씀·거룩·소속): 신앙 쪽으로 천천히 모이되, 설교 결이 갈래마다 다르게 기울인다
+    var frC=fr.length;
+    s.word=clamp(s.word+sp*(0.05*(s.faith-s.word)+dW*s.sermonAcc),0,1);
+    s.holy=clamp(s.holy+sp*(0.05*(s.faith-s.holy)+dH*s.sermonAcc),0,1);
+    s.belong=clamp(s.belong+sp*(0.05*(s.faith-s.belong)+dB*s.sermonAcc+(s.sg?0.004:0)+(frC>=2?0.003:frC===0?-0.005:0)),0,1);
     // 가정신앙(fam)이 부모 다락방 활성도 쪽으로 이동. 모태는 높게, 비신앙 가정은 낮게 머문다.
     if(ctx.parentVitality!=null){var famT=clamp(ctx.parentVitality+(s.bg==='mota'?0.12:s.bg==='none'?-0.18:0),0,1);s.fam=clamp(s.fam+sp*(famT-s.fam)*0.10,0,1);}
   }
@@ -424,7 +437,9 @@
       var lon=risky.filter(function(s){return s.loner;}).length,non=risky.filter(function(s){return s.bg==='none';}).length,ncore=risky.filter(function(s){return !s.core;}).length;
       sl.innerHTML='<b style="color:#a33232">위기군 '+risky.length+'명</b> 누가? &nbsp;중등 <b>'+mid+'</b> 고등 <b>'+high+'</b>(고3 '+go3+') · 외톨이 <b>'+lon+'</b> · 비신앙 가정 <b>'+non+'</b> · 비코어 <b>'+ncore+'</b>';}
       else sl.innerHTML='<span style="color:#3b6d11">지금 위기군(출석 바닥)이 없다.</span> 어떤 학생이 흔들리는지 여기서 바로 짚는다.';}
-    var cur={n:a.length,active:ac,loose:lo,risk:a.length-ac-lo,drop:dropouts,f:f};
+    var n2=a.length||1,aw=0,ah=0,ab=0;a.forEach(function(s){aw+=s.word;ah+=s.holy;ab+=s.belong;});aw/=n2;ah/=n2;ab/=n2;
+    var cur={n:a.length,active:ac,loose:lo,risk:a.length-ac-lo,drop:dropouts,f:f,word:aw,holy:ah,belong:ab};
+    var dm=document.getElementById('dims');if(dm)dm.innerHTML='<b style="color:#6b5538">신앙의 결(평균)</b> &nbsp;말씀 <b style="color:#7a5c38">'+Math.round(aw*100)+'%</b> · 거룩 <b style="color:#6b4a8a">'+Math.round(ah*100)+'%</b> · 소속 <b style="color:#2e8b8b">'+Math.round(ab*100)+'%</b>';
     updateWeekPanel(week);updateWeekFx(cur,prevMetrics);updatePreview();updateEco();prevMetrics=cur;
     updateStudCard();updateCareList();}
   // 이번 주 작동 중인 입력(이벤트·설교·수련회·시험)을 칩으로
@@ -454,7 +469,9 @@
     var el=document.getElementById('weekfx');if(!el)return;
     if(!prev){el.innerHTML='<span style="color:#8a755a">시작 상태. 한 주가 흐르면 여기에 그 주의 효과(지난주 대비)가 나온다.</span>';return;}
     var d=function(lab,c,p,goodUp,pct){var v=c-p;if(Math.abs(v)<(pct?0.005:0.5))return '<span style="color:#9a8e75">'+lab+' 0'+(pct?'%p':'')+'</span>';var g=goodUp?v>0:v<0;return '<span style="color:'+(g?'#3b6d11':'#a33232')+'">'+lab+' '+(v>0?'+':'')+(pct?Math.round(v*100)+'%p':Math.round(v))+'</span>';};
-    el.innerHTML='<b style="color:#6b5538">이번 주 효과(지난주 대비)</b> &nbsp;'+[d('활발',cur.active,prev.active,true),d('위기',cur.risk,prev.risk,false),d('이탈',cur.drop,prev.drop,false),d('신앙',cur.f,prev.f,true,true)].join('<span style="color:#cbb98f"> · </span>');
+    var top=[d('활발',cur.active,prev.active,true),d('위기',cur.risk,prev.risk,false),d('이탈',cur.drop,prev.drop,false),d('신앙',cur.f,prev.f,true,true)].join('<span style="color:#cbb98f"> · </span>');
+    var facets=(cur.word!=null&&prev.word!=null)?('<br><span style="color:#8a755a">결</span> '+[d('말씀',cur.word,prev.word,true,true),d('거룩',cur.holy,prev.holy,true,true),d('소속',cur.belong,prev.belong,true,true)].join('<span style="color:#cbb98f"> · </span>')):'';
+    el.innerHTML='<b style="color:#6b5538">이번 주 효과(지난주 대비)</b> &nbsp;'+top+facets;
   }
   function updatePreview(){
     var el=document.getElementById('step-next');if(!el)return;var ins=activeInputs(week+1);
@@ -817,7 +834,7 @@
   var units={'s-sg':'%','s-mt':'%','s-tc':'','s-in':'','s-speed':'%','s-daracbang':'%','p-n':'명','p-active':'%','p-risk':'%','p-mid':'%','p-high':'%','p-mota':'%','p-none':'%','p-core':'%','p-loner':'%','ev-attend':'%','ev-intensity':'%'};
   Object.keys(units).forEach(function(id){var el=document.getElementById(id),out=document.getElementById('v-'+id);el.addEventListener('input',function(){out.textContent=this.value+units[id];if(id.indexOf('p-')===0)showComp();});});
   var EXPLAIN={
-    sermon:'설교 시리즈는 초점이 닿는 학생의 신앙을 시차를 두고 서서히 끌어올린다. 양육형은 코어·소그룹원, 전도형은 구도자(낮은 신앙·비신앙 가정), 회복형은 출석이 흔들리는 학생에게 닿는다. 길수록 누적이 깊어지고 끝난 뒤에도 한동안 이어진다.',
+    sermon:'설교는 결마다 다르게 작동한다(트레이드오프). 양육·전도·회복형은 신앙과 출석을 함께 올린다. 말씀형은 말씀을 깊게 올리되 출석은 살짝 누른다. 거룩·순결형은 거룩을 크게 올리지만 출석·소속이 내려간다(도전의 값). 은혜·위로형은 소속·출석을 올리되 거룩은 더디다. 효과는 시차를 두고 누적되고 끝난 뒤에도 이어진다.',
     retreat:'수련회는 참가한 학생에게만 큰 힘이 되고 몇 주 동안 지속된다. 길고(박수) 강할수록 효과와 지속이 커지지만, 참가하지 못한 학생과의 격차도 함께 벌어진다.',
     outreach:'전도·친구초청 주간에는 새 친구가 유입되고, 기존 학생의 출석도 잠깐 오른다.',
     smallgroup:'소그룹 집중주간은 소그룹에 속한 학생에게 집중적으로 작용한다.',
