@@ -473,8 +473,9 @@
     var loners=a.filter(function(s){return s.loner&&!s.sg;}).length;
     var noneA=a.filter(function(s){return s.bg==='none';}).length,noneR=risk.filter(function(s){return s.bg==='none';}).length;
     var nextSoo=weeksUntil('sooneung'),nextExam=weeksUntil('exam'),toYE=WEEKS_PER_YEAR-(week%WEEKS_PER_YEAR);
-    if(risky/n>=0.18)items.push({u:2,t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)이 두껍다 → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
-    else if(risky>0)items.push({u:1,t:'위기군 '+risky+'명 → 돌봄 명단 확인, 흔들리는 학생 안부.'});
+    var trend='';if(renderActions._lr!=null&&week>1){var dv=risky-renderActions._lr;if(dv>=2)trend=' <span style="color:#a33232">▲ 늘고 있다</span>';else if(dv<=-2)trend=' <span style="color:#3b6d11">▼ 줄고 있다</span>';}renderActions._lr=risky;
+    if(risky/n>=0.18)items.push({u:2,t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)'+trend+' → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
+    else if(risky>0)items.push({u:1,t:'위기군 '+risky+'명'+trend+' → 돌봄 명단 확인, 흔들리는 학생 안부.'});
     if(loners>=Math.max(3,n*0.08))items.push({u:2,t:'소그룹 밖 외톨이 <b>'+loners+'명</b> → 또래·소그룹에 의도적으로 연결(가장 큰 이탈 위험).'});
     if(nextSoo!=null&&nextSoo<=4)items.push({u:2,t:'수능 '+(nextSoo===0?'<b>진행 중</b>':'<b>'+nextSoo+'주 뒤</b>')+' → 고3 케어 집중, 수능 후 복귀 환영 준비.'});
     if(toYE<=4&&week>0){var shaky3=a.filter(function(s){return s.grade===3&&s.commit<0.5;}).length;if(shaky3>0)items.push({u:2,t:'곧 중3→고1 전환('+toYE+'주 뒤) → 흔들리는 중3 <b>'+shaky3+'명</b>을 미리 관계로 붙들기(전환 절벽).'});}
