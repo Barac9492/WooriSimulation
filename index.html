@@ -95,8 +95,8 @@
   <!-- 이번 주: 한 주씩 진행 + 그 주 입력 -->
   <div class="gpanel" style="padding:9px 12px;margin-bottom:10px">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-      <button class="gbtn" id="btn-step" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">다음 주 ▶</button>
-      <button class="gbtn" id="btn-play">▶ 자동재생</button>
+      <button class="gbtn" id="btn-step" title="스페이스 또는 → 키로도" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">다음 주 ▶</button>
+      <button class="gbtn" id="btn-play" title="P 키로도">▶ 자동재생</button>
       <span style="flex:1"></span>
       <span style="font-size:12px;color:#6b5538"><b class="gnum" id="hud-week">0</b>주차 · <b class="gnum" id="hud-year">1</b>년차 <b class="gnum" id="hud-term">1</b>학기</span>
       <span class="ghint">속도</span>
@@ -925,6 +925,12 @@
   function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
+  // 키보드: 스페이스/→ = 다음 주, P = 재생·멈춤 (입력창 포커스 땐 무시)
+  document.addEventListener('keydown',function(e){
+    if(mode!=='observe')return;var t=e.target.tagName;if(t==='INPUT'||t==='SELECT'||t==='TEXTAREA'||t==='BUTTON')return;
+    if(e.key===' '||e.key==='ArrowRight'){e.preventDefault();if(playing)setPlay(false);step();}
+    else if(e.key==='p'||e.key==='P'){e.preventDefault();setPlay(!playing);}
+  });
   document.getElementById('btn-gen').addEventListener('click',function(){generate();renderSched();});
   function setSlider(id,v){var e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input'));}
   function applyPreset(active,risk,dara){setSlider('p-active',active);setSlider('p-risk',risk);setSlider('s-daracbang',dara);}
