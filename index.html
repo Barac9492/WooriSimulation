@@ -53,6 +53,15 @@
   .slab b{min-width:42px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
   .hint{font-size:11.5px;color:var(--mut);line-height:1.6}
   .preset{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
+  .diag-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px}
+  .mini{background:#f7f9fc;border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+  .mini-h{font-size:12px;color:var(--mut);margin-bottom:4px;font-weight:600}
+  .rt{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  canvas#curve{width:100%;height:auto}
+  .map-h{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:600;margin:4px 0 5px;gap:8px;flex-wrap:wrap}
+  .netcanvas{width:100%;height:auto;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;display:block}
+  .hold{font-size:12.5px;padding:5px 0;border-top:1px solid var(--line)}
+  @media(max-width:560px){.diag-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -74,7 +83,22 @@
     <div class="sec-h"><span class="dot covid"></span><h2>① 지금 진단 — 전염 지도</h2></div>
     <p class="muted">한 아이가 흔들리면 친구도 흔들린다. 지금 우리 부가 어떤 상태인지 본다.</p>
     <div class="stats" id="stat-row"></div>
-    <div id="diag-body" class="placeholder">번짐 곡선 · 한 명이 몇 명에게 번지나(Rₜ) · 관계 지도 — 다음 단계에서</div>
+    <div id="diag-body">
+      <div class="diag-grid">
+        <div class="mini">
+          <div class="mini-h">번짐세 — 한 명 주변에서 번지는 속도</div>
+          <div id="rt-val" class="rt">—</div>
+          <div id="rt-note" class="hint"></div>
+        </div>
+        <div class="mini">
+          <div class="mini-h">주마다 흔들리는 아이</div>
+          <canvas id="curve" width="300" height="90"></canvas>
+        </div>
+      </div>
+      <div class="map-h"><span>관계 지도 — 점은 아이, 선은 친구, 색은 상태</span><span id="map-leg" class="hint"></span></div>
+      <canvas id="net" width="600" height="300" class="netcanvas"></canvas>
+      <div id="hold-list"></div>
+    </div>
   </section>
 
   <section class="card">
@@ -358,11 +382,12 @@
     seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];churchClimate=0.5;parentVitality=0.5;
     var N=val('p-n');for(var i=0;i<N;i++)students.push(makeOne(pickGrade()));
     students.forEach(function(s){s.loner?link(s,students,0,1):link(s,students,3,5);});
-    render();
+    weekInc=0;layoutNet();render();
   }
   function step(){
     week++;
     var active=students.filter(function(s){return !s.left;});
+    active.forEach(function(s){s._wasW=(s.eng<0.3);});
     var sg=val('s-sg')/100,mt=val('s-mt')/100,tc=val('s-tc'),intake=val('s-in'),sp=val('s-speed')/100;
     var tEff=Math.min(1,(tc*8)/Math.max(1,active.length));
     var we=weekEffects(schedule,week);
@@ -370,12 +395,14 @@
     churchClimate=cu.cc;parentVitality=cu.pv;
     var ctx={arr:students,sgFrac:sg,mtFrac:mt,tEff:tEff,speed:sp,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:parentVitality,churchClimate:churchClimate,allRetreat:cu.allRetreat,revival:cu.revival};lastCtx=ctx;
     active.forEach(function(s){tick(s,ctx);});
-    if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var i=0;i<4;i++){var ns=makeOne(Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){ns.friends.push(students.indexOf(inv[Math.floor(Math.random()*inv.length)]));}students.push(ns);}}
+    if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var i=0;i<4;i++){var ns=makeOne(Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){ns.friends.push(students.indexOf(inv[Math.floor(Math.random()*inv.length)]));}ns.mx=Math.random();ns.my=Math.random();students.push(ns);}}
     students.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}});
+    weekInc=students.filter(function(s){return !s.left&&s.eng<0.3&&!s._wasW;}).length;
     if(week%WEEKS_PER_YEAR===0){students.forEach(function(s){if(!s.left){var was=s.grade;s.grade++;
         if(s.grade>MAX_GRADE){s.left=true;if(s.seat>=0)seats[s.seat].taken=false;}
         else if(was===3&&Math.random()<cliffProb(s)){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}}});
-      for(var j=0;j<intake;j++){var n2=makeOne(1);var p=students.filter(function(o){return !o.left&&o.grade<=2;});n2.loner?link(n2,p,0,1):link(n2,p,3,5);students.push(n2);}}
+      for(var j=0;j<intake;j++){var n2=makeOne(1);var p=students.filter(function(o){return !o.left&&o.grade<=2;});n2.loner?link(n2,p,0,1):link(n2,p,3,5);n2.mx=Math.random();n2.my=Math.random();students.push(n2);}
+      layoutNet();}
     render();
   }
   function beliefIndex(a){return a.length?Math.round(a.reduce(function(x,s){return x+(s.commit+s.faith)/2;},0)/a.length*100):0;}
@@ -384,11 +411,52 @@
     var a=students.filter(function(s){return !s.left;});
     var ac=a.filter(function(s){return s.eng>=0.55;}).length,lo=a.filter(function(s){return s.eng>=0.3&&s.eng<0.55;}).length,ri=a.length-ac-lo;
     var f=a.length?a.reduce(function(x,s){return x+s.faith;},0)/a.length:0,idx=beliefIndex(a);
-    hist.push({n:a.length,active:ac,loose:lo,risk:ri,f:f,idx:idx});if(hist.length>240)hist.shift();
+    hist.push({n:a.length,active:ac,loose:lo,risk:ri,f:f,idx:idx,inc:weekInc});if(hist.length>240)hist.shift();
     document.getElementById('wk').textContent=week;
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
+    updateDiag();
+  }
+
+  // ── ① 전염 지도 (COVID 렌즈) ──
+  var weekInc=0;
+  // 관계망 force 레이아웃: 점 위치를 한 번 잡아 둔다(생성·매년). 친구로 끌어당기고 서로 밀어낸다.
+  function layoutNet(){
+    var a=students.filter(function(s){return !s.left;});if(!a.length)return;
+    a.forEach(function(s){if(s.mx==null){s.mx=Math.random();s.my=Math.random();}});
+    for(var it=0;it<70;it++){
+      a.forEach(function(p){var fx=0,fy=0;for(var j=0;j<a.length;j++){var q=a[j];if(q===p)continue;var dx=p.mx-q.mx,dy=p.my-q.my,d2=dx*dx+dy*dy+0.0008,f=0.00016/d2;fx+=dx*f;fy+=dy*f;}p._fx=fx;p._fy=fy;});
+      a.forEach(function(p){friendObjs(p,students).forEach(function(q){if(q.mx==null)return;p._fx+=(q.mx-p.mx)*0.02;p._fy+=(q.my-p.my)*0.02;});});
+      a.forEach(function(p){p._fx+=(0.5-p.mx)*0.01;p._fy+=(0.5-p.my)*0.01;p.mx=Math.min(0.99,Math.max(0.01,p.mx+p._fx));p.my=Math.min(0.97,Math.max(0.03,p.my+p._fy));});
+    }
+  }
+  // 번짐세(재생산지수 비슷): 최근 2주 새로 흔들린 아이 / 그 앞 2주. 1 넘으면 번지는 중(코로나 Rₜ 비유).
+  function rtCalc(){var h=hist,n=h.length;if(n<5)return null;var a=(h[n-1].inc||0)+(h[n-2].inc||0),b=(h[n-3].inc||0)+(h[n-4].inc||0);if(b<1)return a<1?0:2.5;return Math.min(3,a/b);}
+  function drawCurve(){var cv=document.getElementById('curve');if(!cv)return;var g=cv.getContext('2d');g.clearRect(0,0,300,90);if(hist.length<2)return;var mx=1;hist.forEach(function(h){if(h.risk>mx)mx=h.risk;});
+    g.strokeStyle='#e0584a';g.lineWidth=2;g.beginPath();hist.forEach(function(h,i){var x=i/(hist.length-1)*296+2,y=86-(h.risk/mx)*78;i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();}
+  function drawNet(c){var cv=document.getElementById('net');if(!cv)return;var g=cv.getContext('2d'),W=600,H=300;g.clearRect(0,0,W,H);
+    var a=students.filter(function(s){return !s.left&&s.mx!=null;});
+    g.strokeStyle='rgba(120,130,150,0.13)';g.lineWidth=1;
+    a.forEach(function(s){friendObjs(s,students).forEach(function(q){if(q.mx==null)return;g.beginPath();g.moveTo(s.mx*W,s.my*H);g.lineTo(q.mx*W,q.my*H);g.stroke();});});
+    g.strokeStyle='rgba(220,38,38,0.45)';
+    a.forEach(function(s){if(s.eng>=0.3)return;friendObjs(s,students).forEach(function(q){if(q.mx==null||q.eng<0.3)return;g.beginPath();g.moveTo(s.mx*W,s.my*H);g.lineTo(q.mx*W,q.my*H);g.stroke();});});
+    a.forEach(function(s){g.fillStyle=s.eng>=0.55?'#16a34a':s.eng>=0.3?'#d08a1a':'#dc2626';g.beginPath();g.arc(s.mx*W,s.my*H,3.2,0,6.2832);g.fill();});
+    if(c){g.lineWidth=2;c.spread.forEach(function(x){if(x.s.mx==null)return;g.strokeStyle='#991b1b';g.beginPath();g.arc(x.s.mx*W,x.s.my*H,6,0,6.2832);g.stroke();});
+      c.anchor.forEach(function(x){if(x.s.mx==null)return;g.strokeStyle='#15803d';g.beginPath();g.arc(x.s.mx*W,x.s.my*H,6,0,6.2832);g.stroke();});}}
+  function updateDiag(){
+    var c=contagion();
+    var rt=rtCalc(),rv=document.getElementById('rt-val'),rn=document.getElementById('rt-note');
+    if(rt===null){rv.textContent='—';rv.style.color='var(--mut)';rn.textContent='몇 주 흐르면 번지는 속도가 나온다.';}
+    else{rv.textContent=Math.round(rt*10)/10;
+      if(rt>=1.15){rv.style.color='var(--bad)';rn.textContent='1보다 크다 — 흔들림이 번지는 중. 아래 "먼저 붙들 아이"부터.';}
+      else if(rt>=0.9){rv.style.color='var(--warn)';rn.textContent='1 안팎 — 비슷하게 유지된다.';}
+      else{rv.style.color='var(--good)';rn.textContent='1보다 작다 — 번짐이 꺼지는 중.';}}
+    drawCurve();drawNet(c);
+    document.getElementById('map-leg').innerHTML='<span style="color:var(--good)">●</span> 든든 <span style="color:var(--warn)">●</span> 느슨 <span style="color:var(--bad)">●</span> 흔들림 · <span style="color:#991b1b">◯</span> 먼저 붙들 아이';
+    var hl=document.getElementById('hold-list');
+    if(c&&c.spread&&c.spread.length)hl.innerHTML='<div class="mini-h" style="margin-top:12px">먼저 붙들 아이 — 여기서 번짐을 끊는다</div>'+c.spread.map(function(x){return '<div class="hold">'+studTag(x.s)+' · 출석 '+Math.round(x.s.eng*100)+'% → 곁에 아직 건강한 친구 '+x.heal+'명</div>';}).join('');
+    else hl.innerHTML='';
   }
 
   // ── 설정 서랍 ──
