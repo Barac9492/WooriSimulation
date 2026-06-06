@@ -110,7 +110,7 @@
   <div class="gpanel" style="padding:9px 12px;margin-bottom:10px">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
       <button class="gbtn" id="btn-step" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">다음 주 ▶</button>
-      <button class="gbtn" id="btn-play">▶ 자동재생</button>
+      <button class="gbtn" id="btn-play" title="자동재생 켜고 끄기 (스페이스바)">▶ 자동재생</button>
       <button class="gbtn" id="btn-reset" title="같은 계획으로 처음부터 다시 본다">↺ 처음부터</button>
       <span style="flex:1"></span>
       <span style="font-size:12px;color:#6b5538"><b class="gnum" id="hud-week">0</b>주차 · <b class="gnum" id="hud-year">1</b>년차 <b class="gnum" id="hud-term">1</b>학기</span>
@@ -295,6 +295,7 @@
 
 <p class="ghint" style="margin:14px 2px 4px">효과 수치(수련회·설교·소그룹이 출석과 신앙을 얼마나 움직이는지)는 그럴듯하게 넣은 가정값이지 검증된 사실이 아니다. 결론을 내리는 도구가 아니라, 계획의 방향과 크기를 가늠하고 가설을 다듬는 도구로 보는 것이 맞다.</p>
 </div>
+<button id="fab-step" title="다음 주로 (→ 키)" style="position:fixed;right:14px;bottom:14px;z-index:40;background:#e0a52f;border:2px solid #9a6c12;color:#3a2a08;box-shadow:0 2px 7px rgba(74,58,42,.4);padding:11px 15px;font-size:15px;font-family:inherit;border-radius:8px;cursor:pointer">다음 주 ▶</button>
 <script>
 (function(){
   var W=document.getElementById('world'),wx=W.getContext('2d');
@@ -1050,7 +1051,8 @@
 
   // ── 모드 전환 ──
   function setMode(m){mode=m;
-    ['observe','scenario','config'].forEach(function(x){document.getElementById(x).hidden=(x!==m);document.getElementById('mode-'+x).classList.toggle('on',x===m);});}
+    ['observe','scenario','config'].forEach(function(x){document.getElementById(x).hidden=(x!==m);document.getElementById('mode-'+x).classList.toggle('on',x===m);});
+    var fb=document.getElementById('fab-step');if(fb)fb.style.display=(m==='observe')?'block':'none';}
   document.getElementById('mode-observe').addEventListener('click',function(){setMode('observe');});
   document.getElementById('mode-scenario').addEventListener('click',function(){setMode('scenario');});
   document.getElementById('mode-config').addEventListener('click',function(){setMode('config');});
@@ -1071,6 +1073,25 @@
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
   document.getElementById('btn-reset').addEventListener('click',function(){if(week>0&&!confirm('지금까지 흘려본 주를 지우고, 같은 계획으로 처음부터 다시 본다.'))return;if(playing)setPlay(false);generate();});
+  document.getElementById('fab-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
+  // 손가락 화면(태블릿)에선 hover가 없어 툴팁이 안 보인다. .tip을 누르면 풀이를 잠깐 띄운다.
+  var tipBox=null;
+  document.addEventListener('click',function(e){
+    var t=e.target&&e.target.closest?e.target.closest('.tip'):null;if(!t)return;
+    var txt=t.getAttribute('title');if(!txt)return;
+    if(!tipBox){tipBox=document.createElement('div');tipBox.style.cssText='position:fixed;z-index:60;background:#4a3a2a;color:#fdf3e6;font-size:12px;line-height:1.5;padding:7px 10px;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none';document.body.appendChild(tipBox);}
+    tipBox.textContent=txt;tipBox.style.display='block';
+    var w=Math.min(240,window.innerWidth-16);tipBox.style.maxWidth=w+'px';
+    tipBox.style.left=Math.max(8,Math.min(e.clientX-w/2,window.innerWidth-w-8))+'px';tipBox.style.top=(e.clientY+16)+'px';
+    clearTimeout(tipBox._t);tipBox._t=setTimeout(function(){if(tipBox)tipBox.style.display='none';},2800);
+  });
+  // 키보드: 관찰에서 →는 다음 주, 스페이스바는 자동재생 켜고 끄기(입력칸에 있을 땐 무시)
+  document.addEventListener('keydown',function(e){
+    if(mode!=='observe')return;var tag=(e.target&&e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='select'||tag==='textarea')return;
+    if(e.key==='ArrowRight'){e.preventDefault();if(playing)setPlay(false);step();}
+    else if(e.key===' '){e.preventDefault();setPlay(!playing);}
+  });
   document.getElementById('btn-gen').addEventListener('click',function(){generate();renderSched();});
   function setSlider(id,v){var e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input'));}
   function applyPreset(active,risk,dara){setSlider('p-active',active);setSlider('p-risk',risk);setSlider('s-daracbang',dara);}
