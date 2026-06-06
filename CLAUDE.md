@@ -34,7 +34,7 @@
 - `fires(ev, w)` : 점이벤트·수련회가 해당 주차에 실행되는지 판정한다.
 - `seriesActive(ev, w)` : 설교 시리즈가 해당 주차에 지속 중인지 판정한다(`start`부터 `weeks`주간).
 - `weekEffects(sched, w)` : 한 주의 일정을 훑어 `{f(점이벤트 플래그), retreat(참가율·강도 인수), sermon(활성 초점 배열), labels}`를 만든다. `step`과 `simulateOnce`가 공유한다.
-- `simulateOnce(cfg, weeks)` / `simulate(cfg, weeks, runs)` : 화면 없이 한 시나리오를 `weeks`주 돌려 주차별 지표 기록을 반환한다. `simulate`는 `runs`회(기본 8) 평균.
+- `simulateOnce(cfg, weeks)` / `simulate(cfg, weeks, runs)` : 화면 없이 한 시나리오를 `weeks`주 돌려 주차별 지표 기록을 반환한다. `simulate`는 `runs`회(기본 8) 평균이며, `acc.seg`(취약 집계)와 `acc.range`(최종 주차 지표의 8회 변동 폭 min~max)를 함께 붙인다. 변동 폭은 결과의 불확실성을 정직하게 드러내 단일 숫자 과신을 막는다.
 - `captureConfig()` : 현재 분포·운영(`s-*` 슬라이더)·일정을 시나리오 객체 `{dist, ops, schedule}`로 스냅샷한다. 일정 시작은 절대 주차(1~)이므로 보정 없이 그대로 쓴다.
 - `projectRun()` : 시나리오 모드. 현재 계획과 "기본 운영만(빈 일정)"을 같은 기간 돌려 견주고, 아래에 취약 분석을 덧붙인다.
 - `segStats(arr)` / `segHTML(seg, weeks)` : **취약 분석**. 어떤 학생이 빠지는가를 본다. 고정 속성(신앙배경·외톨이·코어)은 누적 이탈률, 학년은 현재 위기 비율로 집계하고, 이탈이 가장 몰리는 유형과 그에 맞는 목회적 한 줄을 제시한다. `simulateOnce`가 최종 상태 `seg`를 `hist.seg`로 붙이고 `simulate`가 평균한다.

@@ -394,14 +394,16 @@
     return by;
   }
   function simulate(cfg,weeks,runs){
-    var acc=null,segAcc=null;
-    for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks);
+    var acc=null,segAcc=null,fin=[];
+    for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks);fin.push(h[h.length-1]);
       if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop};});segAcc=h.seg;}
       else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;});
         for(var d in h.seg)for(var g in h.seg[d])for(var k in h.seg[d][g])segAcc[d][g][k]+=h.seg[d][g][k];}}
     acc.forEach(function(p){p.n/=runs;p.f/=runs;p.active/=runs;p.loose/=runs;p.risk/=runs;p.drop/=runs;});
     for(var d2 in segAcc)for(var g2 in segAcc[d2])for(var k2 in segAcc[d2][g2])segAcc[d2][g2][k2]/=runs;
     acc.seg=segAcc;
+    var rng=function(key){var mn=1e9,mx=-1e9;fin.forEach(function(p){if(p[key]<mn)mn=p[key];if(p[key]>mx)mx=p[key];});return [mn,mx];};
+    acc.range={n:rng('n'),active:rng('active'),risk:rng('risk'),drop:rng('drop'),f:rng('f')};
     return acc;
   }
   function captureConfig(){return {dist:distFromDOM(),ops:{sg:val('s-sg')/100,mt:val('s-mt')/100,tc:val('s-tc'),intake:val('s-in'),speed:val('s-speed')/100},schedule:schedule.map(function(e){var o={};for(var k in e)o[k]=e[k];return o;})};}
@@ -430,6 +432,8 @@
     rows.forEach(function(rw,i){var bg=i%2?'#fbf4e4':'#f3e7cc';var pct=rw[4];var dv=rw[1]-rw[2];var good=(rw[3]==='g')?dv>0:dv<0;var dc=Math.abs(dv)<(pct?0.005:0.5)?'#8a755a':(good?'#3b6d11':'#a33232');var dt=(dv>0?'+':'')+(pct?Math.round(dv*100)+'%p':Math.round(dv));
       html+=cell(rw[0],bg,'left')+cell(fmt(rw[1],pct),bg,'right')+cell(fmt(rw[2],pct),bg,'right')+cell(dt,bg,'right',dc);});
     html+='</div>';
+    if(hA.range){var R=hA.range,ri=function(a){return Math.round(a[0])+'~'+Math.round(a[1]);};
+      html+='<div class="ghint" style="margin-top:6px">'+labA+' 변동 폭('+runs+'회 중): 전체 '+ri(R.n)+' · 활발 '+ri(R.active)+' · 위기 '+ri(R.risk)+' · 이탈 '+ri(R.drop)+' · 신앙 '+Math.round(R.f[0]*100)+'~'+Math.round(R.f[1]*100)+'%. 폭이 넓을수록 결과가 불확실하니 단일 숫자로 단정하지 말라.</div>';}
     if(note)html+='<div class="ghint" style="margin-top:6px">'+note+'</div>';
     box.innerHTML=html;
     drawPairChart('pcv',hA,hB,colA,colB);
