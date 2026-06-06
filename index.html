@@ -149,7 +149,7 @@
   <div id="weekfx" class="gpanel" style="padding:6px 10px;margin-bottom:12px;font-size:12px;line-height:1.6"></div>
 
   <!-- 전염 진단: 흔들림이 친구 관계를 타고 번진다(비유) -->
-  <div class="zhead" style="color:#a3622a">전염 진단 — 흔들림이 친구 관계를 타고 번진다(비유)</div>
+  <div class="zhead" style="color:#a3622a">전염 진단 — 한 아이가 흔들리면 친구도 흔들린다(비유)</div>
   <div id="conta" class="gpanel" style="padding:9px 12px;margin-bottom:12px;border-color:#a3622a;background:#f6efe2"></div>
 
   <!-- 자세히: 분석 디테일(접힘) -->
@@ -522,11 +522,11 @@
   function updateContagion(c){
     var el=document.getElementById('conta');if(!el)return;
     if(!c){el.innerHTML='<div class="ghint">아직 시작 전. 한 주가 흐르면 흔들림이 친구를 타고 어떻게 번지는지 여기서 진단한다.</div>';return;}
-    var html='<div style="font-size:12px;line-height:1.7"><b style="color:#3b6d11">면역</b>(활발) '+c.R+' · <b style="color:#9a6c12">취약</b>(느슨) '+c.S+' · <b style="color:#a33232">감염</b>(위기) '+c.I+' &nbsp;<span class="ghint">출석 흔들림을 전염에 빗대 본다.</span></div>';
-    if(c.I===0){html+='<div style="font-size:12px;color:#3b6d11;margin-top:5px">지금 번지는 흔들림이 없다. 면역 거점(활발 학생)이 공동체를 받치고 있다.</div>';el.innerHTML=html;return;}
+    var html='<div style="font-size:12px;line-height:1.7"><b style="color:#3b6d11">면역</b>(활발) '+c.R+' · <b style="color:#9a6c12">취약</b>(느슨) '+c.S+' · <b style="color:#a33232">감염</b>(위기) '+c.I+' &nbsp;<span class="ghint">출석이 흔들리는 모습을 전염에 빗대 본다.</span></div>';
+    if(c.I===0){html+='<div style="font-size:12px;color:#3b6d11;margin-top:5px">지금은 번지는 흔들림이 없다. 활발한 아이들이 공동체를 받치고 있다.</div>';el.innerHTML=html;return;}
     var sp=c.S?Math.round(c.exposed/c.S*100):0,cl=Math.round(c.cluster*10)/10;
     html+='<div style="font-size:12px;line-height:1.7;margin-top:5px"><b class="tip" style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들리는 친구 곁에 있어 다음에 흔들리기 쉬운 학생이 얼마나 되나">전파압</b> &nbsp;흔들리는 친구를 곁에 둔 취약 학생 <b style="color:#a33232">'+c.exposed+'명</b>'+(c.S?'(취약군의 '+sp+'%)':'')+' · <span class="tip" style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들림이 친구 무리에 얼마나 몰렸나. 1배면 흩어져 있고, 2배면 무리에 두 배로 몰려 번진다">군집도</span> <b>'+cl+'배</b></div>';
-    html+='<div class="ghint" style="margin-top:3px">'+(c.cluster>=1.4?'흔들림이 친구 무리에 몰려 번진다. 한 명씩보다 그 무리를 함께 챙기는 편이 낫다.':c.cluster>=1.05?'흔들림이 친구를 따라 옅게 번지는 중이다.':'흔들림이 흩어져 있다. 함께 번진다기보다 한 명씩 돌볼 일이다.')+'</div>';
+    html+='<div class="ghint" style="margin-top:3px">'+(c.cluster>=1.4?'흔들리는 아이들이 같은 친구 무리에 몰려 있다. 한 명씩 따로 챙기기보다 그 무리를 함께 챙기는 게 낫다.':c.cluster>=1.05?'흔들리는 아이들이 친구를 따라 조금씩 늘고 있다.':'흔들리는 아이들이 여기저기 흩어져 있다. 친구 따라 번지기보다 저마다 사정이 다르니 한 명씩 챙기면 된다.')+'</div>';
     var listLine=function(x,arrow){return '<div class="cline" data-sel="'+students.indexOf(x.s)+'" style="font-size:12px;padding:2px 0;cursor:pointer;line-height:1.5">· '+studTag(x.s)+' · 출석 '+Math.round(x.s.eng*100)+'% <span style="color:#8a755a">'+arrow+'</span></div>';};
     if(c.spread.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#a33232">번짐의 핵 — 먼저 붙들면 번짐을 끊는다</div>'+c.spread.map(function(x){return listLine(x,'→ 건강한 친구 '+x.heal+'명이 곁에');}).join('');}
     if(c.anchor.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#3b6d11">면역 거점 — 세우면 곁의 흔들림을 잡아준다</div>'+c.anchor.map(function(x){return listLine(x,'→ 흔들리는 친구 '+x.shaky+'명을 곁에서');}).join('');}
@@ -549,7 +549,7 @@
     if(risky/n>=0.18)items.push({u:2,go:'care',t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)이 두껍다 → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
     else if(risky>0)items.push({u:1,go:'care',t:'위기군 '+risky+'명 → 돌봄 명단 확인, 흔들리는 학생 안부.'});
     if(loners>=Math.max(3,n*0.08))items.push({u:2,t:'소그룹 밖 외톨이 <b>'+loners+'명</b> → 또래·소그룹에 의도적으로 연결(가장 큰 이탈 위험).'});
-    if(conta&&conta.spread.length&&conta.exposed>=Math.max(2,n*0.06))items.push({u:2,go:'conta',t:'흔들림이 친구를 타고 번지는 중(취약 '+conta.exposed+'명 노출) → "전염 진단"의 <b>번짐의 핵 '+conta.spread.length+'명</b>을 먼저 붙들어 무리 확산을 끊으라.'});
+    if(conta&&conta.spread.length&&conta.exposed>=Math.max(2,n*0.06))items.push({u:2,go:'conta',t:'흔들리는 아이가 친구를 타고 늘고 있다(취약 '+conta.exposed+'명 노출) → "전염 진단"의 <b>번짐의 핵 '+conta.spread.length+'명</b>을 먼저 붙들어 번짐을 끊으라.'});
     if(nextSoo!=null&&nextSoo<=4)items.push({u:2,t:'수능 '+(nextSoo===0?'<b>진행 중</b>':'<b>'+nextSoo+'주 뒤</b>')+' → 고3 케어 집중, 수능 후 복귀 환영 준비.'});
     if(toYE<=4&&week>0){var shaky3=a.filter(function(s){return s.grade===3&&s.commit<0.5;}).length;if(shaky3>0)items.push({u:2,t:'곧 중3→고1 전환('+toYE+'주 뒤) → 흔들리는 중3 <b>'+shaky3+'명</b>을 미리 관계로 붙들기(전환 절벽).'});}
     if(nextExam!=null&&nextExam<=3)items.push({u:1,t:'시험기간 '+(nextExam===0?'진행 중':nextExam+'주 뒤')+' → 출석 일시 하락 대비, 시험 후 회복 모임.'});
