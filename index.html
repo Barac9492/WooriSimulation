@@ -31,29 +31,33 @@
 <body>
 <div class="wrap">
 <h1>고등부 목회 계획 시뮬레이터</h1>
+<div class="gpanel" style="padding:9px 12px;margin:0 0 10px;background:#f3e7cc;border-color:#9a6c12">
+  <div style="font-size:12px;font-weight:600;color:#6b4a16;margin-bottom:3px">전제</div>
+  <div class="ghint" style="color:#6b5538">이 도구는 출석과 신앙이 친구 관계와 사역(소그룹·멘토·설교·수련회)으로 천천히 움직인다고 가정한다. 효과 수치는 그럴듯하게 넣은 가정값이지 검증된 사실이 아니다. 그러므로 여기서 보는 것은 현실 예측이 아니라 "이 전제대로라면 이렇게 흘러간다"는 한 가지 시나리오다. 분당우리교회 고등부 한 부(약 150명) 기준.</div>
+</div>
 <div style="display:flex;align-items:center;gap:10px;margin:0 2px 12px;flex-wrap:wrap">
-  <span class="seg"><button id="mode-predict" class="on">예측</button><button id="mode-observe">관찰</button></span>
-  <span class="ghint" style="flex:1;min-width:200px">분당우리교회 고등부 한 부(약 150명) 기준. 예측은 짠 계획대로 끝까지 돌려 결과만 본다. 관찰은 한 주씩 흐르는 교실을 본다.</span>
+  <span class="seg"><button id="mode-observe" class="on">관찰</button><button id="mode-scenario">시나리오</button></span>
+  <span class="ghint" style="flex:1;min-width:200px">관찰은 한 주씩 흐르는 교실을 지켜본다. 시나리오는 같은 계획을 끝까지 돌려 흐름과 처방을 본다.</span>
 </div>
 
-<!-- ── 예측 결과(기본) ────────────────────────────── -->
-<div id="predict">
+<!-- ── 시나리오(보조) ────────────────────────────── -->
+<div id="scenario" hidden>
   <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
-    <div class="gsec">예측 결과</div>
+    <div class="gsec">시나리오 결과</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
       <span style="font-size:12px;color:#6b5538">기간</span>
       <select id="pj-weeks"><option value="24">1년(24주)</option><option value="48" selected>2년(48주)</option><option value="72">3년(72주)</option><option value="120">5년(120주)</option></select>
       <span style="flex:1"></span>
       <button class="gbtn" id="pj-advise">약점·처방 분석</button>
-      <button class="gbtn" id="pj-run" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">예측 실행</button>
+      <button class="gbtn" id="pj-run" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">시나리오 실행</button>
     </div>
-    <div id="pj-result"><div class="ghint" style="padding-top:2px">아래에서 운영·연간 계획·교회 설정을 맞춘 뒤 "예측 실행"을 누르면, 그 계획대로 끝까지 돌린 결과가 여기 나온다. "약점·처방 분석"은 문제를 짚고, 효과를 검증한 개입안을 추천한다.</div></div>
+    <div id="pj-result"><div class="ghint" style="padding-top:2px">아래에서 운영·연간 계획·교회 설정을 맞춘 뒤 "시나리오 실행"을 누르면, 그 전제대로 끝까지 흘러간 결과가 여기 나온다. "약점·처방 분석"은 문제를 짚고, 효과를 검증한 개입안을 추천한다.</div></div>
     <div id="pj-advice" style="margin-top:8px"></div>
   </div>
 </div>
 
-<!-- ── 관찰 모드 ──────────────────────────────────── -->
-<div id="observe" hidden>
+<!-- ── 관찰 모드(메인) ───────────────────────────── -->
+<div id="observe">
   <div class="gpanel" style="display:flex;justify-content:space-between;padding:6px 12px;margin-bottom:6px;font-size:13px">
     <span>주차 <b class="gnum" id="hud-week">0</b></span><span><b class="gnum" id="hud-year">1</b>년차</span><span><b class="gnum" id="hud-term">1</b>학기</span>
   </div>
@@ -170,7 +174,7 @@
   var EVENTS={retreat:{label:'수련회',color:'#5fb04e'},outreach:{label:'전도·친구초청',color:'#378add'},smallgroup:{label:'소그룹 집중주간',color:'#7a5cd0'},service:{label:'봉사·단기선교',color:'#1d9e75'},exam:{label:'시험기간',color:'#d65a4f'},sermon:{label:'설교 시리즈',color:'#c9852b'}};
   var SERMON_FOCUS={nurture:{label:'양육형',color:'#c9852b'},evangel:{label:'전도형',color:'#378add'},recovery:{label:'회복형',color:'#9a5bd0'}};
   var seats=[];for(var r=0;r<12;r++)for(var c=0;c<15;c++)seats.push({x:14+c*20,y:36+r*13,taken:false});
-  var students=[],week=0,dropouts=0,playing=true,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='predict',curCands=[];
+  var students=[],week=0,dropouts=0,playing=true,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[];
   var val=function(id){return +document.getElementById(id).value;};
   function freeSeat(){for(var i=0;i<seats.length;i++)if(!seats[i].taken){seats[i].taken=true;return i;}return -1;}
   function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
@@ -381,7 +385,7 @@
     var html='<div class="gsec" style="margin-top:4px">약점 진단</div><ul style="margin:0 0 8px 18px;padding:0;font-size:12px;color:#6b5538;line-height:1.7">'+diag.map(function(d){return '<li>'+d+'</li>';}).join('')+'</ul>';
     if(!top.length){html+='<div class="ghint">지금 계획에서 뚜렷이 더 나아지는 처방을 찾지 못했다. 설정을 바꾼 뒤 다시 분석해 보라.</div>';}
     else{
-      html+='<div class="gsec">추천 처방 (예측으로 검증한 순)</div>';
+      html+='<div class="gsec">추천 처방 (시나리오로 검증한 순)</div>';
       top.forEach(function(x){var dDrop=x.l.drop-L.drop,dRisk=x.l.risk-L.risk,dAct=x.l.active-L.active,dF=x.l.f-L.f;
         var chip=function(lab,v,goodUp,pct){var g=goodUp?v>0:v<0;var col=Math.abs(v)<(pct?0.005:0.5)?'#8a755a':(g?'#3b6d11':'#a33232');return '<span style="color:'+col+'">'+lab+' '+(v>0?'+':'')+(pct?Math.round(v*100)+'%p':Math.round(v))+'</span>';};
         html+='<div style="border:2px solid #4a3a2a;border-radius:5px;padding:7px 9px;margin-bottom:6px;background:#f3e7cc"><div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:13px">'+x.cd.label+'</span><button class="gbtn" data-adopt="'+x.i+'" style="padding:3px 9px;font-size:12px">적용</button></div><div style="font-size:11px;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap">'+chip('이탈',dDrop,false)+chip('위기',dRisk,false)+chip('활발',dAct,true)+chip('신앙',dF,true,true)+'</div></div>';
@@ -435,11 +439,11 @@
 
   // ── 모드 전환 ──
   function setMode(m){mode=m;
-    document.getElementById('predict').hidden=(m!=='predict');
+    document.getElementById('scenario').hidden=(m!=='scenario');
     document.getElementById('observe').hidden=(m!=='observe');
-    document.getElementById('mode-predict').classList.toggle('on',m==='predict');
+    document.getElementById('mode-scenario').classList.toggle('on',m==='scenario');
     document.getElementById('mode-observe').classList.toggle('on',m==='observe');}
-  document.getElementById('mode-predict').addEventListener('click',function(){setMode('predict');});
+  document.getElementById('mode-scenario').addEventListener('click',function(){setMode('scenario');});
   document.getElementById('mode-observe').addEventListener('click',function(){setMode('observe');});
 
   // ── 버튼 ──
