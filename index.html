@@ -111,7 +111,7 @@
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
       <button class="gbtn" id="btn-step" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">다음 주 ▶</button>
       <button class="gbtn" id="btn-play">▶ 자동재생</button>
-      <button class="gbtn" id="btn-reset" title="같은 계획으로 처음(0주차)부터 다시 본다">↺ 처음부터</button>
+      <button class="gbtn" id="btn-reset" title="같은 계획으로 처음부터 다시 본다">↺ 처음부터</button>
       <span style="flex:1"></span>
       <span style="font-size:12px;color:#6b5538"><b class="gnum" id="hud-week">0</b>주차 · <b class="gnum" id="hud-year">1</b>년차 <b class="gnum" id="hud-term">1</b>학기</span>
       <span class="ghint">속도</span>
@@ -139,12 +139,12 @@
   </div>
   <div id="stud-card" class="gpanel" style="padding:8px 10px;margin-bottom:6px;background:#f3e7cc" hidden></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px;margin-bottom:6px">
-    <div class="gcard" style="cursor:help" title="이번 주 나오는 우리 부 전체(이탈·졸업 제외)">  <div class="l">전체</div><div class="v" id="m-total">0</div></div>
-    <div class="gcard" style="cursor:help" title="출석이 든든한 학생 — 출석 55% 이상">              <div class="l" style="color:#3b6d11">활발</div><div class="v" id="m-active" style="color:#3b6d11">0</div></div>
-    <div class="gcard" style="cursor:help" title="발걸음이 뜸해지는 학생 — 출석 30~55%. 지금 손쓰면 돌아온다">  <div class="l" style="color:#9a6c12">느슨</div><div class="v" id="m-loose" style="color:#9a6c12">0</div></div>
-    <div class="gcard" style="cursor:help" title="거의 안 나오는 학생 — 출석 30% 미만. 이탈로 가는 길목">    <div class="l" style="color:#a33232">위기</div><div class="v" id="m-risk" style="color:#a33232">0</div></div>
-    <div class="gcard" style="cursor:help" title="6주 연속 출석이 바닥이라 공동체를 떠난 학생 누적">          <div class="l">누적 이탈</div><div class="v" id="m-drop">0</div></div>
-    <div class="gcard" style="cursor:help" title="전체 평균 신앙 관심도(0~100%)">                       <div class="l">평균 신앙</div><div class="v" id="m-faith">0%</div></div>
+    <div class="gcard tip" style="cursor:help" title="이번 주 함께하는 우리 부 전체(떠난 학생·졸업생 제외)"><div class="l">전체</div><div class="v" id="m-total">0</div></div>
+    <div class="gcard tip" style="cursor:help" title="출석이 든든한 학생(출석 55% 이상)"><div class="l" style="color:#3b6d11">활발</div><div class="v" id="m-active" style="color:#3b6d11">0</div></div>
+    <div class="gcard tip" style="cursor:help" title="발걸음이 뜸해진 학생(출석 30~55%). 지금 챙기면 돌아온다"><div class="l" style="color:#9a6c12">느슨</div><div class="v" id="m-loose" style="color:#9a6c12">0</div></div>
+    <div class="gcard tip" style="cursor:help" title="거의 안 나오는 학생(출석 30% 미만). 이탈로 가는 길목이다"><div class="l" style="color:#a33232">위기</div><div class="v" id="m-risk" style="color:#a33232">0</div></div>
+    <div class="gcard tip" style="cursor:help" title="여섯 주 내리 출석이 바닥이라 끝내 떠난 학생 누계"><div class="l">누적 이탈</div><div class="v" id="m-drop">0</div></div>
+    <div class="gcard tip" style="cursor:help" title="우리 부 평균 신앙 관심도(0~100%)"><div class="l">평균 신앙</div><div class="v" id="m-faith">0%</div></div>
   </div>
   <div id="weekfx" class="gpanel" style="padding:6px 10px;margin-bottom:12px;font-size:12px;line-height:1.6"></div>
 
@@ -470,7 +470,8 @@
     record();
   }
   function record(){var a=students.filter(function(s){return !s.left;});var f=a.length?a.reduce(function(x,s){return x+s.faith;},0)/a.length:0;
-    hist.push({n:a.length,f:f});if(hist.length>140)hist.shift();maxN=Math.max(maxN,a.length);
+    var acH=a.filter(function(s){return s.eng>=0.55;}).length,rkH=a.filter(function(s){return s.eng<0.3;}).length;
+    hist.push({n:a.length,f:f,active:acH,risk:rkH});if(hist.length>140)hist.shift();maxN=Math.max(maxN,a.length);
     document.getElementById('hud-week').textContent=week;document.getElementById('hud-year').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;document.getElementById('hud-term').textContent=(Math.floor(week/12)%2)+1;
     var ac=a.filter(function(s){return s.eng>=0.55;}).length,lo=a.filter(function(s){return s.eng>=0.3&&s.eng<0.55;}).length;
     document.getElementById('m-total').textContent=a.length;document.getElementById('m-active').textContent=ac;document.getElementById('m-loose').textContent=lo;document.getElementById('m-risk').textContent=a.length-ac-lo;document.getElementById('m-drop').textContent=dropouts;document.getElementById('m-faith').textContent=Math.round(f*100)+'%';
@@ -523,8 +524,8 @@
     var html='<div style="font-size:12px;line-height:1.7"><b style="color:#3b6d11">면역</b>(활발) '+c.R+' · <b style="color:#9a6c12">취약</b>(느슨) '+c.S+' · <b style="color:#a33232">감염</b>(위기) '+c.I+' &nbsp;<span class="ghint">출석 흔들림을 전염에 빗대 본다.</span></div>';
     if(c.I===0){html+='<div style="font-size:12px;color:#3b6d11;margin-top:5px">지금 번지는 흔들림이 없다. 면역 거점(활발 학생)이 공동체를 받치고 있다.</div>';el.innerHTML=html;return;}
     var sp=c.S?Math.round(c.exposed/c.S*100):0,cl=Math.round(c.cluster*10)/10;
-    html+='<div style="font-size:12px;line-height:1.7;margin-top:5px"><b style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들리는 친구를 곁에 둔 탓에 다음으로 흔들릴 수 있는 학생이 얼마나 되는가">전파압</b> &nbsp;흔들리는 친구를 곁에 둔 취약 학생 <b style="color:#a33232">'+c.exposed+'명</b>'+(c.S?'(취약군의 '+sp+'%)':'')+' · <span style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들림이 친구 무리에 몰린 정도. 1배면 무작위처럼 흩어진 것, 2배면 무리에 두 배로 몰려 번지는 것">군집도</span> <b>'+cl+'배</b></div>';
-    html+='<div class="ghint" style="margin-top:3px">'+(c.cluster>=1.4?'흔들림이 친구 무리에 몰려 번진다. 한 명씩보다 무리째 손대는 것이 효율적이다.':c.cluster>=1.05?'흔들림이 친구를 따라 옅게 번지는 중이다.':'흔들림이 흩어져 있다. 무리 전파보다 개별 돌봄에 가깝다.')+'</div>';
+    html+='<div style="font-size:12px;line-height:1.7;margin-top:5px"><b class="tip" style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들리는 친구 곁에 있어 다음에 흔들리기 쉬운 학생이 얼마나 되나">전파압</b> &nbsp;흔들리는 친구를 곁에 둔 취약 학생 <b style="color:#a33232">'+c.exposed+'명</b>'+(c.S?'(취약군의 '+sp+'%)':'')+' · <span class="tip" style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들림이 친구 무리에 얼마나 몰렸나. 1배면 흩어져 있고, 2배면 무리에 두 배로 몰려 번진다">군집도</span> <b>'+cl+'배</b></div>';
+    html+='<div class="ghint" style="margin-top:3px">'+(c.cluster>=1.4?'흔들림이 친구 무리에 몰려 번진다. 한 명씩보다 무리째 챙기는 편이 낫다.':c.cluster>=1.05?'흔들림이 친구를 따라 옅게 번지는 중이다.':'흔들림이 흩어져 있다. 무리로 번진다기보다 한 명씩 돌볼 일이다.')+'</div>';
     var listLine=function(x,arrow){return '<div class="cline" data-sel="'+students.indexOf(x.s)+'" style="font-size:12px;padding:2px 0;cursor:pointer;line-height:1.5">· '+studTag(x.s)+' · 출석 '+Math.round(x.s.eng*100)+'% <span style="color:#8a755a">'+arrow+'</span></div>';};
     if(c.spread.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#a33232">번짐의 핵 — 먼저 붙들면 번짐을 끊는다</div>'+c.spread.map(function(x){return listLine(x,'→ 건강한 친구 '+x.heal+'명이 곁에');}).join('');}
     if(c.anchor.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#3b6d11">면역 거점 — 세우면 곁의 흔들림을 잡아준다</div>'+c.anchor.map(function(x){return listLine(x,'→ 흔들리는 친구 '+x.shaky+'명을 곁에서');}).join('');}
@@ -591,9 +592,16 @@
   // 이번 주 우리 부를 한 문장으로(목사가 한눈에 읽는 이야기). 흔들리는 아이와 그 변화에 초점.
   function updateNarr(cur,prev){
     var el=document.getElementById('narr');if(!el)return;
-    if(week<1){el.innerHTML='<span style="color:#8a755a">계획을 짠 뒤 "다음 주 ▶"를 누르면, 매주 우리 부 이야기가 여기 한 줄로 쌓인다.</span>';return;}
+    if(week<1){el.innerHTML='<span style="color:#8a755a">"다음 주 ▶"를 누르면 한 주가 흐르고, 그 주 우리 부 모습이 여기 한 줄로 뜬다.</span>';return;}
     var t='이번 주 우리 부 <b>'+cur.n+'명</b> · 든든한 아이 <b style="color:#3b6d11">'+cur.active+'</b> · 느슨한 아이 <b style="color:#9a6c12">'+cur.loose+'</b> · 흔들리는 아이 <b style="color:#a33232">'+cur.risk+'</b>';
     if(prev){var d=cur.risk-prev.risk;t+=d>0?' <span style="color:#a33232">(지난주보다 '+d+'명 더 흔들린다)</span>':d<0?' <span style="color:#3b6d11">(지난주보다 '+(-d)+'명 돌아왔다)</span>':' <span style="color:#8a755a">(지난주와 같다)</span>';}
+    // 흐름(참고): 최근 몇 주의 추세를 방향으로만 읽는다. 단정이 아니라 가늠이다.
+    if(hist.length>=6){var k=Math.min(8,hist.length-1),p0=hist[hist.length-1-k];
+      var dNet=(cur.active-cur.risk)-(p0.active-p0.risk),dN=cur.n-p0.n,flow,fc;
+      if(dNet>=3&&dN>=-1){flow='올라가는 중';fc='#3b6d11';}
+      else if(dNet<=-3||dN<=-4){flow='내려가는 중';fc='#a33232';}
+      else{flow='제자리';fc='#9a6c12';}
+      t+='<br><span style="color:#8a755a">요즘 흐름</span> <b style="color:'+fc+'">'+flow+'</b> <span class="ghint">최근 '+k+'주를 본 어림이다. 단정은 아니다.</span>';}
     el.innerHTML=t;
   }
   function updateWeekFx(cur,prev){
@@ -835,10 +843,10 @@
         html+=cell(rw[0],bg,'left')+cell(fmt(L0[rw[1]],pct),bg,'right')+cell(fmt(Lr[rw[1]],pct),bg,'right')+cell(fmt(Lh[rw[1]],pct),bg,'right');});
       html+='</div>';
       var dHubRnd=Lr.drop-Lh.drop,dHubNone=L0.drop-Lh.drop,read;
-      if(dHubRnd>=1)read='같은 주당 <b>'+K+'명</b>을 무작위로 돌볼 때보다, <b>전파 핵부터</b> 돌볼 때 누적 이탈이 <b style="color:#3b6d11">'+Math.round(dHubRnd)+'명</b> 적다('+weeks+'주). 진단이 돌봄의 순서를 바꾼다 — 같은 양으로 더 멀리 간다.';
-      else if(dHubRnd<=-1)read='이 설정에선 무작위 돌봄이 핵 우선보다 이탈이 '+Math.round(-dHubRnd)+'명 적게 나온다. 위기가 흩어져 있으면(군집도 낮음) 길목을 골라 잡는 이점이 약하다.';
-      else read='이 설정에선 핵 우선과 무작위의 차이가 뚜렷하지 않다('+Math.round(Math.abs(dHubRnd))+'명 안팎). 위기가 친구 무리에 몰릴수록(군집도 높을수록) 핵 우선의 값이 커진다.';
-      html+='<div style="font-size:12px;color:#4a3a2a;margin-top:8px;line-height:1.6;border-top:1px solid #e0cda0;padding-top:6px">→ '+read+'<br><span class="ghint">무처치 대비로는 핵 우선이 누적 이탈을 약 '+Math.round(dHubNone)+'명 줄인다. 돌봄 효과 수치는 가정값이므로 방향과 크기로만 읽으라.</span></div>';
+      if(dHubRnd>=1)read='매주 <b>'+K+'명</b>을 무작위로 돌볼 때보다, <b>번짐의 핵부터</b> 돌볼 때 누적 이탈이 <b style="color:#3b6d11">'+Math.round(dHubRnd)+'명</b> 적다('+weeks+'주). 같은 손길도 누구부터 챙기느냐에 따라 결과가 갈린다.';
+      else if(dHubRnd<=-1)read='이번 설정에서는 무작위로 돌볼 때가 핵부터 돌볼 때보다 이탈이 '+Math.round(-dHubRnd)+'명 적게 나온다. 흔들림이 흩어져 있으면(군집도 낮음) 길목부터 챙기는 이점이 옅다.';
+      else read='이번 설정에서는 핵부터 돌볼 때와 무작위로 돌볼 때 차이가 뚜렷하지 않다('+Math.round(Math.abs(dHubRnd))+'명 안팎). 흔들림이 친구 무리에 몰릴수록(군집도 높을수록) 핵부터 챙기는 값이 커진다.';
+      html+='<div style="font-size:12px;color:#4a3a2a;margin-top:8px;line-height:1.6;border-top:1px solid #e0cda0;padding-top:6px">→ '+read+'<br><span class="ghint">아무것도 안 할 때와 견주면, 핵부터 돌볼 때 누적 이탈이 약 '+Math.round(dHubNone)+'명 준다. 돌봄 효과 수치는 가정값이니 방향과 크기로만 읽으라.</span></div>';
       box.innerHTML=html;
       drawCurves('sxcv',[none.map(function(p){return p.risk;}),rnd.map(function(p){return p.risk;}),hub.map(function(p){return p.risk;})],cols);
     },30);
@@ -1062,7 +1070,7 @@
   function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
-  document.getElementById('btn-reset').addEventListener('click',function(){if(week>0&&!confirm('지금까지 흘려본 주차를 비우고, 같은 계획으로 0주차부터 다시 본다.'))return;if(playing)setPlay(false);generate();});
+  document.getElementById('btn-reset').addEventListener('click',function(){if(week>0&&!confirm('지금까지 흘려본 주를 지우고, 같은 계획으로 처음부터 다시 본다.'))return;if(playing)setPlay(false);generate();});
   document.getElementById('btn-gen').addEventListener('click',function(){generate();renderSched();});
   function setSlider(id,v){var e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input'));}
   function applyPreset(active,risk,dara){setSlider('p-active',active);setSlider('p-risk',risk);setSlider('s-daracbang',dara);}
