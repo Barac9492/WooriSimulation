@@ -179,12 +179,12 @@
   </div>
   <div id="stud-card" class="gpanel" style="padding:8px 10px;margin-bottom:6px;background:#f3e7cc" hidden></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px;margin-bottom:6px">
-    <div class="gcard"><div class="l">전체</div><div class="v" id="m-total">0</div></div>
-    <div class="gcard"><div class="l" style="color:#3b6d11">활발</div><div class="v" id="m-active" style="color:#3b6d11">0</div></div>
-    <div class="gcard"><div class="l" style="color:#7a5510">느슨</div><div class="v" id="m-loose" style="color:#7a5510">0</div></div>
-    <div class="gcard"><div class="l" style="color:#a33232">위기</div><div class="v" id="m-risk" style="color:#a33232">0</div></div>
-    <div class="gcard"><div class="l">누적 이탈</div><div class="v" id="m-drop">0</div></div>
-    <div class="gcard"><div class="l">평균 신앙</div><div class="v" id="m-faith">0%</div></div>
+    <div class="gcard" style="cursor:help" title="이번 주 함께하는 우리 부 전체(떠난 학생·졸업생 제외)"><div class="l">전체</div><div class="v" id="m-total">0</div></div>
+    <div class="gcard" style="cursor:help" title="출석이 든든한 학생(출석 55% 이상)"><div class="l" style="color:#3b6d11">활발</div><div class="v" id="m-active" style="color:#3b6d11">0</div></div>
+    <div class="gcard" style="cursor:help" title="발걸음이 뜸해진 학생(출석 30~55%). 지금 챙기면 돌아온다"><div class="l" style="color:#7a5510">느슨</div><div class="v" id="m-loose" style="color:#7a5510">0</div></div>
+    <div class="gcard" style="cursor:help" title="거의 안 나오는 학생(출석 30% 미만). 이탈로 가는 길목이다"><div class="l" style="color:#a33232">위기</div><div class="v" id="m-risk" style="color:#a33232">0</div></div>
+    <div class="gcard" style="cursor:help" title="여섯 주 내리 출석이 바닥이라 끝내 떠난 학생 누계"><div class="l">누적 이탈</div><div class="v" id="m-drop">0</div></div>
+    <div class="gcard" style="cursor:help" title="우리 부 평균 신앙 관심도(0~100%)"><div class="l">평균 신앙</div><div class="v" id="m-faith">0%</div></div>
   </div>
   <div id="statusline" style="font-size:12px;color:#4a3a2a;margin:0 2px 6px;line-height:1.5"></div>
   <div id="weekfx" class="gpanel" style="padding:6px 10px;margin-bottom:12px;font-size:12px;line-height:1.6"></div>
@@ -711,14 +711,15 @@
   function updateStudCard(){
     var el=document.getElementById('stud-card');if(!el)return;var s=selStudent;
     if(!s){el.hidden=true;return;}
-    if(s.left){el.hidden=false;el.innerHTML='<div style="font-size:12px;color:#6b5538"><b>고른 아이</b> · 이미 떠났다(그만뒀거나 졸업).</div>';return;}
+    var closeX='<span class="closex" title="닫기" style="float:right;cursor:pointer;color:#8a755a;font-weight:700;padding:0 2px;line-height:1">✕</span>';
+    if(s.left){el.hidden=false;el.innerHTML='<div style="font-size:12px;color:#6b5538">'+closeX+'<b>고른 아이</b> · 이미 떠났다(그만뒀거나 졸업).</div>';return;}
     var bgL={mota:'모태신앙',normal:'일반 가정',none:'비신앙 가정'}[s.bg];
     var stat=s.eng>=0.55?'<span style="color:#3b6d11;font-weight:600">활발</span>':s.eng>=0.3?'<span style="color:#9a6c12;font-weight:600">느슨</span>':'<span style="color:#a33232;font-weight:600">위기</span>';
     var tags=[];if(s.core)tags.push('코어');if(s.loner)tags.push('외톨이');if(s.sg)tags.push('소그룹');if(s.mentor)tags.push('멘토 연결');
     var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
     var followers=contagionDeps[students.indexOf(s)]||0;
     el.hidden=false;
-    el.innerHTML='<div style="font-size:12px;line-height:1.7;color:#4a3a2a">'+
+    el.innerHTML='<div style="font-size:12px;line-height:1.7;color:#4a3a2a">'+closeX+
       '<b>고른 아이</b> &nbsp;'+stat+'<br>'+
       GRADE_LABELS[s.grade]+' · '+bgL+(tags.length?' · '+tags.join(' · '):'')+'<br>'+
       '출석 '+Math.round(s.eng*100)+'% · 신앙 관심 '+Math.round(s.faith*100)+'% · 친구 '+fr+'명<br>'+
@@ -733,6 +734,9 @@
     students.forEach(function(s){if(s.left||s.seat<0)return;var a=seats[s.seat];var d=(a.x-cx)*(a.x-cx)+(a.y-cy)*(a.y-cy);if(d<bd){bd=d;best=s;}});
     if(best&&bd<=80){selStudent=best;}else{selStudent=null;}
     updateStudCard();
+  });
+  document.getElementById('stud-card').addEventListener('click',function(e){
+    if(e.target&&e.target.classList&&e.target.classList.contains('closex')){selStudent=null;updateStudCard();draw(0);}
   });
   // 이번 주 돌봄 명단: 출석이 무너진 학생을 약한 순서로, 한 줄 처방과 함께
   function updateCareList(){
