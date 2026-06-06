@@ -104,6 +104,7 @@
     </div>
     <div id="step-next" class="ghint" style="margin-top:7px"></div>
   </div>
+  <div id="actions" class="gpanel" style="padding:8px 12px;margin-bottom:8px"></div>
   <div id="eco" class="gpanel" style="padding:7px 10px;margin-bottom:8px;font-size:12px;color:#6b5538;line-height:2"></div>
   <div class="gpanel" style="padding:4px;line-height:0;margin-bottom:8px">
     <canvas id="world" width="320" height="190" style="width:100%;height:auto;image-rendering:pixelated;border-radius:3px;cursor:pointer"></canvas>
@@ -441,7 +442,30 @@
     var cur={n:a.length,active:ac,loose:lo,risk:a.length-ac-lo,drop:dropouts,f:f,word:aw,holy:ah,belong:ab};
     var dm=document.getElementById('dims');if(dm)dm.innerHTML='<b style="color:#6b5538">신앙의 결(평균)</b> &nbsp;말씀 <b style="color:#7a5c38">'+Math.round(aw*100)+'%</b> · 거룩 <b style="color:#6b4a8a">'+Math.round(ah*100)+'%</b> · 소속 <b style="color:#2e8b8b">'+Math.round(ab*100)+'%</b>';
     updateWeekPanel(week);updateWeekFx(cur,prevMetrics);updatePreview();updateEco();prevMetrics=cur;
-    updateStudCard();updateCareList();}
+    updateStudCard();updateCareList();renderActions();}
+  // 가장 가까운 해당 종류 일정까지 남은 주(0=진행 중, null=24주 내 없음)
+  function weeksUntil(type){for(var d=0;d<=24;d++){var w=week+d,on=false;schedule.forEach(function(ev){if(ev.type===type&&periodActive(ev,w))on=true;});if(on)return d;}return null;}
+  // 이번 주 할 일 — 현재 상태와 다가오는 일정을 훑어 시급순으로 액션 아이템을 띄운다(목사·갱신팀의 눈)
+  function renderActions(){
+    var el=document.getElementById('actions');if(!el)return;var a=students.filter(function(s){return !s.left;});
+    if(!a.length){el.innerHTML='';return;}var n=a.length,items=[];
+    var risk=a.filter(function(s){return s.eng<0.3;}),risky=risk.length;
+    var loners=a.filter(function(s){return s.loner&&!s.sg;}).length;
+    var noneA=a.filter(function(s){return s.bg==='none';}).length,noneR=risk.filter(function(s){return s.bg==='none';}).length;
+    var nextSoo=weeksUntil('sooneung'),nextExam=weeksUntil('exam'),toYE=WEEKS_PER_YEAR-(week%WEEKS_PER_YEAR);
+    if(risky/n>=0.18)items.push({u:2,t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)이 두껍다 → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
+    else if(risky>0)items.push({u:1,t:'위기군 '+risky+'명 → 돌봄 명단 확인, 흔들리는 학생 안부.'});
+    if(loners>=Math.max(3,n*0.08))items.push({u:2,t:'소그룹 밖 외톨이 <b>'+loners+'명</b> → 또래·소그룹에 의도적으로 연결(가장 큰 이탈 위험).'});
+    if(nextSoo!=null&&nextSoo<=4)items.push({u:2,t:'수능 '+(nextSoo===0?'<b>진행 중</b>':'<b>'+nextSoo+'주 뒤</b>')+' → 고3 케어 집중, 수능 후 복귀 환영 준비.'});
+    if(toYE<=4&&week>0){var shaky3=a.filter(function(s){return s.grade===3&&s.commit<0.5;}).length;if(shaky3>0)items.push({u:2,t:'곧 중3→고1 전환('+toYE+'주 뒤) → 흔들리는 중3 <b>'+shaky3+'명</b>을 미리 관계로 붙들기(전환 절벽).'});}
+    if(nextExam!=null&&nextExam<=3)items.push({u:1,t:'시험기간 '+(nextExam===0?'진행 중':nextExam+'주 뒤')+' → 출석 일시 하락 대비, 시험 후 회복 모임.'});
+    if(parentVitality<0.42)items.push({u:1,t:'부모 다락방 활성도 낮음('+Math.round(parentVitality*100)+'%) → 가정 연계·부모 기도, 담임 말씀과 연결.'});
+    if(noneA>3&&noneR/noneA>=0.25)items.push({u:1,t:'비신앙 가정 학생이 흔들린다 → 전도형 설교·가정 방문으로 붙들기.'});
+    if(!items.length)items.push({u:0,t:'큰 불은 없다 → 코어 제자훈련을 한 걸음 더, 다음 절기·전환을 미리 준비.'});
+    items.sort(function(x,y){return y.u-x.u;});
+    var col=['#6b8e3b','#9a6c12','#a33232'],lab=['여유','살핌','시급'];
+    el.innerHTML='<div class="gsec" style="margin-bottom:5px">이번 주 할 일 — 지금 무엇이 필요한가</div>'+items.slice(0,6).map(function(it){return '<div style="font-size:12px;line-height:1.6;padding:3px 0;border-bottom:1px solid #efe2c4"><span style="display:inline-block;min-width:28px;font-size:10px;color:#fff;background:'+col[it.u]+';border-radius:3px;padding:1px 5px;text-align:center;margin-right:7px;vertical-align:middle">'+lab[it.u]+'</span>'+it.t+'</div>';}).join('');
+  }
   // 이번 주 작동 중인 입력(이벤트·설교·수련회·시험)을 칩으로
   function activeInputs(wk){
     var out=[],pN=function(ev){return (ev.repeat>0?((wk-ev.start)%ev.repeat):(wk-ev.start))+1;};
@@ -672,7 +696,7 @@
   ];}
   function adviseRun(){
     var box=document.getElementById('pj-advice');
-    var plan=captureConfig(),weeks=val('pj-weeks'),runs=4;
+    var plan=captureConfig(),weeks=val('pj-weeks'),runs=6;
     var hp=simulate(plan,weeks,runs),L=hp[hp.length-1],mid=hp[Math.floor(hp.length/2)],N0=plan.dist.n,base=scoreOf(L);
     var diag=[];
     if(L.drop>=N0*0.25)diag.push('한 해 동안 누적 이탈이 시작 인원의 4분의 1을 넘는다(약 '+Math.round(L.drop)+'명).');
@@ -693,7 +717,10 @@
         html+='<div style="border:2px solid #4a3a2a;border-radius:5px;padding:7px 9px;margin-bottom:6px;background:#f3e7cc"><div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:13px">'+x.cd.label+'</span><button class="gbtn" data-adopt="'+x.i+'" style="padding:3px 9px;font-size:12px">적용</button></div><div style="font-size:11px;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap">'+chip('이탈',dDrop,false)+chip('위기',dRisk,false)+chip('활발',dAct,true)+chip('신앙',dF,true,true)+'</div></div>';
       });
     }
-    html+='<div class="ghint" style="margin-top:4px">처방 효과는 같은 계획에 그 조치만 더해 '+weeks+'주를 '+runs+'회 돌린 평균의 차이다. 가정값에 기댄 추정이므로 방향으로 읽으라. "적용"은 위 계획·설정에 실제로 반영한다.</div>';
+    // 하지 말 것 / 지금 우선순위 아님 — 추천이 있을 때만, 대비로 보여 준다
+    var weak=scored.filter(function(x){return x.gain<=0.5;}).sort(function(a,b){return a.gain-b.gain;}).slice(0,2);
+    if(weak.length&&top.length){html+='<div class="gsec" style="margin-top:8px;color:#9a6c12">지금은 우선순위가 아님</div>'+weak.map(function(x){var why=x.gain<-8?'지금 우리 상황에선 오히려 역효과로 나온다':'지금 우리 상황에선 효과가 작다(이미 충분하거나 닿지 않는다)';return '<div style="font-size:12px;color:#6b5538;padding:2px 0">· <b>'+x.cd.label+'</b> — '+why+'. 위쪽 처방에 먼저 집중하라.</div>';}).join('');}
+    html+='<div class="ghint" style="margin-top:6px">처방 효과는 같은 계획에 그 조치만 더해 '+weeks+'주를 '+runs+'회 돌린 평균의 차이다. 가정값에 기댄 추정이므로 방향으로 읽으라. "적용"은 위 계획·설정에 실제로 반영한다.</div>';
     box.innerHTML=html;
     Array.prototype.forEach.call(box.querySelectorAll('[data-adopt]'),function(b){b.addEventListener('click',function(){var idx=+this.dataset.adopt;curCands[idx].adopt();this.textContent='적용됨';this.disabled=true;});});
   }
