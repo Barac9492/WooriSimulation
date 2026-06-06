@@ -125,6 +125,7 @@
 
   <!-- 우리 부 지금: 교실 + 지표 + 이번 주 효과 -->
   <div class="zhead">우리 부 지금 — 점 하나가 학생 한 명(클릭하면 그 아이)</div>
+  <div id="narr" style="font-size:13px;line-height:1.6;color:#4a3a2a;margin:0 2px 7px"></div>
   <div class="gpanel" style="padding:4px;line-height:0;margin-bottom:5px">
     <canvas id="world" width="320" height="190" style="width:100%;height:auto;image-rendering:pixelated;border-radius:3px;cursor:pointer"></canvas>
   </div>
@@ -480,7 +481,7 @@
     var n2=a.length||1,aw=0,ah=0,ab=0;a.forEach(function(s){aw+=s.word;ah+=s.holy;ab+=s.belong;});aw/=n2;ah/=n2;ab/=n2;
     var cur={n:a.length,active:ac,loose:lo,risk:a.length-ac-lo,drop:dropouts,f:f,word:aw,holy:ah,belong:ab};
     var dm=document.getElementById('dims');if(dm)dm.innerHTML='<b style="color:#6b5538">신앙의 결(평균)</b> &nbsp;말씀 <b style="color:#7a5c38">'+Math.round(aw*100)+'%</b> · 거룩 <b style="color:#6b4a8a">'+Math.round(ah*100)+'%</b> · 소속 <b style="color:#2e8b8b">'+Math.round(ab*100)+'%</b>';
-    updateWeekPanel(week);updateWeekFx(cur,prevMetrics);updatePreview();updateEco();prevMetrics=cur;
+    updateWeekPanel(week);updateNarr(cur,prevMetrics);updateWeekFx(cur,prevMetrics);updatePreview();updateEco();prevMetrics=cur;
     conta=contagion();updateContagion(conta);
     updateStudCard();updateCareList();renderActions();}
   // ── 전염 진단(비유): 흔들림(위기)이 친구 관계를 타고 번진다는 렌즈로 공동체를 읽는다 ──
@@ -585,6 +586,14 @@
     bar.innerHTML=wk<1?'<b>아직 시작 전.</b> "다음 주 ▶"를 누르거나 자동재생하면 한 주가 흐른다.'
       :('<b>이번 주 입력</b>('+wk+'주차) &nbsp;'+(ins.length?ins.map(chip).join(''):'<span style="color:#8a755a">평상시(특별 일정 없음)</span>'));
   }
+  // 이번 주 우리 부를 한 문장으로(목사가 한눈에 읽는 이야기). 흔들리는 아이와 그 변화에 초점.
+  function updateNarr(cur,prev){
+    var el=document.getElementById('narr');if(!el)return;
+    if(week<1){el.innerHTML='<span style="color:#8a755a">계획을 짠 뒤 "다음 주 ▶"를 누르면, 매주 우리 부 이야기가 여기 한 줄로 쌓인다.</span>';return;}
+    var t='이번 주 우리 부 <b>'+cur.n+'명</b> · 든든한 아이 <b style="color:#3b6d11">'+cur.active+'</b> · 느슨한 아이 <b style="color:#9a6c12">'+cur.loose+'</b> · 흔들리는 아이 <b style="color:#a33232">'+cur.risk+'</b>';
+    if(prev){var d=cur.risk-prev.risk;t+=d>0?' <span style="color:#a33232">(지난주보다 '+d+'명 더 흔들린다)</span>':d<0?' <span style="color:#3b6d11">(지난주보다 '+(-d)+'명 돌아왔다)</span>':' <span style="color:#8a755a">(지난주와 같다)</span>';}
+    el.innerHTML=t;
+  }
   function updateWeekFx(cur,prev){
     var el=document.getElementById('weekfx');if(!el)return;
     if(!prev){el.innerHTML='<span style="color:#8a755a">시작 상태. 한 주가 흐르면 여기에 그 주의 효과(지난주 대비)가 나온다.</span>';return;}
@@ -630,13 +639,14 @@
   function updateStudCard(){
     var el=document.getElementById('stud-card');if(!el)return;var s=selStudent;
     if(!s){el.hidden=true;return;}
-    if(s.left){el.hidden=false;el.innerHTML='<div style="font-size:12px;color:#6b5538"><b>선택한 학생</b> · 이미 공동체를 떠났다(이탈 또는 졸업).</div>';return;}
+    var closeX='<span class="closex" title="닫기" style="float:right;cursor:pointer;color:#8a755a;font-weight:700;padding:0 2px;line-height:1">✕</span>';
+    if(s.left){el.hidden=false;el.innerHTML='<div style="font-size:12px;color:#6b5538">'+closeX+'<b>선택한 학생</b> · 이미 공동체를 떠났다(이탈 또는 졸업).</div>';return;}
     var bgL={mota:'모태신앙',normal:'일반 가정',none:'비신앙 가정'}[s.bg];
     var stat=s.eng>=0.55?'<span style="color:#3b6d11;font-weight:600">활발</span>':s.eng>=0.3?'<span style="color:#9a6c12;font-weight:600">느슨</span>':'<span style="color:#a33232;font-weight:600">위기</span>';
     var tags=[];if(s.core)tags.push('코어');if(s.loner)tags.push('외톨이');if(s.sg)tags.push('소그룹');if(s.mentor)tags.push('멘토 연결');
     var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
     el.hidden=false;
-    el.innerHTML='<div style="font-size:12px;line-height:1.7;color:#4a3a2a">'+
+    el.innerHTML='<div style="font-size:12px;line-height:1.7;color:#4a3a2a">'+closeX+
       '<b>선택한 학생</b> &nbsp;'+stat+'<br>'+
       GRADE_LABELS[s.grade]+' · '+bgL+(tags.length?' · '+tags.join(' · '):'')+'<br>'+
       '출석 '+Math.round(s.eng*100)+'% · 신앙 관심 '+Math.round(s.faith*100)+'% · 친구 '+fr+'명'+
@@ -649,6 +659,9 @@
     students.forEach(function(s){if(s.left||s.seat<0)return;var a=seats[s.seat];var d=(a.x-cx)*(a.x-cx)+(a.y-cy)*(a.y-cy);if(d<bd){bd=d;best=s;}});
     if(best&&bd<=80){selStudent=best;}else{selStudent=null;}
     updateStudCard();
+  });
+  document.getElementById('stud-card').addEventListener('click',function(e){
+    if(e.target&&e.target.classList&&e.target.classList.contains('closex')){selStudent=null;updateStudCard();}
   });
   // 이번 주 돌봄 명단: 출석이 무너진 학생을 약한 순서로, 한 줄 처방과 함께
   function updateCareList(){
