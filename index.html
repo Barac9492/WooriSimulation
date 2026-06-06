@@ -60,22 +60,22 @@
 
 <!-- ── 시나리오(보조) ────────────────────────────── -->
 <div id="scenario" hidden>
-  <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
-    <div class="gsec">시나리오 결과</div>
+  <div class="zhead">① 이 계획의 전망 — 끝까지 돌려 본다</div>
+  <div class="gpanel" style="padding:10px 12px;margin-bottom:12px">
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
       <span style="font-size:12px;color:#6b5538">기간</span>
       <select id="pj-weeks"><option value="24">1년(24주)</option><option value="48" selected>2년(48주)</option><option value="72">3년(72주, 한 학생의 재학)</option></select>
+      <button class="gbtn" id="pj-run" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">시나리오 실행 ▶</button>
       <span style="flex:1"></span>
+      <button class="gbtn" id="pj-advise">약점·처방</button>
       <button class="gbtn" id="pj-summary">공유 요약</button>
-      <button class="gbtn" id="pj-advise">약점·처방 분석</button>
-      <button class="gbtn" id="pj-run" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">시나리오 실행</button>
     </div>
     <div id="pj-result"><div class="ghint" style="padding-top:2px">아래에서 운영·연간 계획·교회 설정을 맞춘 뒤 "시나리오 실행"을 누르면, 그 전제대로 끝까지 흘러간 결과가 여기 나온다. "약점·처방 분석"은 문제를 짚고 효과를 검증한 개입안을 추천한다. "공유 요약"은 교사팀·담임께 붙여 넣을 텍스트를 뽑는다.</div></div>
     <div id="pj-advice" style="margin-top:8px"></div>
     <div id="pj-summary-box" style="margin-top:8px"></div>
   </div>
+  <div class="zhead">② 두 계획 비교 (A/B)</div>
   <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
-    <div class="gsec">시나리오 비교 (A/B)</div>
     <div class="ghint" style="margin-bottom:8px">두 안을 같은 기간 동안 견준다. 설정 탭에서 한 안을 맞춰 A에 담고, 바꿔서 B에 담은 뒤 비교한다. 예: 수련회를 1년차 vs 2년차.</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
       <button class="gbtn" id="cmp-save-a">현재 설정 → A</button>
