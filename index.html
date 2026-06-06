@@ -595,10 +595,11 @@
     var top=risky.slice(0,12);
     el.innerHTML=top.map(function(s,i){
       var tags=[GRADE_LABELS[s.grade],{mota:'모태',normal:'일반',none:'비신앙 가정'}[s.bg]];if(s.loner)tags.push('외톨이');if(!s.sg)tags.push('소그룹 밖');
-      return '<div style="font-size:12px;padding:4px 0;border-bottom:1px solid #e6d6b0;line-height:1.6"><b style="color:#a33232">'+(i+1)+'.</b> '+tags.join(' · ')+' · 출석 '+Math.round(s.eng*100)+'%<br><span style="color:#6b4a16">→ '+studNote(s)+'</span></div>';
+      return '<div data-care="'+students.indexOf(s)+'" style="font-size:12px;padding:4px 0;border-bottom:1px solid #e6d6b0;line-height:1.6;cursor:pointer"><b style="color:#a33232">'+(i+1)+'.</b> '+tags.join(' · ')+' · 출석 '+Math.round(s.eng*100)+'% <span style="color:#3b6d11;font-size:11px">▸ 이 아이 보기</span><br><span style="color:#6b4a16">→ '+studNote(s)+'</span></div>';
     }).join('')+(risky.length>12?'<div class="ghint" style="margin-top:4px">외 '+(risky.length-12)+'명 더 있다.</div>':'');
   }
   document.getElementById('care-toggle').addEventListener('click',function(){var el=document.getElementById('care-list');el.hidden=!el.hidden;this.textContent=el.hidden?'펼치기':'접기';updateCareList();});
+  document.getElementById('care-list').addEventListener('click',function(e){var row=e.target.closest('[data-care]');if(!row)return;var s=students[+row.dataset.care];if(s&&!s.left){selStudent=s;updateStudCard();draw(0);var sc=document.getElementById('stud-card');if(sc&&sc.scrollIntoView)sc.scrollIntoView({block:'center',behavior:'smooth'});}});
 
   // ── 헤드리스 예측 엔진 ──
   function simulateOnce(cfg,weeks){
