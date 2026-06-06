@@ -49,6 +49,9 @@
 - `buildSummaryText()` / `showSummary()` + 보조(`schedLine`/`vulnTop`/`topRx`) : **교사팀 공유 요약**. 우리 부 설정·운영·연간 계획·전망(계획 vs 기본)·취약 1순위·추천 처방 1순위를 한 덩어리 텍스트로 만들어 복사하게 한다(카톡·문서 붙여넣기용).
 - `compareRun()` / `renderPair()` / `drawPairChart()` : 두 시나리오(A/B 또는 계획/기본)를 추이 그래프와 지표 델타 표로 그린다.
 - `draw(t)`, `drawSpark()`, `record()` : 관찰 모드의 캔버스·추이 그래프·지표 카드를 갱신한다.
+- `churchEffects(sched,w)` / `advanceChurch(cc,pv,sched,w,sp,dara)` : **전체 교회 층**. 담임 말씀·전교인 수련회·부흥회·절기가 교회 분위기(`churchClimate`)를 움직이고, 그것과 다락방 참여율이 부모 다락방 활성도(`parentVitality`)를 움직인다. 라이브는 전역 `churchClimate`/`parentVitality`, 헤드리스는 run마다 로컬 `cc`/`pv`. `tick`에 `ctx.parentVitality`/`churchClimate`/`allRetreat`/`revival`로 전달되어 `fam`을 끌고 출석·신앙을 받친다.
+- `renderCSched()` / `csyncFields()` + `cbtn-add` : 설정 탭의 "전체 교회 일정"(`churchSchedule`, 별도 트랙) 추가·삭제.
+- `updateEco()` : 관찰 상단 "교회 생태계"(교회 분위기·부모 다락방 활성도 막대) 갱신.
 - `setMode(m)` / `syncFields()` : 관찰(`observe`)·시나리오(`scenario`)·설정(`config`) 세 탭 토글(셋 중 하나만 표시), 일정 추가 폼의 종류별 입력 표시.
 - `planSnapshot()` / `applyPlan()` / `loadPlans()` 등 : 운영·연간 계획·교회 설정을 이름 붙여 `localStorage`(`woori_plans_v1`)에 저장·불러오기·삭제. 슬라이더 원시값과 일정을 그대로 직렬화한다.
 
@@ -86,6 +89,17 @@ commit += speed * force      // speed=변화 속도 슬라이더(0.2~1.0, 기본
 **수련회(상세)** : 일정에 `nights`(1·2·3박), `attendRate`, `intensity`. `factor = (0.45 + 0.22*nights) * (0.5 + 0.6*intensity)`. 그 주에 학생은 `attendRate`(코어·소그룹원 ×1.3) 확률로 참가하고, 참가자만 `retreatGlow = max(현재, factor)`(일시 급등)와 `commit += 0.02*factor`(작은 영속 상승)를 받는다. `retreatGlow`는 매주 `×0.85`로 식는다. 비참가자는 못 받아 격차가 생긴다.
 
 **설교 시리즈** : 일정에 `focus`(nurture/evangel/recovery)와 `weeks`. 즉효가 아니라 시차를 두고 누적된다. 초점이 닿는 학생(양육→코어·소그룹·신앙≥0.5, 전도→비신앙 가정·신앙<0.4, 회복→출석<0.4)에게 `sermonAcc`가 매주 `+= (1-acc)*0.15`로 차오르고, 닿지 않으면 `×0.92`로 식는다. 효과는 누적에 비례해 신앙 `+0.022*acc`, 출석(force) `+(초점별 0.004~0.012)*acc`. 시리즈가 끝나도 여운이 남는다.
+
+### 3층 교회 생태계 (고등부는 진공이 아니다)
+
+고등학생의 신앙·출석은 청소년 사역만으로 정해지지 않는다. 위 두 층이 천장을 정한다.
+
+- **① 전체 교회** : 별도 트랙 `churchSchedule`(담임 말씀 시리즈·전교인 수련회·부흥회·절기)이 `churchClimate`(0~1)를 천천히 끌어올린다. 목표값 = `0.45 + 이벤트 부스트`, 매주 그쪽으로 `sp*0.25` 이동.
+- **② 가정·부모** : `parentVitality`(부모 다락방 활성도) 목표 = `0.22 + 0.46*churchClimate + 0.30*다락방참여율`, 매주 `sp*0.20` 이동.
+- **③ 고등부** : 각 학생 `fam`이 `parentVitality`(+배경 보정: 모태 +0.12, 비신앙 −0.18) 쪽으로 매주 `sp*0.10` 이동한다(이제 고정값이 아니다). `fam`은 출석힘에 `0.05*(fam−0.5)`, 신앙에 `0.020*(fam−0.5)`. 더해 `churchClimate`가 직접 출석 `0.035*(cc−0.5)`·신앙 `0.015*(cc−0.5)`를 받친다.
+- **전교인 수련회**(`allRetreat`) : 온 가족 참여 → 모든 학생에게 수련회 여운(glow 0.9)+commit·신앙 상승. **부흥회**(`revival`) : 그 기간 출석 `+0.05`·신앙 `+0.02`.
+
+이로써 전체 교회·부모가 살아나면 고등부가 눈에 띄게 따라 오르고, 청소년 사역만으로는 닿지 못하는 천장이 보인다. 수치는 전부 가정값 — 정밀 예측이 아니라 "무엇이 천장을 정하는가"의 방향으로 읽는다.
 
 교사효율 = min(1, (교사수 * 8) / 활동 학생 수). 학생이 많아질수록 개입 효과가 희석된다.
 
