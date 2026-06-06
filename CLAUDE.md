@@ -52,7 +52,7 @@
 - `churchEffects(sched,w)` / `advanceChurch(cc,pv,sched,w,sp,dara)` : **전체 교회 층**. 담임 말씀·전교인 수련회·부흥회·절기가 교회 분위기(`churchClimate`)를 움직이고, 그것과 다락방 참여율이 부모 다락방 활성도(`parentVitality`)를 움직인다. 라이브는 전역 `churchClimate`/`parentVitality`, 헤드리스는 run마다 로컬 `cc`/`pv`. `tick`에 `ctx.parentVitality`/`churchClimate`/`allRetreat`/`revival`로 전달되어 `fam`을 끌고 출석·신앙을 받친다.
 - `renderCSched()` / `csyncFields()` + `cbtn-add` : 설정 탭의 "전체 교회 일정"(`churchSchedule`, 별도 트랙) 추가·삭제.
 - `updateEco()` : 관찰 상단 "교회 생태계"(교회 분위기·부모 다락방 활성도 막대) 갱신.
-- `renderTimeline()` + `btn-runplan` : 설정 탭 맨 위 **주간 계획표**. `activeInputs(w)`로 1~기간 각 주의 입력(고등부+전체 교회)을 칩으로 죽 펼친다. 한 주를 누르면 추가 폼의 시작 주차가 그 주로 맞춰진다. "이 계획대로 돌려보기"는 `generate()`+`setMode('observe')`로 0주차에서 다시 시작한다. `renderSched`/`renderCSched`가 갱신될 때 함께 다시 그린다.
+- `renderTimeline()` + `TRACKS`/`activeForTypes()` + `btn-runplan` : 설정 탭 맨 위 **주간 계획 캘린더**(간트식). 사역별 **트랙이 행**, 주차가 **열**인 그리드다. 트랙은 담임 설교·어른 행사·고등부 설교·고등부 사역·외부 환경 다섯. 각 (트랙,주차) 칸은 그 주 그 트랙에 일정이 있으면 이벤트 색으로 칠해져 다주 이벤트가 막대로 보인다(title에 이름). 칸을 누르면 추가 폼 시작 주차가 그 주로. "이 계획대로 돌려보기"는 `generate()`+`setMode('observe')`. `renderSched`/`renderCSched` 갱신 때 함께 다시 그린다. 가로 스크롤, 좌측 트랙 라벨 sticky.
 - **자동재생은 기본 꺼짐**(`playing=false`). 계획을 먼저 짜고 "다음 주 ▶"나 "자동재생"으로 돌린다. 로드 시 멋대로 돌지 않는다.
 - `setMode(m)` / `syncFields()` : 관찰(`observe`)·시나리오(`scenario`)·설정(`config`) 세 탭 토글(셋 중 하나만 표시), 일정 추가 폼의 종류별 입력 표시.
 - `planSnapshot()` / `applyPlan()` / `loadPlans()` 등 : 운영·연간 계획·교회 설정을 이름 붙여 `localStorage`(`woori_plans_v1`)에 저장·불러오기·삭제. 슬라이더 원시값과 일정을 그대로 직렬화한다.
