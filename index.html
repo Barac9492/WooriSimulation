@@ -132,6 +132,10 @@
   </div>
   <div id="weekfx" class="gpanel" style="padding:6px 10px;margin-bottom:12px;font-size:12px;line-height:1.6"></div>
 
+  <!-- 전염 진단: 흔들림이 친구 관계를 타고 번진다(비유) -->
+  <div class="zhead" style="color:#a3622a">전염 진단 — 흔들림이 친구 관계를 타고 번진다(비유)</div>
+  <div id="conta" class="gpanel" style="padding:9px 12px;margin-bottom:12px;border-color:#a3622a;background:#f6efe2"></div>
+
   <!-- 자세히: 분석 디테일(접힘) -->
   <details class="gpanel" style="padding:9px 12px;margin-bottom:8px">
     <summary style="font-size:12px;font-weight:600;color:#6b5538;cursor:pointer">자세히 보기 — 교회 생태계 · 신앙의 결 · 위기군 구성 · 돌봄 명단 · 추이 ▾</summary>
@@ -298,6 +302,7 @@
   var CHURCH_EVENTS={senior:{label:'담임 말씀 시리즈',color:'#b5651d'},allretreat:{label:'전교인 수련회',color:'#2e8b57'},revival:{label:'부흥회',color:'#c0392b'},season:{label:'절기',color:'#8e7cc3'}};
   var seats=[];for(var r=0;r<12;r++)for(var c=0;c<15;c++)seats.push({x:14+c*20,y:36+r*13,taken:false});
   var students=[],week=0,dropouts=0,playing=false,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null;
+  var conta=null,showSpread=false;
   var churchClimate=0.5,parentVitality=0.5,churchSchedule=[],ceid=0;
   var val=function(id){return +document.getElementById(id).value;};
   function freeSeat(){for(var i=0;i<seats.length;i++)if(!seats[i].taken){seats[i].taken=true;return i;}return -1;}
@@ -459,7 +464,53 @@
     var cur={n:a.length,active:ac,loose:lo,risk:a.length-ac-lo,drop:dropouts,f:f,word:aw,holy:ah,belong:ab};
     var dm=document.getElementById('dims');if(dm)dm.innerHTML='<b style="color:#6b5538">신앙의 결(평균)</b> &nbsp;말씀 <b style="color:#7a5c38">'+Math.round(aw*100)+'%</b> · 거룩 <b style="color:#6b4a8a">'+Math.round(ah*100)+'%</b> · 소속 <b style="color:#2e8b8b">'+Math.round(ab*100)+'%</b>';
     updateWeekPanel(week);updateWeekFx(cur,prevMetrics);updatePreview();updateEco();prevMetrics=cur;
+    conta=contagion();updateContagion(conta);
     updateStudCard();updateCareList();renderActions();}
+  // ── 전염 진단(비유): 흔들림(위기)이 친구 관계를 타고 번진다는 렌즈로 공동체를 읽는다 ──
+  // 모형은 이미 친구 평균 헌신으로 출석을 끌어당긴다(tick의 0.11*(pull-0.5)). 여기서는 그 확산을
+  // SIR식(면역·취약·감염)으로 진단만 한다 — 새 가정을 더하지 않는다. 현실 예측이 아니라 방향이다.
+  function liveFriends(s){var o=[];for(var k=0;k<s.friends.length;k++){var f=students[s.friends[k]];if(f&&!f.left)o.push(f);}return o;}
+  function studTag(s){var t=[GRADE_LABELS[s.grade]];if(s.loner)t.push('외톨이');if(!s.sg)t.push('소그룹 밖');if(s.bg==='none')t.push('비신앙 가정');if(s.core)t.push('코어');return t.join('·');}
+  function contagion(){
+    var a=students.filter(function(s){return !s.left;}),n=a.length;if(!n)return null;
+    var I=[],S=[],R=[];
+    a.forEach(function(s){var e=s.eng;if(e<0.3)I.push(s);else if(e<0.55)S.push(s);else R.push(s);});
+    var baseRate=I.length/n;
+    // 노출된 취약군: 흔들리는(감염) 친구를 곁에 둔 취약(느슨) 학생. 군집도: 감염자 친구 중 감염 비율 / 전체 감염률.
+    var exposed=0,localSum=0,infWithFr=0;
+    S.forEach(function(s){var fr=liveFriends(s);if(fr.length&&fr.some(function(o){return o.eng<0.3;}))exposed++;});
+    I.forEach(function(s){var fr=liveFriends(s);if(!fr.length)return;infWithFr++;localSum+=fr.filter(function(o){return o.eng<0.3;}).length/fr.length;});
+    var cluster=baseRate>0.001&&infWithFr?(localSum/infWithFr)/baseRate:0;
+    // 번짐의 핵: 흔들리는 학생(감염·취약) 곁에 아직 건강한 친구가 많을수록 번질 길이 넓다(먼저 끊을 지점).
+    var spread=a.map(function(s){var w=s.eng<0.3?1:s.eng<0.55?0.4:0;if(!w)return null;var fr=liveFriends(s);
+      var sc=w*(fr.filter(function(o){return o.eng>=0.3&&o.eng<0.55;}).length+0.4*fr.filter(function(o){return o.eng>=0.55;}).length);
+      return sc>0.5?{s:s,v:sc,heal:fr.filter(function(o){return o.eng>=0.3;}).length}:null;}).filter(Boolean).sort(function(x,y){return y.v-x.v;}).slice(0,3);
+    // 면역 거점: 흔들리는 친구를 곁에 둔 활발(면역) 학생. 세우면 곁의 번짐을 잡아준다.
+    var anchor=R.map(function(s){var fr=liveFriends(s);var sc=fr.filter(function(o){return o.eng>=0.3&&o.eng<0.55;}).length+1.3*fr.filter(function(o){return o.eng<0.3;}).length;
+      return sc>0.5?{s:s,v:sc,shaky:fr.filter(function(o){return o.eng<0.55;}).length}:null;}).filter(Boolean).sort(function(x,y){return y.v-x.v;}).slice(0,3);
+    // 위험 표지(DNA식): 고정 속성별 감염률 / 전체 감염률. 1을 크게 넘으면 그 표지가 흔들림을 잘 부른다.
+    function rr(filt){var g=a.filter(filt);if(g.length<4)return null;var gi=g.filter(function(s){return s.eng<0.3;}).length/g.length;return baseRate>0.001?{rr:gi/baseRate,n:g.length}:null;}
+    var markers=[{k:'외톨이',d:rr(function(s){return s.loner;})},{k:'비신앙 가정',d:rr(function(s){return s.bg==='none';})},{k:'비코어',d:rr(function(s){return !s.core;})},{k:'고등',d:rr(function(s){return s.grade>=4;})}]
+      .filter(function(m){return m.d&&m.d.rr>=1.3;}).sort(function(x,y){return y.d.rr-x.d.rr;});
+    return {n:n,S:S.length,I:I.length,R:R.length,exposed:exposed,cluster:cluster,spread:spread,anchor:anchor,markers:markers};
+  }
+  function updateContagion(c){
+    var el=document.getElementById('conta');if(!el)return;
+    if(!c){el.innerHTML='<div class="ghint">아직 시작 전. 한 주가 흐르면 흔들림이 친구를 타고 어떻게 번지는지 여기서 진단한다.</div>';return;}
+    var html='<div style="font-size:12px;line-height:1.7"><b style="color:#3b6d11">면역</b>(활발) '+c.R+' · <b style="color:#9a6c12">취약</b>(느슨) '+c.S+' · <b style="color:#a33232">감염</b>(위기) '+c.I+' &nbsp;<span class="ghint">출석 흔들림을 전염에 빗대 본다.</span></div>';
+    if(c.I===0){html+='<div style="font-size:12px;color:#3b6d11;margin-top:5px">지금 번지는 흔들림이 없다. 면역 거점(활발 학생)이 공동체를 받치고 있다.</div>';el.innerHTML=html;return;}
+    var sp=c.S?Math.round(c.exposed/c.S*100):0,cl=Math.round(c.cluster*10)/10;
+    html+='<div style="font-size:12px;line-height:1.7;margin-top:5px"><b>전파압</b> &nbsp;흔들리는 친구를 곁에 둔 취약 학생 <b style="color:#a33232">'+c.exposed+'명</b>'+(c.S?'(취약군의 '+sp+'%)':'')+' · 군집도 <b>'+cl+'배</b></div>';
+    html+='<div class="ghint" style="margin-top:3px">'+(c.cluster>=1.4?'흔들림이 친구 무리에 몰려 번진다. 한 명씩보다 무리째 손대는 것이 효율적이다.':c.cluster>=1.05?'흔들림이 친구를 따라 옅게 번지는 중이다.':'흔들림이 흩어져 있다. 무리 전파보다 개별 돌봄에 가깝다.')+'</div>';
+    var listLine=function(x,arrow){return '<div class="cline" data-sel="'+students.indexOf(x.s)+'" style="font-size:12px;padding:2px 0;cursor:pointer;line-height:1.5">· '+studTag(x.s)+' · 출석 '+Math.round(x.s.eng*100)+'% <span style="color:#8a755a">'+arrow+'</span></div>';};
+    if(c.spread.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#a33232">번짐의 핵 — 먼저 붙들면 번짐을 끊는다</div>'+c.spread.map(function(x){return listLine(x,'→ 건강한 친구 '+x.heal+'명이 곁에');}).join('');}
+    if(c.anchor.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#3b6d11">면역 거점 — 세우면 곁의 흔들림을 잡아준다</div>'+c.anchor.map(function(x){return listLine(x,'→ 흔들리는 친구 '+x.shaky+'명을 곁에서');}).join('');}
+    if(c.markers.length){html+='<div style="font-size:12px;margin-top:8px;border-top:1px solid #e0cda0;padding-top:6px"><span style="color:#8a755a">위험 표지(누가 잘 흔들리나)</span> &nbsp;'+c.markers.map(function(m){return '<b style="color:#a33232">'+m.k+' '+(Math.round(m.d.rr*10)/10)+'배</b>';}).join(' · ')+'</div>';}
+    html+='<div style="margin-top:8px"><button class="gbtn" id="conta-view" style="padding:3px 9px;font-size:12px'+(showSpread?';background:#5fb04e;border-color:#3b6d11;color:#1d3a14':'')+'">'+(showSpread?'전염 경로 숨기기':'교실에서 전염 경로 보기')+'</button></div>';
+    el.innerHTML=html;
+    Array.prototype.forEach.call(el.querySelectorAll('.cline'),function(b){b.addEventListener('click',function(){selStudent=students[+this.dataset.sel]||null;updateStudCard();document.getElementById('world').scrollIntoView({block:'center'});});});
+    var v=document.getElementById('conta-view');if(v)v.addEventListener('click',function(){showSpread=!showSpread;updateContagion(conta);});
+  }
   // 가장 가까운 해당 종류 일정까지 남은 주(0=진행 중, null=24주 내 없음)
   function weeksUntil(type){for(var d=0;d<=24;d++){var w=week+d,on=false;schedule.forEach(function(ev){if(ev.type===type&&periodActive(ev,w))on=true;});if(on)return d;}return null;}
   // 이번 주 할 일 — 현재 상태와 다가오는 일정을 훑어 시급순으로 액션 아이템을 띄운다(목사·갱신팀의 눈)
@@ -473,6 +524,7 @@
     if(risky/n>=0.18)items.push({u:2,t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)이 두껍다 → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
     else if(risky>0)items.push({u:1,t:'위기군 '+risky+'명 → 돌봄 명단 확인, 흔들리는 학생 안부.'});
     if(loners>=Math.max(3,n*0.08))items.push({u:2,t:'소그룹 밖 외톨이 <b>'+loners+'명</b> → 또래·소그룹에 의도적으로 연결(가장 큰 이탈 위험).'});
+    if(conta&&conta.spread.length&&conta.exposed>=Math.max(2,n*0.06))items.push({u:2,t:'흔들림이 친구를 타고 번지는 중(취약 '+conta.exposed+'명 노출) → "전염 진단"의 <b>번짐의 핵 '+conta.spread.length+'명</b>을 먼저 붙들어 무리 확산을 끊으라.'});
     if(nextSoo!=null&&nextSoo<=4)items.push({u:2,t:'수능 '+(nextSoo===0?'<b>진행 중</b>':'<b>'+nextSoo+'주 뒤</b>')+' → 고3 케어 집중, 수능 후 복귀 환영 준비.'});
     if(toYE<=4&&week>0){var shaky3=a.filter(function(s){return s.grade===3&&s.commit<0.5;}).length;if(shaky3>0)items.push({u:2,t:'곧 중3→고1 전환('+toYE+'주 뒤) → 흔들리는 중3 <b>'+shaky3+'명</b>을 미리 관계로 붙들기(전환 절벽).'});}
     if(nextExam!=null&&nextExam<=3)items.push({u:1,t:'시험기간 '+(nextExam===0?'진행 중':nextExam+'주 뒤')+' → 출석 일시 하락 대비, 시험 후 회복 모임.'});
@@ -529,7 +581,12 @@
     var act=students.filter(function(s){return !s.left;}).length,lines=act<=120;
     if(lines){wx.strokeStyle='rgba(90,70,50,0.14)';wx.lineWidth=1;
       students.forEach(function(s){if(s.left||s.seat<0)return;var a=seats[s.seat];var si=students.indexOf(s);s.friends.forEach(function(j){var fo=students[j];if(fo&&!fo.left&&fo.seat>=0&&j>si){var b=seats[fo.seat];wx.beginPath();wx.moveTo(a.x+1,a.y+1);wx.lineTo(b.x+1,b.y+1);wx.stroke();}});});}
+    // 전염 경로 오버레이: 흔들리는(감염) 학생 → 아직 건강한 친구를 잇는 선(번질 수 있는 길)
+    if(showSpread&&conta){wx.strokeStyle='rgba(214,90,79,0.6)';wx.lineWidth=1;
+      students.forEach(function(s){if(s.left||s.seat<0||s.eng>=0.3)return;var a=seats[s.seat];s.friends.forEach(function(j){var fo=students[j];if(fo&&!fo.left&&fo.seat>=0&&fo.eng>=0.3){var b=seats[fo.seat];wx.beginPath();wx.moveTo(a.x+1,a.y+1);wx.lineTo(b.x+1,b.y+1);wx.stroke();}});});}
     students.forEach(function(s){if(s.left||s.seat<0)return;var a=seats[s.seat];var bob=Math.round(Math.sin(t/350+s.phase));var x=a.x,y=a.y+bob;wx.fillStyle=color(s);wx.fillRect(x-2,y-1,4,4);wx.fillStyle='#f0c9a0';wx.fillRect(x-1,y-4,2,2);if(s.faith>0.7){wx.fillStyle='#f2c84b';wx.fillRect(x,y-6,1,1);}});
+    if(showSpread&&conta){var ring=function(s,col){if(!s||s.left||s.seat<0)return;var a=seats[s.seat];wx.strokeStyle=col;wx.lineWidth=1;wx.strokeRect(a.x-3,a.y-3,7,8);};
+      conta.spread.forEach(function(x){ring(x.s,'#a33232');});conta.anchor.forEach(function(x){ring(x.s,'#3b6d11');});}
     if(selStudent&&!selStudent.left&&selStudent.seat>=0){var sa=seats[selStudent.seat];wx.strokeStyle='#fffaf0';wx.lineWidth=1;wx.strokeRect(sa.x-4,sa.y-4,9,10);wx.strokeStyle='#2b2018';wx.strokeRect(sa.x-3,sa.y-3,7,8);}}
   function drawSpark(){sx.clearRect(0,0,320,56);if(hist.length<2)return;sx.strokeStyle='#5fb04e';sx.lineWidth=2;sx.beginPath();hist.forEach(function(h,i){var x=i/(hist.length-1)*316+2,y=54-(h.n/maxN)*48;i?sx.lineTo(x,y):sx.moveTo(x,y);});sx.stroke();sx.strokeStyle='#e0a52f';sx.beginPath();hist.forEach(function(h,i){var x=i/(hist.length-1)*316+2,y=54-h.f*48;i?sx.lineTo(x,y):sx.moveTo(x,y);});sx.stroke();}
 
