@@ -31,13 +31,13 @@
 <body>
 <div class="wrap">
 <h1>고등부 목회 계획 시뮬레이터</h1>
-<div class="gpanel" style="padding:9px 12px;margin:0 0 10px;background:#f3e7cc;border-color:#9a6c12">
-  <div style="font-size:12px;font-weight:600;color:#6b4a16;margin-bottom:3px">전제</div>
-  <div class="ghint" style="color:#6b5538">이 도구는 출석과 신앙이 친구 관계와 사역(소그룹·멘토·설교·수련회)으로 천천히 움직인다고 가정한다. 효과 수치는 그럴듯하게 넣은 가정값이지 검증된 사실이 아니다. 그러므로 여기서 보는 것은 현실 예측이 아니라 "이 전제대로라면 이렇게 흘러간다"는 한 가지 시나리오다. 분당우리교회 고등부 한 부(약 150명) 기준.</div>
-</div>
+<details class="gpanel" style="padding:9px 12px;margin:0 0 10px;background:#f3e7cc;border-color:#9a6c12">
+  <summary style="font-size:12px;color:#6b4a16;cursor:pointer;font-weight:600;list-style:none">전제 — 현실 예측이 아니라 "이 전제대로라면 이렇게 흘러간다"는 한 가지 시나리오다. <span style="font-weight:400;color:#8a755a">(자세히 ▾)</span></summary>
+  <div class="ghint" style="color:#6b5538;margin-top:6px">출석과 신앙이 친구 관계와 사역(소그룹·멘토·설교·수련회)으로 천천히 움직인다고 가정한다. 효과 수치는 그럴듯하게 넣은 가정값이지 검증된 사실이 아니다. 분당우리교회 고등부 한 부(약 150명) 기준.</div>
+</details>
 <div style="display:flex;align-items:center;gap:10px;margin:0 2px 12px;flex-wrap:wrap">
-  <span class="seg"><button id="mode-observe" class="on">관찰</button><button id="mode-scenario">시나리오</button></span>
-  <span class="ghint" style="flex:1;min-width:200px">관찰은 한 주씩 흐르는 교실을 지켜본다. 시나리오는 같은 계획을 끝까지 돌려 흐름과 처방을 본다.</span>
+  <span class="seg"><button id="mode-observe" class="on">관찰</button><button id="mode-scenario">시나리오</button><button id="mode-config">설정</button></span>
+  <span class="ghint" style="flex:1;min-width:160px">관찰 = 지켜보기 · 시나리오 = 끝까지 돌려보기 · 설정 = 우리 부·계획 맞추기</span>
 </div>
 
 <!-- ── 시나리오(보조) ────────────────────────────── -->
@@ -55,6 +55,20 @@
     <div id="pj-result"><div class="ghint" style="padding-top:2px">아래에서 운영·연간 계획·교회 설정을 맞춘 뒤 "시나리오 실행"을 누르면, 그 전제대로 끝까지 흘러간 결과가 여기 나온다. "약점·처방 분석"은 문제를 짚고 효과를 검증한 개입안을 추천한다. "공유 요약"은 교사팀·담임께 붙여 넣을 텍스트를 뽑는다.</div></div>
     <div id="pj-advice" style="margin-top:8px"></div>
     <div id="pj-summary-box" style="margin-top:8px"></div>
+  </div>
+  <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
+    <div class="gsec">시나리오 비교 (A/B)</div>
+    <div class="ghint" style="margin-bottom:8px">두 안을 같은 기간 동안 견준다. 설정 탭에서 한 안을 맞춰 A에 담고, 바꿔서 B에 담은 뒤 비교한다. 예: 수련회를 1년차 vs 2년차.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+      <button class="gbtn" id="cmp-save-a">현재 설정 → A</button>
+      <button class="gbtn" id="cmp-save-b">현재 설정 → B</button>
+      <span style="flex:1"></span>
+      <select id="cmp-weeks"><option value="24">1년(24주)</option><option value="48" selected>2년(48주)</option><option value="72">3년(72주)</option></select>
+      <button class="gbtn" id="cmp-run" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">비교 실행</button>
+    </div>
+    <div id="cmp-slot-a" class="ghint" style="border-left:3px solid #5fb04e;padding-left:8px;margin-bottom:5px">A · 비어 있다</div>
+    <div id="cmp-slot-b" class="ghint" style="border-left:3px solid #378add;padding-left:8px;margin-bottom:8px">B · 비어 있다</div>
+    <div id="cmp-result"></div>
   </div>
 </div>
 
@@ -98,7 +112,8 @@
   </div>
 </div>
 
-<!-- ── 운영 설정(공통) ───────────────────────────── -->
+<!-- ── 설정 탭: 운영·연간 계획·교회·저장 ───────────── -->
+<div id="config" hidden>
 <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
   <div class="gsec">운영 설정 (평소 사역의 밀도)</div>
   <div class="grow"><span class="glab">소그룹 비중</span><input type="range" id="s-sg" min="0" max="100" step="1" value="55"><span class="gval" id="v-s-sg">55%</span></div>
@@ -170,21 +185,8 @@
   <button class="gbtn" id="btn-gen" style="width:100%;background:#e0a52f;border-color:#9a6c12;color:#3a2a08">이 분포로 새로 생성</button>
 </div>
 
-<!-- ── 시나리오 비교(공통) ──────────────────────── -->
-<div class="gpanel" style="padding:10px 12px">
-  <div class="gsec">시나리오 비교 (A/B)</div>
-  <div class="ghint" style="margin-bottom:8px">지금의 운영·계획·교회 설정을 슬롯에 담아 두 안을 같은 기간 동안 견준다. 예: 수련회를 1년차에 vs 2년차에, 설교 양육형 vs 전도형.</div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-    <button class="gbtn" id="cmp-save-a">현재 설정 → A</button>
-    <button class="gbtn" id="cmp-save-b">현재 설정 → B</button>
-    <span style="flex:1"></span>
-    <select id="cmp-weeks"><option value="24">1년(24주)</option><option value="48" selected>2년(48주)</option><option value="72">3년(72주)</option></select>
-    <button class="gbtn" id="cmp-run" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">비교 실행</button>
-  </div>
-  <div id="cmp-slot-a" class="ghint" style="border-left:3px solid #5fb04e;padding-left:8px;margin-bottom:5px">A · 비어 있다</div>
-  <div id="cmp-slot-b" class="ghint" style="border-left:3px solid #378add;padding-left:8px;margin-bottom:8px">B · 비어 있다</div>
-  <div id="cmp-result"></div>
 </div>
+<!-- /설정 탭 -->
 
 <p class="ghint" style="margin:14px 2px 4px">효과 수치(수련회·설교·소그룹이 출석과 신앙을 얼마나 움직이는지)는 그럴듯하게 넣은 가정값이지 검증된 사실이 아니다. 결론을 내리는 도구가 아니라, 계획의 방향과 크기를 가늠하고 가설을 다듬는 도구로 보는 것이 맞다.</p>
 </div>
@@ -619,12 +621,10 @@
 
   // ── 모드 전환 ──
   function setMode(m){mode=m;
-    document.getElementById('scenario').hidden=(m!=='scenario');
-    document.getElementById('observe').hidden=(m!=='observe');
-    document.getElementById('mode-scenario').classList.toggle('on',m==='scenario');
-    document.getElementById('mode-observe').classList.toggle('on',m==='observe');}
-  document.getElementById('mode-scenario').addEventListener('click',function(){setMode('scenario');});
+    ['observe','scenario','config'].forEach(function(x){document.getElementById(x).hidden=(x!==m);document.getElementById('mode-'+x).classList.toggle('on',x===m);});}
   document.getElementById('mode-observe').addEventListener('click',function(){setMode('observe');});
+  document.getElementById('mode-scenario').addEventListener('click',function(){setMode('scenario');});
+  document.getElementById('mode-config').addEventListener('click',function(){setMode('config');});
 
   // ── 버튼 ──
   document.getElementById('pj-run').addEventListener('click',projectRun);
