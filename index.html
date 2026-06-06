@@ -48,11 +48,13 @@
       <span style="font-size:12px;color:#6b5538">기간</span>
       <select id="pj-weeks"><option value="24">1년(24주)</option><option value="48" selected>2년(48주)</option><option value="72">3년(72주)</option><option value="120">5년(120주)</option></select>
       <span style="flex:1"></span>
+      <button class="gbtn" id="pj-summary">공유 요약</button>
       <button class="gbtn" id="pj-advise">약점·처방 분석</button>
       <button class="gbtn" id="pj-run" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">시나리오 실행</button>
     </div>
-    <div id="pj-result"><div class="ghint" style="padding-top:2px">아래에서 운영·연간 계획·교회 설정을 맞춘 뒤 "시나리오 실행"을 누르면, 그 전제대로 끝까지 흘러간 결과가 여기 나온다. "약점·처방 분석"은 문제를 짚고, 효과를 검증한 개입안을 추천한다.</div></div>
+    <div id="pj-result"><div class="ghint" style="padding-top:2px">아래에서 운영·연간 계획·교회 설정을 맞춘 뒤 "시나리오 실행"을 누르면, 그 전제대로 끝까지 흘러간 결과가 여기 나온다. "약점·처방 분석"은 문제를 짚고 효과를 검증한 개입안을 추천한다. "공유 요약"은 교사팀·담임께 붙여 넣을 텍스트를 뽑는다.</div></div>
     <div id="pj-advice" style="margin-top:8px"></div>
+    <div id="pj-summary-box" style="margin-top:8px"></div>
   </div>
 </div>
 
@@ -513,6 +515,63 @@
     Array.prototype.forEach.call(box.querySelectorAll('[data-adopt]'),function(b){b.addEventListener('click',function(){var idx=+this.dataset.adopt;curCands[idx].adopt();this.textContent='적용됨';this.disabled=true;});});
   }
 
+  // ── 교사팀 공유용 텍스트 요약 ──
+  function schedLine(e){
+    if(e.type==='sermon')return '설교·'+SERMON_FOCUS[e.focus].label+' '+e.start+'주차 '+e.weeks+'주간';
+    if(e.type==='retreat')return '수련회 '+e.start+'주차 '+(['','1박2일','2박3일','3박4일'][e.nights]||'')+' 참가'+Math.round(e.attendRate*100)+'% 강도'+Math.round(e.intensity*100)+(e.repeat?' 매'+e.repeat+'주':'');
+    if(e.type==='exam')return '시험기간 '+e.start+'주차 '+(e.weeks||3)+'주간'+(e.repeat?' 매'+e.repeat+'주':'');
+    return EVENTS[e.type].label+' '+e.start+'주차'+(e.repeat?' 매'+e.repeat+'주':'');
+  }
+  function vulnTop(seg){
+    var rate=function(b){return b.tot>0.5?b.dropped/b.tot:0;};
+    var c=[{k:'외톨이',r:rate(seg.lon.y),t:seg.lon.y.tot},{k:'비신앙 가정',r:rate(seg.bg.none),t:seg.bg.none.tot},{k:'비코어',r:rate(seg.core.n),t:seg.core.n.tot}];
+    var top=c.filter(function(x){return x.t>2;}).sort(function(a,b){return b.r-a.r;})[0];
+    return top&&top.r>0.001?(top.k+' '+Math.round(top.r*100)+'%'):'뚜렷한 취약 유형 없음';
+  }
+  function topRx(plan,weeks){
+    var L=simulate(plan,weeks,4);L=L[L.length-1];var base=scoreOf(L),best=null;
+    candidates().forEach(function(cd){var c=cloneCfg(plan);cd.mut(c);var ll=simulate(c,weeks,4);ll=ll[ll.length-1];var g=scoreOf(ll)-base;if(!best||g>best.g)best={cd:cd,l:ll,g:g};});
+    if(!best||best.g<=0.5)return {ref:L,txt:'지금 계획에서 뚜렷한 추가 처방은 없다.'};
+    var l=best.l;return {ref:L,txt:best.cd.label+' (활발 '+(l.active-L.active>=0?'+':'')+Math.round(l.active-L.active)+', 이탈 '+(l.drop-L.drop>=0?'+':'')+Math.round(l.drop-L.drop)+', 신앙 '+((l.f-L.f)>=0?'+':'')+Math.round((l.f-L.f)*100)+'%p)'};
+  }
+  function buildSummaryText(){
+    var plan=captureConfig(),weeks=val('pj-weeks'),runs=8,yrs=Math.round(weeks/WEEKS_PER_YEAR);
+    var hp=simulate(plan,weeks,runs),hb=simulate({dist:plan.dist,ops:plan.ops,schedule:[]},weeks,runs);
+    var L=hp[hp.length-1],B=hb[hb.length-1],D=plan.dist;
+    var rx=topRx(plan,weeks);
+    var lines=[];
+    lines.push('[고등부 사역 계획 요약 — 시뮬레이션]');
+    lines.push('※ 효과 수치는 검증되지 않은 가정값. 현실 예측이 아니라 방향·크기의 참고용.');
+    lines.push('');
+    lines.push('· 우리 부: 전체 '+D.n+'명 · 1/2/3학년 비중 '+D.g1+'/'+D.g2+'/'+D.g3+' · 모태 '+Math.round(D.mota*100)+'% 비신앙가정 '+Math.round(D.none*100)+'% · 코어 '+Math.round(D.core*100)+'% 외톨이 '+Math.round(D.loner*100)+'%');
+    lines.push('· 운영: 소그룹 '+Math.round(plan.ops.sg*100)+'% · 멘토 '+Math.round(plan.ops.mt*100)+'% · 교사 '+plan.ops.tc+'명 · 연간신입 '+plan.ops.intake+'명 · 변화속도 '+Math.round(plan.ops.speed*100));
+    lines.push('');
+    lines.push('· 연간 계획:');
+    if(plan.schedule.length)plan.schedule.slice().sort(function(a,b){return a.start-b.start;}).forEach(function(e){lines.push('  - '+schedLine(e));});
+    else lines.push('  - (없음)');
+    lines.push('');
+    lines.push('· '+yrs+'년 뒤 전망('+runs+'회 평균, 계획 vs 기본운영):');
+    lines.push('  전체 '+Math.round(L.n)+'명 / 활발 '+Math.round(L.active)+' / 느슨 '+Math.round(L.loose)+' / 위기 '+Math.round(L.risk)+' / 누적이탈 '+Math.round(L.drop)+' / 평균신앙 '+Math.round(L.f*100)+'%');
+    lines.push('  계획 효과(기본운영 대비): 활발 '+(L.active-B.active>=0?'+':'')+Math.round(L.active-B.active)+' · 이탈 '+(L.drop-B.drop>=0?'+':'')+Math.round(L.drop-B.drop)+' · 신앙 '+((L.f-B.f)>=0?'+':'')+Math.round((L.f-B.f)*100)+'%p');
+    lines.push('');
+    lines.push('· 취약: 가장 빨리 빠지는 유형은 '+vulnTop(hp.seg)+'.');
+    lines.push('· 추천 처방 1순위: '+rx.txt);
+    return lines.join('\n');
+  }
+  function showSummary(){
+    var box=document.getElementById('pj-summary-box');
+    box.innerHTML='<div class="ghint" style="padding-top:2px">요약 만드는 중...</div>';
+    var txt=buildSummaryText();
+    box.innerHTML='<textarea id="pj-summary-text" readonly style="width:100%;height:200px;box-sizing:border-box;font-family:ui-monospace,monospace;font-size:11px;line-height:1.5;border:2px solid #4a3a2a;border-radius:5px;background:#fffaf0;color:#4a3a2a;padding:8px"></textarea><div style="display:flex;gap:6px;margin-top:6px"><button class="gbtn" id="pj-summary-copy">복사</button><span class="ghint" id="pj-summary-msg" style="align-self:center"></span></div>';
+    document.getElementById('pj-summary-text').value=txt;
+    document.getElementById('pj-summary-copy').addEventListener('click',function(){
+      var ta=document.getElementById('pj-summary-text');ta.select();
+      var done=function(){document.getElementById('pj-summary-msg').textContent='복사됐다. 교사팀·문서에 붙여 넣으라.';};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ta.value).then(done,function(){try{document.execCommand('copy');done();}catch(e){}});}
+      else{try{document.execCommand('copy');done();}catch(e){}}
+    });
+  }
+
   var slotA=null,slotB=null;
   function slotText(tag,cfg){
     var ev=cfg.schedule.length?cfg.schedule.map(function(e){return e.type==='sermon'?('설교·'+SERMON_FOCUS[e.focus].label):EVENTS[e.type].label;}).join(', '):'없음';
@@ -566,6 +625,7 @@
   // ── 버튼 ──
   document.getElementById('pj-run').addEventListener('click',projectRun);
   document.getElementById('pj-advise').addEventListener('click',adviseRun);
+  document.getElementById('pj-summary').addEventListener('click',showSummary);
   document.getElementById('btn-play').addEventListener('click',function(){playing=!playing;this.classList.toggle('on',playing);this.textContent=playing?'재생':'멈춤';});
   document.getElementById('btn-gen').addEventListener('click',function(){generate();renderSched();});
   document.getElementById('btn-add').addEventListener('click',function(){

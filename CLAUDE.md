@@ -42,6 +42,7 @@
 - `updateStudCard()` / `studNote(s)` + `#world` 클릭 핸들러 : 관찰 모드에서 학생(점)을 클릭하면 `selStudent`로 잡아 그 학생의 학년·배경·태그·출석·신앙·친구 수와 "지금 이 아이에게 필요한 것"(목양 한 줄)을 `#stud-card`에 띄운다. 한 영혼 단위의 돌봄을 위한 창.
 - `updateCareList()` + `#care-toggle` : **이번 주 돌봄 명단**. 출석이 무너진(`eng<0.3`) 학생을 약한 순으로 12명까지, 처지와 `studNote` 한 줄 처방과 함께 나열한다. 주일 심방·연락 명단 용도. `record()`가 펼쳐져 있을 때 실시간 갱신.
 - `adviseRun()` / `candidates()` / `scoreOf()` : 처방 엔진. 계획을 예측해 약점을 진단하고, 후보 개입(회복/양육/전도 설교, 멘토링·소그룹·교사↑, 수련회 강화)을 각각 같은 기간 돌려 개선 점수로 순위를 매겨 상위 3개를 추천한다. 각 카드의 "적용"(`bump`/`addPlanSermon`/`boostRetreatLive`)은 실제 계획·슬라이더에 반영한다.
+- `buildSummaryText()` / `showSummary()` + 보조(`schedLine`/`vulnTop`/`topRx`) : **교사팀 공유 요약**. 우리 부 설정·운영·연간 계획·전망(계획 vs 기본)·취약 1순위·추천 처방 1순위를 한 덩어리 텍스트로 만들어 복사하게 한다(카톡·문서 붙여넣기용).
 - `compareRun()` / `renderPair()` / `drawPairChart()` : 두 시나리오(A/B 또는 계획/기본)를 추이 그래프와 지표 델타 표로 그린다.
 - `draw(t)`, `drawSpark()`, `record()` : 관찰 모드의 캔버스·추이 그래프·지표 카드를 갱신한다.
 - `setMode(m)` / `syncFields()` : 관찰(`observe`, 기본)·시나리오(`scenario`) 토글, 일정 추가 폼의 종류별 입력 표시.
