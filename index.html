@@ -75,6 +75,10 @@
     <div class="gcard"><div class="l">평균 신앙</div><div class="v" id="m-faith">0%</div></div>
   </div>
   <div id="seg-live" class="gpanel" style="padding:7px 10px;margin-bottom:8px;font-size:12px;color:#6b5538;line-height:1.6"></div>
+  <div class="gpanel" style="padding:7px 10px;margin-bottom:8px">
+    <div style="display:flex;align-items:center;gap:8px"><span class="gsec" style="margin:0;flex:1">이번 주 돌봄 명단</span><button class="gbtn" id="care-toggle" style="padding:3px 9px;font-size:12px">펼치기</button></div>
+    <div id="care-list" hidden style="margin-top:7px"></div>
+  </div>
   <div class="gpanel" style="padding:6px;margin-bottom:8px">
     <canvas id="spark" width="320" height="56" style="width:100%;height:auto"></canvas>
     <div style="display:flex;gap:14px;font-size:11px;color:#6b5538;padding:0 2px">
@@ -299,7 +303,7 @@
       var lon=risky.filter(function(s){return s.loner;}).length,non=risky.filter(function(s){return s.bg==='none';}).length,ncore=risky.filter(function(s){return !s.core;}).length;
       sl.innerHTML='<b style="color:#a33232">위기군 '+risky.length+'명</b> 누가? &nbsp;학년 3/2/1: <b>'+g3+'/'+g2+'/'+g1+'</b> · 외톨이 <b>'+lon+'</b> · 비신앙 가정 <b>'+non+'</b> · 비코어 <b>'+ncore+'</b>';}
       else sl.innerHTML='<span style="color:#3b6d11">지금 위기군(출석 바닥)이 없다.</span> 어떤 학생이 흔들리는지 여기서 바로 짚는다.';}
-    updateStudCard();}
+    updateStudCard();updateCareList();}
   function color(s){return s.eng>=0.55?'#5fb04e':s.eng>=0.3?'#e0a52f':'#d65a4f';}
   function draw(t){for(var y=0;y<190;y+=16)for(var x=0;x<320;x+=16){wx.fillStyle=((x/16+y/16)%2===0)?'#efe2c4':'#e7d8b4';wx.fillRect(x,y,16,16);}
     wx.fillStyle='#d9c39a';wx.fillRect(0,0,320,28);wx.fillStyle='#8a6d4b';wx.fillRect(150,9,20,12);
@@ -343,6 +347,18 @@
     if(best&&bd<=80){selStudent=best;}else{selStudent=null;}
     updateStudCard();
   });
+  // 이번 주 돌봄 명단: 출석이 무너진 학생을 약한 순서로, 한 줄 처방과 함께
+  function updateCareList(){
+    var el=document.getElementById('care-list');if(!el||el.hidden)return;
+    var risky=students.filter(function(s){return !s.left&&s.eng<0.3;}).sort(function(a,b){return a.eng-b.eng;});
+    if(!risky.length){el.innerHTML='<div class="ghint" style="color:#3b6d11">지금 돌봄이 급한 학생이 없다. 위기 학생이 생기면 여기 약한 순서로 모인다.</div>';return;}
+    var top=risky.slice(0,12);
+    el.innerHTML=top.map(function(s,i){
+      var tags=[s.grade+'학년',{mota:'모태',normal:'일반',none:'비신앙 가정'}[s.bg]];if(s.loner)tags.push('외톨이');if(!s.sg)tags.push('소그룹 밖');
+      return '<div style="font-size:12px;padding:4px 0;border-bottom:1px solid #e6d6b0;line-height:1.6"><b style="color:#a33232">'+(i+1)+'.</b> '+tags.join(' · ')+' · 출석 '+Math.round(s.eng*100)+'%<br><span style="color:#6b4a16">→ '+studNote(s)+'</span></div>';
+    }).join('')+(risky.length>12?'<div class="ghint" style="margin-top:4px">외 '+(risky.length-12)+'명 더 있다.</div>':'');
+  }
+  document.getElementById('care-toggle').addEventListener('click',function(){var el=document.getElementById('care-list');el.hidden=!el.hidden;this.textContent=el.hidden?'펼치기':'접기';updateCareList();});
 
   // ── 헤드리스 예측 엔진 ──
   function simulateOnce(cfg,weeks){

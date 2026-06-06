@@ -40,6 +40,7 @@
 - `segStats(arr)` / `segHTML(seg, weeks)` : **취약 분석**. 어떤 학생이 빠지는가를 본다. 고정 속성(신앙배경·외톨이·코어)은 누적 이탈률, 학년은 현재 위기 비율로 집계하고, 이탈이 가장 몰리는 유형과 그에 맞는 목회적 한 줄을 제시한다. `simulateOnce`가 최종 상태 `seg`를 `hist.seg`로 붙이고 `simulate`가 평균한다.
 - `record()`는 관찰 모드에서 `#seg-live`에 "위기군이 누구인가"(학년·외톨이·비신앙 가정·비코어 구성)를 실시간으로 보여준다.
 - `updateStudCard()` / `studNote(s)` + `#world` 클릭 핸들러 : 관찰 모드에서 학생(점)을 클릭하면 `selStudent`로 잡아 그 학생의 학년·배경·태그·출석·신앙·친구 수와 "지금 이 아이에게 필요한 것"(목양 한 줄)을 `#stud-card`에 띄운다. 한 영혼 단위의 돌봄을 위한 창.
+- `updateCareList()` + `#care-toggle` : **이번 주 돌봄 명단**. 출석이 무너진(`eng<0.3`) 학생을 약한 순으로 12명까지, 처지와 `studNote` 한 줄 처방과 함께 나열한다. 주일 심방·연락 명단 용도. `record()`가 펼쳐져 있을 때 실시간 갱신.
 - `adviseRun()` / `candidates()` / `scoreOf()` : 처방 엔진. 계획을 예측해 약점을 진단하고, 후보 개입(회복/양육/전도 설교, 멘토링·소그룹·교사↑, 수련회 강화)을 각각 같은 기간 돌려 개선 점수로 순위를 매겨 상위 3개를 추천한다. 각 카드의 "적용"(`bump`/`addPlanSermon`/`boostRetreatLive`)은 실제 계획·슬라이더에 반영한다.
 - `compareRun()` / `renderPair()` / `drawPairChart()` : 두 시나리오(A/B 또는 계획/기본)를 추이 그래프와 지표 델타 표로 그린다.
 - `draw(t)`, `drawSpark()`, `record()` : 관찰 모드의 캔버스·추이 그래프·지표 카드를 갱신한다.
