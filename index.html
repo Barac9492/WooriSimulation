@@ -638,7 +638,14 @@
   }
   function renderPair(box,hA,hB,labA,labB,colA,colB,weeks,runs,note){
     var la=hA[hA.length-1],lb=hB[hB.length-1];
-    var html='<div class="gpanel" style="padding:6px;margin:4px 0 8px"><canvas id="pcv" width="320" height="90" style="width:100%;height:auto"></canvas>'+
+    // 평이한 판정 한 줄 — 숫자표 전에, "그래서 어느 쪽이 나은가"
+    var sc=function(l){return l.active-l.risk-0.6*l.drop+l.f*60;},gap=sc(la)-sc(lb);
+    var vTxt,vCol;if(gap>=8){vTxt=labA+' 쪽이 '+labB+'보다 <b>뚜렷이 낫다</b> — 이 방향으로 가라.';vCol='#3b6d11';}
+    else if(gap>=2.5){vTxt=labA+' 쪽이 '+labB+'보다 <b>조금 낫다</b>.';vCol='#3b6d11';}
+    else if(gap>-2.5){vTxt='둘이 <b>비슷하다</b> — 더 과감한 지렛대가 필요할 수 있다('+labA+' vs '+labB+').';vCol='#9a6c12';}
+    else{vTxt=labA+' 쪽이 '+labB+'보다 <b>오히려 약하다</b> — 손볼 필요가 있다.';vCol='#a33232';}
+    var html='<div style="font-size:13px;color:'+vCol+';background:#f3e7cc;border:2px solid '+vCol+';border-radius:5px;padding:7px 10px;margin:2px 0 8px;line-height:1.5">→ '+vTxt+'</div>'+
+      '<div class="gpanel" style="padding:6px;margin:4px 0 8px"><canvas id="pcv" width="320" height="90" style="width:100%;height:auto"></canvas>'+
       '<div style="display:flex;gap:14px;font-size:11px;color:#6b5538;padding:2px 2px 0;flex-wrap:wrap">'+
       '<span><span style="display:inline-block;width:10px;height:3px;background:'+colA+';vertical-align:middle"></span> '+labA+' 전체 인원</span>'+
       '<span><span style="display:inline-block;width:10px;height:3px;background:'+colB+';vertical-align:middle"></span> '+labB+' 전체 인원</span>'+
