@@ -63,8 +63,9 @@
   </div>
   <div id="evbar" style="background:#e7d8b4;border:2px solid #4a3a2a;border-radius:5px;padding:4px 10px;margin-bottom:8px;font-size:12px;color:#6b5538">이번 주 일정: —</div>
   <div class="gpanel" style="padding:4px;line-height:0;margin-bottom:8px">
-    <canvas id="world" width="320" height="190" style="width:100%;height:auto;image-rendering:pixelated;border-radius:3px"></canvas>
+    <canvas id="world" width="320" height="190" style="width:100%;height:auto;image-rendering:pixelated;border-radius:3px;cursor:pointer"></canvas>
   </div>
+  <div id="stud-card" class="gpanel" style="padding:8px 10px;margin-bottom:8px;background:#f3e7cc" hidden></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px;margin-bottom:8px">
     <div class="gcard"><div class="l">전체</div><div class="v" id="m-total">0</div></div>
     <div class="gcard"><div class="l" style="color:#3b6d11">활발</div><div class="v" id="m-active" style="color:#3b6d11">0</div></div>
@@ -190,7 +191,7 @@
   var EVENTS={retreat:{label:'수련회',color:'#5fb04e'},outreach:{label:'전도·친구초청',color:'#378add'},smallgroup:{label:'소그룹 집중주간',color:'#7a5cd0'},service:{label:'봉사·단기선교',color:'#1d9e75'},exam:{label:'시험기간',color:'#d65a4f'},sermon:{label:'설교 시리즈',color:'#c9852b'}};
   var SERMON_FOCUS={nurture:{label:'양육형',color:'#c9852b'},evangel:{label:'전도형',color:'#378add'},recovery:{label:'회복형',color:'#9a5bd0'}};
   var seats=[];for(var r=0;r<12;r++)for(var c=0;c<15;c++)seats.push({x:14+c*20,y:36+r*13,taken:false});
-  var students=[],week=0,dropouts=0,playing=true,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[];
+  var students=[],week=0,dropouts=0,playing=true,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null;
   var val=function(id){return +document.getElementById(id).value;};
   function freeSeat(){for(var i=0;i<seats.length;i++)if(!seats[i].taken){seats[i].taken=true;return i;}return -1;}
   function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
@@ -214,7 +215,8 @@
   function linkIn(s,master,pool,mn,mx){var cand=pool.filter(function(o){return o!==s&&!o.left&&Math.abs(o.grade-s.grade)<=1;});shuffle(cand);var n=Math.min(cand.length,mn+Math.floor(Math.random()*(mx-mn+1)));for(var k=0;k<n;k++){var idx=master.indexOf(cand[k]);if(idx>=0&&s.friends.indexOf(idx)<0)s.friends.push(idx);}}
   function link(s,pool,mn,mx){linkIn(s,students,pool,mn,mx);}
   function generate(){
-    seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];maxN=1;
+    seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];maxN=1;selStudent=null;
+    var sc=document.getElementById('stud-card');if(sc)sc.hidden=true;
     var N=val('p-n');for(var i=0;i<N;i++)students.push(makeOne(pickGrade()));
     students.forEach(function(s){s.loner?link(s,students,0,1):link(s,students,3,5);});
     showComp();record();
@@ -296,15 +298,51 @@
     if(sl){if(risky.length){var g3=risky.filter(function(s){return s.grade===3;}).length,g2=risky.filter(function(s){return s.grade===2;}).length,g1=risky.filter(function(s){return s.grade===1;}).length;
       var lon=risky.filter(function(s){return s.loner;}).length,non=risky.filter(function(s){return s.bg==='none';}).length,ncore=risky.filter(function(s){return !s.core;}).length;
       sl.innerHTML='<b style="color:#a33232">위기군 '+risky.length+'명</b> 누가? &nbsp;학년 3/2/1: <b>'+g3+'/'+g2+'/'+g1+'</b> · 외톨이 <b>'+lon+'</b> · 비신앙 가정 <b>'+non+'</b> · 비코어 <b>'+ncore+'</b>';}
-      else sl.innerHTML='<span style="color:#3b6d11">지금 위기군(출석 바닥)이 없다.</span> 어떤 학생이 흔들리는지 여기서 바로 짚는다.';}}
+      else sl.innerHTML='<span style="color:#3b6d11">지금 위기군(출석 바닥)이 없다.</span> 어떤 학생이 흔들리는지 여기서 바로 짚는다.';}
+    updateStudCard();}
   function color(s){return s.eng>=0.55?'#5fb04e':s.eng>=0.3?'#e0a52f':'#d65a4f';}
   function draw(t){for(var y=0;y<190;y+=16)for(var x=0;x<320;x+=16){wx.fillStyle=((x/16+y/16)%2===0)?'#efe2c4':'#e7d8b4';wx.fillRect(x,y,16,16);}
     wx.fillStyle='#d9c39a';wx.fillRect(0,0,320,28);wx.fillStyle='#8a6d4b';wx.fillRect(150,9,20,12);
     var act=students.filter(function(s){return !s.left;}).length,lines=act<=120;
     if(lines){wx.strokeStyle='rgba(90,70,50,0.14)';wx.lineWidth=1;
       students.forEach(function(s){if(s.left||s.seat<0)return;var a=seats[s.seat];var si=students.indexOf(s);s.friends.forEach(function(j){var fo=students[j];if(fo&&!fo.left&&fo.seat>=0&&j>si){var b=seats[fo.seat];wx.beginPath();wx.moveTo(a.x+1,a.y+1);wx.lineTo(b.x+1,b.y+1);wx.stroke();}});});}
-    students.forEach(function(s){if(s.left||s.seat<0)return;var a=seats[s.seat];var bob=Math.round(Math.sin(t/350+s.phase));var x=a.x,y=a.y+bob;wx.fillStyle=color(s);wx.fillRect(x-2,y-1,4,4);wx.fillStyle='#f0c9a0';wx.fillRect(x-1,y-4,2,2);if(s.faith>0.7){wx.fillStyle='#f2c84b';wx.fillRect(x,y-6,1,1);}});}
+    students.forEach(function(s){if(s.left||s.seat<0)return;var a=seats[s.seat];var bob=Math.round(Math.sin(t/350+s.phase));var x=a.x,y=a.y+bob;wx.fillStyle=color(s);wx.fillRect(x-2,y-1,4,4);wx.fillStyle='#f0c9a0';wx.fillRect(x-1,y-4,2,2);if(s.faith>0.7){wx.fillStyle='#f2c84b';wx.fillRect(x,y-6,1,1);}});
+    if(selStudent&&!selStudent.left&&selStudent.seat>=0){var sa=seats[selStudent.seat];wx.strokeStyle='#fffaf0';wx.lineWidth=1;wx.strokeRect(sa.x-4,sa.y-4,9,10);wx.strokeStyle='#2b2018';wx.strokeRect(sa.x-3,sa.y-3,7,8);}}
   function drawSpark(){sx.clearRect(0,0,320,56);if(hist.length<2)return;sx.strokeStyle='#5fb04e';sx.lineWidth=2;sx.beginPath();hist.forEach(function(h,i){var x=i/(hist.length-1)*316+2,y=54-(h.n/maxN)*48;i?sx.lineTo(x,y):sx.moveTo(x,y);});sx.stroke();sx.strokeStyle='#e0a52f';sx.beginPath();hist.forEach(function(h,i){var x=i/(hist.length-1)*316+2,y=54-h.f*48;i?sx.lineTo(x,y):sx.moveTo(x,y);});sx.stroke();}
+
+  // ── 한 학생 들여다보기(목양: 한 영혼) ──
+  function studNote(s){
+    var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
+    if(s.loner||fr<=1)return '친구가 거의 없다. 또래·소그룹에 의도적으로 잇는 것이 가장 급하다.';
+    if(s.eng<0.3)return '출석이 흔들린다. 이번 주 안부 연락과 심방이 필요하다.';
+    if(s.bg==='none'&&s.faith<0.4)return '신앙 배경이 약하다. 꾸준한 관심과 전도형 양육으로 붙들라.';
+    if(s.core)return '공동체의 기둥이다. 세워 주고 섬길 자리를 맡기라.';
+    if(s.faith>=0.6&&s.eng>=0.55)return '안정적이고 신앙도 깊다. 한 걸음 더 깊은 제자훈련으로 초대하라.';
+    return '대체로 안정적이다. 곁을 지키며 한 걸음 더 깊은 양육으로 이끌라.';
+  }
+  function updateStudCard(){
+    var el=document.getElementById('stud-card');if(!el)return;var s=selStudent;
+    if(!s){el.hidden=true;return;}
+    if(s.left){el.hidden=false;el.innerHTML='<div style="font-size:12px;color:#6b5538"><b>선택한 학생</b> · 이미 공동체를 떠났다(이탈 또는 졸업).</div>';return;}
+    var bgL={mota:'모태신앙',normal:'일반 가정',none:'비신앙 가정'}[s.bg];
+    var stat=s.eng>=0.55?'<span style="color:#3b6d11;font-weight:600">활발</span>':s.eng>=0.3?'<span style="color:#9a6c12;font-weight:600">느슨</span>':'<span style="color:#a33232;font-weight:600">위기</span>';
+    var tags=[];if(s.core)tags.push('코어');if(s.loner)tags.push('외톨이');if(s.sg)tags.push('소그룹');if(s.mentor)tags.push('멘토 연결');
+    var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
+    el.hidden=false;
+    el.innerHTML='<div style="font-size:12px;line-height:1.7;color:#4a3a2a">'+
+      '<b>선택한 학생</b> &nbsp;'+stat+'<br>'+
+      s.grade+'학년 · '+bgL+(tags.length?' · '+tags.join(' · '):'')+'<br>'+
+      '출석 '+Math.round(s.eng*100)+'% · 신앙 관심 '+Math.round(s.faith*100)+'% · 친구 '+fr+'명'+
+      '<div style="color:#6b4a16;margin-top:5px;border-top:1px solid #e0cda0;padding-top:5px">→ '+studNote(s)+'</div></div>';
+  }
+  document.getElementById('world').addEventListener('click',function(e){
+    var rect=this.getBoundingClientRect();
+    var cx=(e.clientX-rect.left)/rect.width*320,cy=(e.clientY-rect.top)/rect.height*190;
+    var best=null,bd=1e9;
+    students.forEach(function(s){if(s.left||s.seat<0)return;var a=seats[s.seat];var d=(a.x-cx)*(a.x-cx)+(a.y-cy)*(a.y-cy);if(d<bd){bd=d;best=s;}});
+    if(best&&bd<=80){selStudent=best;}else{selStudent=null;}
+    updateStudCard();
+  });
 
   // ── 헤드리스 예측 엔진 ──
   function simulateOnce(cfg,weeks){
