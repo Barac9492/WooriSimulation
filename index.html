@@ -60,6 +60,7 @@
 
 <!-- ── 시나리오(보조) ────────────────────────────── -->
 <div id="scenario" hidden>
+  <div class="ghint" style="margin:0 2px 8px">끝까지 돌려보는 곳이다. ① "시나리오 실행"으로 계획과 기본 운영을 견주고 → ② "확산 차단 실험"으로 같은 돌봄을 어디 먼저 둘지 보고 → ③ "약점·처방 분석"으로 손볼 곳을 받는다.</div>
   <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
     <div class="gsec">시나리오 결과</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
@@ -110,6 +111,7 @@
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
       <button class="gbtn" id="btn-step" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">다음 주 ▶</button>
       <button class="gbtn" id="btn-play">▶ 자동재생</button>
+      <button class="gbtn" id="btn-reset" title="같은 계획으로 처음(0주차)부터 다시 본다">↺ 처음부터</button>
       <span style="flex:1"></span>
       <span style="font-size:12px;color:#6b5538"><b class="gnum" id="hud-week">0</b>주차 · <b class="gnum" id="hud-year">1</b>년차 <b class="gnum" id="hud-term">1</b>학기</span>
       <span class="ghint">속도</span>
@@ -1060,6 +1062,7 @@
   function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
+  document.getElementById('btn-reset').addEventListener('click',function(){if(week>0&&!confirm('지금까지 흘려본 주차를 비우고, 같은 계획으로 0주차부터 다시 본다.'))return;if(playing)setPlay(false);generate();});
   document.getElementById('btn-gen').addEventListener('click',function(){generate();renderSched();});
   function setSlider(id,v){var e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input'));}
   function applyPreset(active,risk,dara){setSlider('p-active',active);setSlider('p-risk',risk);setSlider('s-daracbang',dara);}
