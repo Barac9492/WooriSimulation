@@ -853,10 +853,13 @@
   }
   function compareRun(){
     var box=document.getElementById('cmp-result');
-    if(!slotA||!slotB){box.innerHTML='<div style="font-size:12px;color:#a33232;padding-top:4px">A와 B를 모두 저장한 뒤 실행하라.</div>';return;}
+    if(!slotA||!slotB){var miss=(!slotA&&!slotB)?'A와 B를 모두':(!slotA?'A를':'B를');box.innerHTML='<div style="font-size:12px;color:#a33232;padding-top:4px">'+miss+' 아직 안 담았다 → 설정에서 안을 맞춘 뒤 위 "현재 설정 → A/B"를 눌러 담고 다시 실행하라.</div>';return;}
+    box.innerHTML='<div class="ghint" style="padding-top:2px">비교 중... (각 8회 평균)</div>';
     var weeks=val('cmp-weeks'),runs=8;
-    renderPair(box,simulate(slotA,weeks,runs),simulate(slotB,weeks,runs),'A','B','#5fb04e','#378add',weeks,runs,
-      weeks+'주 차 시점의 평균값이다. 차이는 (A − B). 계수는 검증되지 않은 가정값이므로 방향과 크기의 비교로만 읽으라.');
+    setTimeout(function(){
+      renderPair(box,simulate(slotA,weeks,runs),simulate(slotB,weeks,runs),'A','B','#5fb04e','#378add',weeks,runs,
+        weeks+'주 차 시점의 평균값이다. 차이는 (A − B). 계수는 검증되지 않은 가정값이므로 방향과 크기의 비교로만 읽으라.');
+    },30);
   }
   function renderSched(){schedule.sort(function(a,b){return a.start-b.start;});var c=document.getElementById('sched');
     c.innerHTML=schedule.length?schedule.map(function(ev){
