@@ -40,7 +40,7 @@
       <b>① 설정 → 현재 진단</b> : 우리 부의 지금(규모·건강·중등/고등)을 넣는다.<br>
       <b>② 설정 → 주간 계획 캘린더</b> : 설교·수련회·담임 말씀을 주차에 채운다.<br>
       <b>③ 관찰</b> : "다음 주 ▶"로 한 주씩 넘기며 그 효과를 본다.<br>
-      <b>④ 시나리오</b> : 끝까지 돌려 결과·취약 분석·처방을 받는다.
+      <b>④ 시나리오</b> : 끝까지 돌려 결과·어떤 아이가 빠지나·처방을 받는다.
     </div>
     <div style="display:flex;gap:8px">
       <button class="gbtn" id="intro-start" style="flex:1;background:#5fb04e;border-color:#3b6d11;color:#1d3a14">설정에서 시작하기</button>
@@ -52,7 +52,7 @@
 <div style="display:flex;align-items:center;gap:8px;margin:6px 2px 6px"><h1 style="margin:0;flex:1">중고등부 목회 계획 시뮬레이터</h1><button class="gbtn" id="btn-guide" style="padding:4px 10px;font-size:12px;flex:none">가이드</button></div>
 <details class="gpanel" style="padding:9px 12px;margin:0 0 10px;background:#f3e7cc;border-color:#9a6c12">
   <summary style="font-size:12px;color:#6b4a16;cursor:pointer;font-weight:600;list-style:none">전제 — 현실 예측이 아니라 "이 전제대로라면 이렇게 흘러간다"는 한 가지 시나리오다. <span style="font-weight:400;color:#6b5538">(자세히 ▾)</span></summary>
-  <div class="ghint" style="color:#6b5538;margin-top:6px">출석과 신앙이 친구 관계와 사역(소그룹·멘토·설교·수련회)으로 천천히 움직인다고 가정한다. 효과 수치는 그럴듯하게 넣은 가정값이지 검증된 사실이 아니다. 분당우리교회 중고등부 한 부(약 150명) 기준.</div>
+  <div class="ghint" style="color:#6b5538;margin-top:6px">출석과 신앙이 친구 관계와 사역(소그룹·멘토·설교·수련회)으로 천천히 움직인다고 본다. 효과 수치는 그럴듯하게 넣어 본 값이지 확인된 사실이 아니다. 분당우리교회 중고등부 한 부(약 150명) 기준.</div>
 </details>
 <div style="display:flex;align-items:center;gap:10px;margin:0 2px 12px;flex-wrap:wrap">
   <span class="seg"><button id="mode-observe" class="on">관찰</button><button id="mode-scenario">시나리오</button><button id="mode-config">설정</button></span>
@@ -71,7 +71,7 @@
       <button class="gbtn" id="pj-advise">약점·처방</button>
       <button class="gbtn" id="pj-summary">공유 요약</button>
     </div>
-    <div id="pj-result"><div class="ghint" style="padding-top:2px">아래에서 운영·연간 계획·교회 설정을 맞춘 뒤 "시나리오 실행"을 누르면, 그 전제대로 끝까지 흘러간 결과가 여기 나온다. "약점·처방 분석"은 문제를 짚고 효과를 검증한 개입안을 추천한다. "공유 요약"은 교사팀·담임께 붙여 넣을 텍스트를 뽑는다.</div></div>
+    <div id="pj-result"><div class="ghint" style="padding-top:2px">아래에서 운영·연간 계획·교회 설정을 맞춘 뒤 "시나리오 실행"을 누르면, 그대로 끝까지 흘러간 결과가 여기 나온다. "약점·처방"은 문제를 짚고, 돌려 보고 효과를 확인한 손쓸 거리를 추천한다. "공유 요약"은 교사팀·담임께 붙여 넣을 글을 뽑는다.</div></div>
     <div id="pj-advice" style="margin-top:8px"></div>
     <div id="pj-summary-box" style="margin-top:8px"></div>
   </div>
@@ -154,7 +154,7 @@
 
   <!-- 자세히: 분석 디테일(접힘) -->
   <details class="gpanel" style="padding:9px 12px;margin-bottom:8px">
-    <summary style="font-size:12px;font-weight:600;color:#6b5538;cursor:pointer">자세히 보기 — 교회 생태계 · 신앙의 결 · 위기군 구성 · 돌봄 명단 · 추이 ▾</summary>
+    <summary style="font-size:12px;font-weight:600;color:#6b5538;cursor:pointer">자세히 보기 — 교회·가정 분위기 · 신앙의 결 · 흔들리는 아이들 · 돌봄 명단 · 추이 ▾</summary>
     <div style="margin-top:10px">
       <div id="eco" style="font-size:12px;color:#6b5538;line-height:2;margin-bottom:8px"></div>
       <div id="dims" style="font-size:12px;color:#6b5538;line-height:1.6;margin-bottom:2px"></div>
@@ -295,7 +295,7 @@
 </div>
 <!-- /설정 탭 -->
 
-<p class="ghint" style="margin:14px 2px 4px">효과 수치(수련회·설교·소그룹이 출석과 신앙을 얼마나 움직이는지)는 그럴듯하게 넣은 가정값이지 검증된 사실이 아니다. 결론을 내리는 도구가 아니라, 계획의 방향과 크기를 가늠하고 가설을 다듬는 도구로 보는 것이 맞다.</p>
+<p class="ghint" style="margin:14px 2px 4px">효과 수치(수련회·설교·소그룹이 출석과 신앙을 얼마나 움직이는지)는 그럴듯하게 넣어 본 값이지 확인된 사실이 아니다. 결론을 내리는 도구가 아니라, 계획의 방향과 크기를 가늠하고 생각을 다듬는 도구로 보는 것이 맞다.</p>
 </div>
 <script>
 (function(){
@@ -481,8 +481,8 @@
     var risky=a.filter(function(s){return s.eng<0.3;});var sl=document.getElementById('seg-live');
     if(sl){if(risky.length){var mid=risky.filter(function(s){return s.grade<=3;}).length,high=risky.filter(function(s){return s.grade>=4;}).length,go3=risky.filter(function(s){return s.grade===6;}).length;
       var lon=risky.filter(function(s){return s.loner;}).length,non=risky.filter(function(s){return s.bg==='none';}).length,ncore=risky.filter(function(s){return !s.core;}).length;
-      sl.innerHTML='<b style="color:#a33232">위기군 '+risky.length+'명</b> 누가? &nbsp;중등 <b>'+mid+'</b> 고등 <b>'+high+'</b>(고3 '+go3+') · 외톨이 <b>'+lon+'</b> · 비신앙 가정 <b>'+non+'</b> · 비코어 <b>'+ncore+'</b>';}
-      else sl.innerHTML='<span style="color:#3b6d11">지금 위기군(출석 바닥)이 없다.</span> 어떤 학생이 흔들리는지 여기서 바로 짚는다.';}
+      sl.innerHTML='<b style="color:#a33232">흔들리는 아이 '+risky.length+'명</b>, 누구? &nbsp;중등 <b>'+mid+'</b> 고등 <b>'+high+'</b>(고3 '+go3+') · 외톨이 <b>'+lon+'</b> · 비신앙 가정 <b>'+non+'</b> · 코어 아닌 아이 <b>'+ncore+'</b>';}
+      else sl.innerHTML='<span style="color:#3b6d11">지금은 흔들리는 아이가 없다.</span> 누가 흔들리는지 여기서 바로 짚는다.';}
     var n2=a.length||1,aw=0,ah=0,ab=0;a.forEach(function(s){aw+=s.word;ah+=s.holy;ab+=s.belong;});aw/=n2;ah/=n2;ab/=n2;
     var cur={n:a.length,active:ac,loose:lo,risk:a.length-ac-lo,drop:dropouts,f:f,word:aw,holy:ah,belong:ab};
     var dm=document.getElementById('dims');if(dm)dm.innerHTML='<b style="color:#6b5538">신앙의 결(평균)</b> &nbsp;말씀 <b style="color:#7a5c38">'+Math.round(aw*100)+'%</b> · 거룩 <b style="color:#6b4a8a">'+Math.round(ah*100)+'%</b> · 소속 <b style="color:#2e8b8b">'+Math.round(ab*100)+'%</b>';
@@ -538,8 +538,8 @@
     var noneA=a.filter(function(s){return s.bg==='none';}).length,noneR=risk.filter(function(s){return s.bg==='none';}).length;
     var nextSoo=weeksUntil('sooneung'),nextExam=weeksUntil('exam'),toYE=WEEKS_PER_YEAR-(week%WEEKS_PER_YEAR);
     var trend='';if(renderActions._lr!=null&&week>1){var dv=risky-renderActions._lr;if(dv>=2)trend=' <span style="color:#a33232">▲ 늘고 있다</span>';else if(dv<=-2)trend=' <span style="color:#3b6d11">▼ 줄고 있다</span>';}renderActions._lr=risky;
-    if(risky/n>=0.18)items.push({u:2,t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)'+trend+' → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
-    else if(risky>0)items.push({u:1,t:'위기군 '+risky+'명'+trend+' → 돌봄 명단 확인, 흔들리는 학생 안부.'});
+    if(risky/n>=0.18)items.push({u:2,t:'흔들리는 아이가 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)'+trend+' → "이번 주 돌봄 명단"을 펴서 약한 아이부터 심방·연락.'});
+    else if(risky>0)items.push({u:1,t:'흔들리는 아이 '+risky+'명'+trend+' → 돌봄 명단 보고 안부 묻기.'});
     if(loners>=Math.max(3,n*0.08))items.push({u:2,t:'소그룹 밖 외톨이 <b>'+loners+'명</b> → 또래·소그룹에 의도적으로 연결(가장 큰 이탈 위험).'});
     if(conta&&conta.spread.length&&conta.exposed>=Math.max(2,n*0.06))items.push({u:2,t:'흔들리는 아이가 친구를 타고 늘고 있다(함께 흔들리기 쉬운 아이 '+conta.exposed+'명) → "전염 진단"의 번짐의 핵 '+conta.spread.length+'명을 먼저 붙들어 번짐을 끊으라.'});
     if(nextSoo!=null&&nextSoo<=4)items.push({u:2,t:'수능 '+(nextSoo===0?'<b>진행 중</b>':'<b>'+nextSoo+'주 뒤</b>')+' → 고3 케어 집중, 수능 후 복귀 환영 준비.'});
@@ -598,7 +598,7 @@
   function updateEco(){
     var el=document.getElementById('eco');if(!el)return;
     var bar=function(v,col){var w=Math.round(v*60);return '<span style="display:inline-block;width:60px;height:7px;border:1px solid #4a3a2a;border-radius:3px;vertical-align:middle;background:linear-gradient(90deg,'+col+' '+w+'px,#e7d8b4 '+w+'px)"></span>';};
-    el.innerHTML='<b style="color:#6b4a16">교회 생태계</b> &nbsp;교회 분위기 '+bar(churchClimate,'#b5651d')+' '+Math.round(churchClimate*100)+'% &nbsp;·&nbsp; 부모 다락방 '+bar(parentVitality,'#2e8b57')+' '+Math.round(parentVitality*100)+'%';
+    el.innerHTML='<b style="color:#6b4a16">교회·가정 분위기</b> &nbsp;교회 분위기 '+bar(churchClimate,'#b5651d')+' '+Math.round(churchClimate*100)+'% &nbsp;·&nbsp; 부모 다락방 '+bar(parentVitality,'#2e8b57')+' '+Math.round(parentVitality*100)+'%';
   }
   function color(s){return s.eng>=0.55?'#5fb04e':s.eng>=0.3?'#e0a52f':'#d65a4f';}
   function draw(t){for(var y=0;y<190;y+=16)for(var x=0;x<320;x+=16){wx.fillStyle=((x/16+y/16)%2===0)?'#efe2c4':'#e7d8b4';wx.fillRect(x,y,16,16);}
@@ -630,14 +630,14 @@
   function updateStudCard(){
     var el=document.getElementById('stud-card');if(!el)return;var s=selStudent;
     if(!s){el.hidden=true;return;}
-    if(s.left){el.hidden=false;el.innerHTML='<div style="font-size:12px;color:#6b5538"><b>선택한 학생</b> · 이미 공동체를 떠났다(이탈 또는 졸업).</div>';return;}
+    if(s.left){el.hidden=false;el.innerHTML='<div style="font-size:12px;color:#6b5538"><b>고른 아이</b> · 이미 떠났다(그만뒀거나 졸업).</div>';return;}
     var bgL={mota:'모태신앙',normal:'일반 가정',none:'비신앙 가정'}[s.bg];
     var stat=s.eng>=0.55?'<span style="color:#3b6d11;font-weight:600">활발</span>':s.eng>=0.3?'<span style="color:#9a6c12;font-weight:600">느슨</span>':'<span style="color:#a33232;font-weight:600">위기</span>';
     var tags=[];if(s.core)tags.push('코어');if(s.loner)tags.push('외톨이');if(s.sg)tags.push('소그룹');if(s.mentor)tags.push('멘토 연결');
     var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
     el.hidden=false;
     el.innerHTML='<div style="font-size:12px;line-height:1.7;color:#4a3a2a">'+
-      '<b>선택한 학생</b> &nbsp;'+stat+'<br>'+
+      '<b>고른 아이</b> &nbsp;'+stat+'<br>'+
       GRADE_LABELS[s.grade]+' · '+bgL+(tags.length?' · '+tags.join(' · '):'')+'<br>'+
       '출석 '+Math.round(s.eng*100)+'% · 신앙 관심 '+Math.round(s.faith*100)+'% · 친구 '+fr+'명<br>'+
       '<span style="font-size:11px;color:#6b5538">신앙의 결 — 말씀 '+Math.round(s.word*100)+'% · 거룩 '+Math.round(s.holy*100)+'% · 소속 '+Math.round(s.belong*100)+'%</span>'+
@@ -753,12 +753,12 @@
     var fmt=function(v,pct){return pct?Math.round(v*100)+'%':Math.round(v);};
     var cell=function(txt,bg,al,cl){return '<div style="padding:5px 8px;background:'+bg+';text-align:'+al+(cl?';color:'+cl:'')+(al==='right'?';font-family:ui-monospace,monospace':'')+'">'+txt+'</div>';};
     html+='<div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;font-size:12px;border:2px solid #4a3a2a;border-radius:5px;overflow:hidden">';
-    html+=cell('지표','#e7d8b4','left')+cell(labA,'#e7d8b4','right','#3b6d11')+cell(labB,'#e7d8b4','right','#7a6a4a')+cell('차이','#e7d8b4','right');
+    html+=cell('항목','#e7d8b4','left')+cell(labA,'#e7d8b4','right','#3b6d11')+cell(labB,'#e7d8b4','right','#7a6a4a')+cell('차이','#e7d8b4','right');
     rows.forEach(function(rw,i){var bg=i%2?'#fbf4e4':'#f3e7cc';var pct=rw[4];var dv=rw[1]-rw[2];var good=(rw[3]==='g')?dv>0:dv<0;var dc=Math.abs(dv)<(pct?0.005:0.5)?'#8a755a':(good?'#3b6d11':'#a33232');var dt=(dv>0?'+':'')+(pct?Math.round(dv*100)+'%p':Math.round(dv));
       html+=cell(rw[0],bg,'left')+cell(fmt(rw[1],pct),bg,'right')+cell(fmt(rw[2],pct),bg,'right')+cell(dt,bg,'right',dc);});
     html+='</div>';
     if(hA.range){var R=hA.range,ri=function(a){return Math.round(a[0])+'~'+Math.round(a[1]);};
-      html+='<div class="ghint" style="margin-top:6px">'+labA+' 변동 폭('+runs+'회 중): 전체 '+ri(R.n)+' · 활발 '+ri(R.active)+' · 위기 '+ri(R.risk)+' · 이탈 '+ri(R.drop)+' · 신앙 '+Math.round(R.f[0]*100)+'~'+Math.round(R.f[1]*100)+'%. 폭이 넓을수록 결과가 불확실하니 단일 숫자로 단정하지 말라.</div>';}
+      html+='<div class="ghint" style="margin-top:6px">'+labA+' 오르내림 폭('+runs+'번 중): 전체 '+ri(R.n)+' · 활발 '+ri(R.active)+' · 위기 '+ri(R.risk)+' · 이탈 '+ri(R.drop)+' · 신앙 '+Math.round(R.f[0]*100)+'~'+Math.round(R.f[1]*100)+'%. 폭이 넓을수록 결과가 들쭉날쭉하니 숫자 하나로 단정하지 말라.</div>';}
     if(note)html+='<div class="ghint" style="margin-top:6px">'+note+'</div>';
     box.innerHTML=html;
     drawPairChart('pcv',hA,hB,colA,colB);
@@ -773,23 +773,23 @@
       var cells=groups.map(function(g){var r=rate(g.b);var hot=(g.tot>2&&r>=max&&max>0);return '<span style="'+(hot?'color:#a33232;font-weight:600':'color:#6b5538')+'">'+g.lab+' '+(g.tot>2?pc(r):'—')+'</span>';}).join('<span style="color:#cbb98f"> · </span>');
       return '<div style="font-size:12px;margin:3px 0"><span style="color:#6b5538">'+title+'</span> &nbsp;'+cells+'</div>';
     }
-    var html='<div class="gpanel" style="padding:8px 10px;margin:8px 0 0;background:#f3e7cc"><div class="gsec">취약 분석 — 어떤 학생이 빠지는가 ('+weeks+'주 누적 이탈률)</div>';
+    var html='<div class="gpanel" style="padding:8px 10px;margin:8px 0 0;background:#f3e7cc"><div class="gsec">어떤 아이가 빠지나 ('+weeks+'주 동안 떠난 비율)</div>';
     html+=line('외톨이',[{lab:'외톨이',b:seg.lon.y,tot:seg.lon.y.tot},{lab:'친구 있음',b:seg.lon.n,tot:seg.lon.n.tot}]);
     html+=line('신앙 배경',[{lab:'비신앙 가정',b:seg.bg.none,tot:seg.bg.none.tot},{lab:'일반',b:seg.bg.normal,tot:seg.bg.normal.tot},{lab:'모태',b:seg.bg.mota,tot:seg.bg.mota.tot}]);
-    html+=line('코어 여부',[{lab:'비코어',b:seg.core.n,tot:seg.core.n.tot},{lab:'코어',b:seg.core.y,tot:seg.core.y.tot}]);
+    html+=line('코어인지',[{lab:'코어 아닌 아이',b:seg.core.n,tot:seg.core.n.tot},{lab:'코어',b:seg.core.y,tot:seg.core.y.tot}]);
     // 중등/고등 현재 위기 비율
     var gr=[{lab:'고등',b:seg.grade.high},{lab:'중등',b:seg.grade.mid}];
     var gmax=0;gr.forEach(function(g){if(g.b.active>2&&riskRate(g.b)>gmax)gmax=riskRate(g.b);});
     var gcells=gr.map(function(g){var r=riskRate(g.b);var hot=(g.b.active>2&&r>=gmax&&gmax>0);return '<span style="'+(hot?'color:#a33232;font-weight:600':'color:#6b5538')+'">'+g.lab+' '+(g.b.active>2?pc(r):'—')+'</span>';}).join('<span style="color:#cbb98f"> · </span>');
-    html+='<div style="font-size:12px;margin:3px 0"><span style="color:#6b5538">중등·고등 위기(현재)</span> &nbsp;'+gcells+'</div>';
-    // 목회 한 줄: 고정 속성 중 이탈률 최고 유형 + 학년 메모
-    var cands=[{key:'외톨이',r:rate(seg.lon.y),tot:seg.lon.y.tot,tip:'친구 없는 학생을 소그룹·멘토에 의도적으로 잇는 것이 급선무다.'},
-      {key:'비신앙 가정',r:rate(seg.bg.none),tot:seg.bg.none.tot,tip:'전도형 설교와 가정 연계로 이 학생들을 붙드는 것이 필요하다.'},
-      {key:'비코어',r:rate(seg.core.n),tot:seg.core.n.tot,tip:'주변부 학생을 양육·소그룹으로 끌어들이는 제자훈련이 효과적이다.'}];
+    html+='<div style="font-size:12px;margin:3px 0"><span style="color:#6b5538">지금 흔들리는 비율(중등·고등)</span> &nbsp;'+gcells+'</div>';
+    // 목회 한 줄: 가장 잘 빠지는 부류 + 학년 메모
+    var cands=[{key:'외톨이',r:rate(seg.lon.y),tot:seg.lon.y.tot,tip:'친구 없는 아이를 소그룹·멘토에 일부러라도 이어 주는 게 먼저다.'},
+      {key:'비신앙 가정',r:rate(seg.bg.none),tot:seg.bg.none.tot,tip:'전도형 설교와 가정 연결로 이 아이들을 붙들어야 한다.'},
+      {key:'코어 아닌 아이',r:rate(seg.core.n),tot:seg.core.n.tot,tip:'겉도는 아이를 양육·소그룹으로 끌어들이는 제자훈련이 잘 듣는다.'}];
     var top=cands.filter(function(c){return c.tot>2;}).sort(function(a,b){return b.r-a.r;})[0];
-    var read=top&&top.r>0.001?('가장 빨리 빠지는 유형은 <b>'+top.key+'</b>('+pc(top.r)+')다. '+top.tip):'특정 유형에 이탈이 몰리지는 않는다.';
-    if(seg.grade.high.active>2&&riskRate(seg.grade.high)>=gmax&&gmax>0.001)read+=' 고등(특히 고3 수능 시즌) 위기가 두껍다. 또 중3→고1 전환에서 흔들리는 학생을 미리 붙드는 것이 중요하다.';
-    else if(seg.grade.mid.active>2&&riskRate(seg.grade.mid)>=gmax&&gmax>0.001)read+=' 중등 위기가 두껍다. 중3→고1 전환 절벽을 넘기 전에 관계로 묶어 두는 것이 관건이다.';
+    var read=top&&top.r>0.001?('가장 빨리 빠지는 건 <b>'+top.key+'</b>('+pc(top.r)+')다. '+top.tip):'특별히 한 부류로 몰려 빠지지는 않는다.';
+    if(seg.grade.high.active>2&&riskRate(seg.grade.high)>=gmax&&gmax>0.001)read+=' 고등(특히 고3 수능 철)에 흔들리는 아이가 많다. 중3에서 고1로 올라갈 때 흔들리는 아이를 미리 붙드는 게 중요하다.';
+    else if(seg.grade.mid.active>2&&riskRate(seg.grade.mid)>=gmax&&gmax>0.001)read+=' 중등에 흔들리는 아이가 많다. 중3에서 고1로 넘어가는 고비 전에 관계로 단단히 묶어 두는 게 관건이다.';
     html+='<div style="font-size:12px;color:#4a3a2a;margin-top:6px;line-height:1.6;border-top:1px solid #e0cda0;padding-top:6px">→ '+read+'</div></div>';
     return html;
   }
@@ -802,7 +802,7 @@
       var weeks=val('pj-weeks'),runs=8;
       var hp=simulate(plan,weeks,runs),hb=simulate(base,weeks,runs);
       renderPair(box,hp,hb,'계획','기본 운영','#5fb04e','#9a8e75',weeks,runs,
-        '계획대로 했을 때와, 특별 계획 없이 평소 운영(소그룹·멘토·교사)만 했을 때의 '+weeks+'주 뒤 평균 비교다. 차이는 (계획 − 기본 운영). 수치는 검증되지 않은 가정값이므로 방향과 크기로만 읽으라.');
+        '계획대로 했을 때와, 특별 계획 없이 평소 운영(소그룹·멘토·교사)만 했을 때의 '+weeks+'주 뒤 평균 비교다. 차이는 (계획 − 기본 운영). 수치는 확인되지 않은, 그냥 넣어 본 값이므로 방향과 크기로만 읽으라.');
       box.insertAdjacentHTML('beforeend',segHTML(hp.seg,weeks));
     },30);
   }
@@ -829,7 +829,7 @@
     var hp=simulate(plan,weeks,runs),L=hp[hp.length-1],mid=hp[Math.floor(hp.length/2)],N0=plan.dist.n,base=scoreOf(L);
     var diag=[];
     if(L.drop>=N0*0.25)diag.push('한 해 동안 누적 이탈이 시작 인원의 4분의 1을 넘는다(약 '+Math.round(L.drop)+'명).');
-    if(L.risk>=L.n*0.18)diag.push('이탈 위기군이 두껍다(약 '+Math.round(L.risk)+'명).');
+    if(L.risk>=L.n*0.18)diag.push('흔들리는 아이가 많다(약 '+Math.round(L.risk)+'명).');
     if(L.f<mid.f-0.02)diag.push('평균 신앙 관심도가 후반으로 갈수록 내려간다.');
     if(L.n<N0*0.9)diag.push('전체 인원이 시작보다 줄어든다(약 '+Math.round(N0-L.n)+'명 감소).');
     if(!diag.length)diag.push('큰 문제는 두드러지지 않는다. 아래는 더 끌어올릴 여지다.');
@@ -849,7 +849,7 @@
     // 하지 말 것 / 지금 우선순위 아님 — 추천이 있을 때만, 대비로 보여 준다
     var weak=scored.filter(function(x){return x.gain<=0.5;}).sort(function(a,b){return a.gain-b.gain;}).slice(0,2);
     if(weak.length&&top.length){html+='<div class="gsec" style="margin-top:8px;color:#7a5510">지금은 우선순위가 아님</div>'+weak.map(function(x){var why=x.gain<-8?'지금 우리 상황에선 오히려 역효과로 나온다':'지금 우리 상황에선 효과가 작다(이미 충분하거나 닿지 않는다)';return '<div style="font-size:12px;color:#6b5538;padding:2px 0">· <b>'+x.cd.label+'</b> — '+why+'. 위쪽 처방에 먼저 집중하라.</div>';}).join('');}
-    html+='<div class="ghint" style="margin-top:6px">처방 효과는 같은 계획에 그 조치만 더해 '+weeks+'주를 '+runs+'회 돌린 평균의 차이다. 가정값에 기댄 추정이므로 방향으로 읽으라. "적용"은 위 계획·설정에 실제로 반영한다.</div>';
+    html+='<div class="ghint" style="margin-top:6px">처방 효과는 같은 계획에 그 조치만 더해 '+weeks+'주를 '+runs+'번 돌린 평균의 차이다. 그냥 넣어 본 값에 기댄 어림이니 방향으로 읽으라. "적용"은 위 계획·설정에 실제로 반영한다.</div>';
     box.innerHTML=html;
     Array.prototype.forEach.call(box.querySelectorAll('[data-adopt]'),function(b){b.addEventListener('click',function(){var idx=+this.dataset.adopt;curCands[idx].adopt();this.textContent='적용됨';this.disabled=true;projectRun();});});
     },30);
@@ -864,9 +864,9 @@
   }
   function vulnTop(seg){
     var rate=function(b){return b.tot>0.5?b.dropped/b.tot:0;};
-    var c=[{k:'외톨이',r:rate(seg.lon.y),t:seg.lon.y.tot},{k:'비신앙 가정',r:rate(seg.bg.none),t:seg.bg.none.tot},{k:'비코어',r:rate(seg.core.n),t:seg.core.n.tot}];
+    var c=[{k:'외톨이',r:rate(seg.lon.y),t:seg.lon.y.tot},{k:'비신앙 가정',r:rate(seg.bg.none),t:seg.bg.none.tot},{k:'코어 아닌 아이',r:rate(seg.core.n),t:seg.core.n.tot}];
     var top=c.filter(function(x){return x.t>2;}).sort(function(a,b){return b.r-a.r;})[0];
-    return top&&top.r>0.001?(top.k+' '+Math.round(top.r*100)+'%'):'뚜렷한 취약 유형 없음';
+    return top&&top.r>0.001?(top.k+' '+Math.round(top.r*100)+'%'):'뚜렷이 빠지는 부류 없음';
   }
   function topRx(plan,weeks){
     var L=simulate(plan,weeks,4);L=L[L.length-1];var base=scoreOf(L),best=null;
@@ -881,7 +881,7 @@
     var rx=topRx(plan,weeks);
     var lines=[];
     lines.push('[중고등부 사역 계획 요약 — 시뮬레이션]');
-    lines.push('※ 효과 수치는 검증되지 않은 가정값. 현실 예측이 아니라 방향·크기의 참고용.');
+    lines.push('※ 효과 수치는 확인되지 않은, 그냥 넣어 본 값. 현실을 맞히는 게 아니라 방향·크기 참고용.');
     lines.push('');
     lines.push('· 우리 부: 전체 '+D.n+'명 · 중등/고등 비중 '+D.mid+'/'+D.high+' · 모태 '+Math.round(D.mota*100)+'% 비신앙가정 '+Math.round(D.none*100)+'% · 코어 '+Math.round(D.core*100)+'% 외톨이 '+Math.round(D.loner*100)+'%');
     lines.push('· 운영: 소그룹 '+Math.round(plan.ops.sg*100)+'% · 멘토 '+Math.round(plan.ops.mt*100)+'% · 교사 '+plan.ops.tc+'명 · 연간신입 '+plan.ops.intake+'명 · 변화속도 '+Math.round(plan.ops.speed*100));
@@ -895,7 +895,7 @@
     lines.push('  계획 효과(기본운영 대비): 활발 '+(L.active-B.active>=0?'+':'')+Math.round(L.active-B.active)+' · 이탈 '+(L.drop-B.drop>=0?'+':'')+Math.round(L.drop-B.drop)+' · 신앙 '+((L.f-B.f)>=0?'+':'')+Math.round((L.f-B.f)*100)+'%p');
     var S0=hp[0];lines.push('  시작 대비: 활발 '+(L.active-S0.active>=0?'+':'')+Math.round(L.active-S0.active)+' · 위기 '+(L.risk-S0.risk>=0?'+':'')+Math.round(L.risk-S0.risk)+' · 신앙 '+((L.f-S0.f)>=0?'+':'')+Math.round((L.f-S0.f)*100)+'%p');
     lines.push('');
-    lines.push('· 취약: 가장 빨리 빠지는 유형은 '+vulnTop(hp.seg)+'.');
+    lines.push('· 잘 빠지는 아이: 가장 빨리 빠지는 건 '+vulnTop(hp.seg)+'.');
     lines.push('· 추천 처방 1순위: '+rx.txt);
     return lines.join('\n');
   }
@@ -917,7 +917,7 @@
   function printReport(txt){
     var esc=txt.replace(/&/g,'&amp;').replace(/</g,'&lt;');
     var w=window.open('','_blank','width=720,height=900');if(!w){document.getElementById('pj-summary-msg').textContent='팝업이 막혔다. 팝업을 허용한 뒤 다시.';return;}
-    w.document.write('<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>중고등부 목회 계획 요약</title><style>body{font-family:system-ui,\'Malgun Gothic\',sans-serif;max-width:640px;margin:0 auto;padding:34px 30px;color:#2a2418;line-height:1.75}h1{font-size:19px;margin:0 0 4px;color:#6b4a16}.sub{color:#6b5538;font-size:12px;margin-bottom:18px}pre{white-space:pre-wrap;font-family:inherit;font-size:13px;margin:0}@media print{body{padding:0}}</style></head><body><h1>중고등부 목회 계획 요약</h1><div class="sub">시뮬레이션 기반 — 가정값 위의 방향 참고용</div><pre>'+esc+'</pre></body></html>');
+    w.document.write('<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>중고등부 목회 계획 요약</title><style>body{font-family:system-ui,\'Malgun Gothic\',sans-serif;max-width:640px;margin:0 auto;padding:34px 30px;color:#2a2418;line-height:1.75}h1{font-size:19px;margin:0 0 4px;color:#6b4a16}.sub{color:#6b5538;font-size:12px;margin-bottom:18px}pre{white-space:pre-wrap;font-family:inherit;font-size:13px;margin:0}@media print{body{padding:0}}</style></head><body><h1>중고등부 목회 계획 요약</h1><div class="sub">시뮬레이션 기반 — 넣어 본 값 위의 방향 참고용</div><pre>'+esc+'</pre></body></html>');
     w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},250);
   }
 
@@ -933,7 +933,7 @@
     var weeks=val('cmp-weeks'),runs=8;
     setTimeout(function(){
       renderPair(box,simulate(slotA,weeks,runs),simulate(slotB,weeks,runs),'A','B','#5fb04e','#378add',weeks,runs,
-        weeks+'주 차 시점의 평균값이다. 차이는 (A − B). 계수는 검증되지 않은 가정값이므로 방향과 크기의 비교로만 읽으라.');
+        weeks+'주 뒤 평균값이다. 차이는 (A − B). 수치는 확인되지 않은, 그냥 넣어 본 값이므로 방향과 크기로만 견주라.');
     },30);
   }
   function renderSched(){schedule.sort(function(a,b){return a.start-b.start;});var c=document.getElementById('sched');
