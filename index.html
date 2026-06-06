@@ -723,13 +723,13 @@
   function addPlanSermon(focus,weeks,start){schedule.push({id:eid++,type:'sermon',start:start,focus:focus,weeks:weeks,repeat:0});renderSched();}
   function boostRetreatLive(){var r=schedule.filter(function(e){return e.type==='retreat';});if(r.length){r.forEach(function(e){e.attendRate=clamp(e.attendRate+0.15,0,1);e.intensity=clamp(e.intensity+0.15,0,1);});}else{schedule.push({id:eid++,type:'retreat',start:12,nights:2,attendRate:0.7,intensity:0.6,repeat:24});}renderSched();}
   function candidates(){return [
-    {label:'회복형 설교 시리즈 8주 추가',mut:function(c){c.schedule.push({type:'sermon',start:6,focus:'recovery',weeks:8,repeat:0});},adopt:function(){addPlanSermon('recovery',8,6);}},
-    {label:'양육형 설교 시리즈 10주 추가',mut:function(c){c.schedule.push({type:'sermon',start:4,focus:'nurture',weeks:10,repeat:0});},adopt:function(){addPlanSermon('nurture',10,4);}},
-    {label:'전도형 설교 시리즈 6주 추가',mut:function(c){c.schedule.push({type:'sermon',start:18,focus:'evangel',weeks:6,repeat:0});},adopt:function(){addPlanSermon('evangel',6,18);}},
-    {label:'멘토링 비중 +20%p',mut:function(c){c.ops.mt=clamp(c.ops.mt+0.2,0,1);},adopt:function(){bump('s-mt',20);}},
-    {label:'소그룹 비중 +15%p',mut:function(c){c.ops.sg=clamp(c.ops.sg+0.15,0,1);},adopt:function(){bump('s-sg',15);}},
-    {label:'교사 5명 증원',mut:function(c){c.ops.tc=Math.min(40,c.ops.tc+5);},adopt:function(){bump('s-tc',5);}},
-    {label:'수련회 강화(참가·강도 +15%p)',mut:function(c){var r=c.schedule.filter(function(e){return e.type==='retreat';});if(r.length){r.forEach(function(e){e.attendRate=clamp(e.attendRate+0.15,0,1);e.intensity=clamp(e.intensity+0.15,0,1);});}else{c.schedule.push({type:'retreat',start:12,nights:2,attendRate:0.7,intensity:0.6,repeat:24});}},adopt:function(){boostRetreatLive();}}
+    {label:'회복형 설교 시리즈 8주 추가',helps:'출석이 흔들리는 학생',mut:function(c){c.schedule.push({type:'sermon',start:6,focus:'recovery',weeks:8,repeat:0});},adopt:function(){addPlanSermon('recovery',8,6);}},
+    {label:'양육형 설교 시리즈 10주 추가',helps:'코어·소그룹원',mut:function(c){c.schedule.push({type:'sermon',start:4,focus:'nurture',weeks:10,repeat:0});},adopt:function(){addPlanSermon('nurture',10,4);}},
+    {label:'전도형 설교 시리즈 6주 추가',helps:'구도자·비신앙 가정',mut:function(c){c.schedule.push({type:'sermon',start:18,focus:'evangel',weeks:6,repeat:0});},adopt:function(){addPlanSermon('evangel',6,18);}},
+    {label:'멘토링 비중 +20%p',helps:'경계의 학생 전반',mut:function(c){c.ops.mt=clamp(c.ops.mt+0.2,0,1);},adopt:function(){bump('s-mt',20);}},
+    {label:'소그룹 비중 +15%p',helps:'외톨이·주변부',mut:function(c){c.ops.sg=clamp(c.ops.sg+0.15,0,1);},adopt:function(){bump('s-sg',15);}},
+    {label:'교사 5명 증원',helps:'전체(돌봄 여력↑)',mut:function(c){c.ops.tc=Math.min(40,c.ops.tc+5);},adopt:function(){bump('s-tc',5);}},
+    {label:'수련회 강화(참가·강도 +15%p)',helps:'참가하는 학생',mut:function(c){var r=c.schedule.filter(function(e){return e.type==='retreat';});if(r.length){r.forEach(function(e){e.attendRate=clamp(e.attendRate+0.15,0,1);e.intensity=clamp(e.intensity+0.15,0,1);});}else{c.schedule.push({type:'retreat',start:12,nights:2,attendRate:0.7,intensity:0.6,repeat:24});}},adopt:function(){boostRetreatLive();}}
   ];}
   function adviseRun(){
     var box=document.getElementById('pj-advice');
@@ -751,7 +751,7 @@
       html+='<div class="gsec">추천 처방 (시나리오로 검증한 순)</div>';
       top.forEach(function(x){var dDrop=x.l.drop-L.drop,dRisk=x.l.risk-L.risk,dAct=x.l.active-L.active,dF=x.l.f-L.f;
         var chip=function(lab,v,goodUp,pct){var g=goodUp?v>0:v<0;var col=Math.abs(v)<(pct?0.005:0.5)?'#8a755a':(g?'#3b6d11':'#a33232');return '<span style="color:'+col+'">'+lab+' '+(v>0?'+':'')+(pct?Math.round(v*100)+'%p':Math.round(v))+'</span>';};
-        html+='<div style="border:2px solid #4a3a2a;border-radius:5px;padding:7px 9px;margin-bottom:6px;background:#f3e7cc"><div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:13px">'+x.cd.label+'</span><button class="gbtn" data-adopt="'+x.i+'" style="padding:3px 9px;font-size:12px">적용</button></div><div style="font-size:11px;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap">'+chip('이탈',dDrop,false)+chip('위기',dRisk,false)+chip('활발',dAct,true)+chip('신앙',dF,true,true)+'</div></div>';
+        html+='<div style="border:2px solid #4a3a2a;border-radius:5px;padding:7px 9px;margin-bottom:6px;background:#f3e7cc"><div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:13px">'+x.cd.label+(x.cd.helps?' <span style="font-size:11px;color:#8a755a">· '+x.cd.helps+'에 닿음</span>':'')+'</span><button class="gbtn" data-adopt="'+x.i+'" style="padding:3px 9px;font-size:12px">적용</button></div><div style="font-size:11px;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap">'+chip('이탈',dDrop,false)+chip('위기',dRisk,false)+chip('활발',dAct,true)+chip('신앙',dF,true,true)+'</div></div>';
       });
     }
     // 하지 말 것 / 지금 우선순위 아님 — 추천이 있을 때만, 대비로 보여 준다
