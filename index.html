@@ -73,6 +73,7 @@
     <div class="gcard"><div class="l">누적 이탈</div><div class="v" id="m-drop">0</div></div>
     <div class="gcard"><div class="l">평균 신앙</div><div class="v" id="m-faith">0%</div></div>
   </div>
+  <div id="seg-live" class="gpanel" style="padding:7px 10px;margin-bottom:8px;font-size:12px;color:#6b5538;line-height:1.6"></div>
   <div class="gpanel" style="padding:6px;margin-bottom:8px">
     <canvas id="spark" width="320" height="56" style="width:100%;height:auto"></canvas>
     <div style="display:flex;gap:14px;font-size:11px;color:#6b5538;padding:0 2px">
@@ -190,7 +191,7 @@
     var fam=bg==='mota'?rnd(0.7,0.95):bg==='none'?rnd(0.05,0.35):rnd(0.35,0.65);
     var c=forceEng!=null?forceEng:(core?rnd(0.78,0.95):rnd(0.45,0.78));
     return {grade:grade,bg:bg,core:core,loner:loner,commit:c,eng:c,faith:core?rnd(0.5,0.75):rnd(0.22,0.5),fam:fam,
-      rSg:Math.random(),rMt:Math.random(),sermonAcc:0,retreatGlow:0,examPress:0,absent:0,left:false,sg:false,mentor:false,friends:[]};
+      rSg:Math.random(),rMt:Math.random(),sermonAcc:0,retreatGlow:0,examPress:0,absent:0,left:false,dropped:false,sg:false,mentor:false,friends:[]};
   }
   function makeOne(grade,forceEng){var s=spawn(distFromDOM(),grade,forceEng);s.phase=Math.random()*6.28;s.seat=freeSeat();return s;}
   function pickGradeW(g1,g2,g3){var t=g1+g2+g3;if(t<=0)return 1+Math.floor(Math.random()*3);var x=Math.random()*t;return x<g1?1:x<g1+g2?2:3;}
@@ -264,7 +265,7 @@
     var ctx={arr:students,sgFrac:sg,mtFrac:mt,tEff:tEff,speed:sp,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam};
     active.forEach(function(s){tick(s,ctx);});
     if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var i=0;i<4;i++){var ns=makeOne(Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){var fnd=inv[Math.floor(Math.random()*inv.length)];ns.friends.push(students.indexOf(fnd));}students.push(ns);}}
-    students.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}});
+    students.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}});
     if(week%WEEKS_PER_YEAR===0){students.forEach(function(s){if(!s.left){s.grade++;if(s.grade>3){s.left=true;if(s.seat>=0)seats[s.seat].taken=false;}}});for(var j=0;j<intake;j++){var n2=makeOne(1);var p=students.filter(function(o){return !o.left&&o.grade<=2;});n2.loner?link(n2,p,0,1):link(n2,p,3,5);students.push(n2);}}
     var bar=document.getElementById('evbar');
     if(we.labels.length){bar.textContent='이번 주 일정: '+we.labels.join(', ');var col=we.retreat?EVENTS.retreat.color:(we.exam?EVENTS.exam.color:(we.sermon.length?SERMON_FOCUS[we.sermon[0]].color:EVENTS[Object.keys(we.f)[0]].color));bar.style.background=col;bar.style.color='#fff';}
@@ -275,7 +276,12 @@
     hist.push({n:a.length,f:f});if(hist.length>140)hist.shift();maxN=Math.max(maxN,a.length);
     document.getElementById('hud-week').textContent=week;document.getElementById('hud-year').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;document.getElementById('hud-term').textContent=(Math.floor(week/12)%2)+1;
     var ac=a.filter(function(s){return s.eng>=0.55;}).length,lo=a.filter(function(s){return s.eng>=0.3&&s.eng<0.55;}).length;
-    document.getElementById('m-total').textContent=a.length;document.getElementById('m-active').textContent=ac;document.getElementById('m-loose').textContent=lo;document.getElementById('m-risk').textContent=a.length-ac-lo;document.getElementById('m-drop').textContent=dropouts;document.getElementById('m-faith').textContent=Math.round(f*100)+'%';}
+    document.getElementById('m-total').textContent=a.length;document.getElementById('m-active').textContent=ac;document.getElementById('m-loose').textContent=lo;document.getElementById('m-risk').textContent=a.length-ac-lo;document.getElementById('m-drop').textContent=dropouts;document.getElementById('m-faith').textContent=Math.round(f*100)+'%';
+    var risky=a.filter(function(s){return s.eng<0.3;});var sl=document.getElementById('seg-live');
+    if(sl){if(risky.length){var g3=risky.filter(function(s){return s.grade===3;}).length,g2=risky.filter(function(s){return s.grade===2;}).length,g1=risky.filter(function(s){return s.grade===1;}).length;
+      var lon=risky.filter(function(s){return s.loner;}).length,non=risky.filter(function(s){return s.bg==='none';}).length,ncore=risky.filter(function(s){return !s.core;}).length;
+      sl.innerHTML='<b style="color:#a33232">위기군 '+risky.length+'명</b> 누가? &nbsp;학년 3/2/1: <b>'+g3+'/'+g2+'/'+g1+'</b> · 외톨이 <b>'+lon+'</b> · 비신앙 가정 <b>'+non+'</b> · 비코어 <b>'+ncore+'</b>';}
+      else sl.innerHTML='<span style="color:#3b6d11">지금 위기군(출석 바닥)이 없다.</span> 어떤 학생이 흔들리는지 여기서 바로 짚는다.';}}
   function color(s){return s.eng>=0.55?'#5fb04e':s.eng>=0.3?'#e0a52f':'#d65a4f';}
   function draw(t){for(var y=0;y<190;y+=16)for(var x=0;x<320;x+=16){wx.fillStyle=((x/16+y/16)%2===0)?'#efe2c4':'#e7d8b4';wx.fillRect(x,y,16,16);}
     wx.fillStyle='#d9c39a';wx.fillRect(0,0,320,28);wx.fillStyle='#8a6d4b';wx.fillRect(150,9,20,12);
@@ -298,21 +304,33 @@
       var ctx={arr:arr,sgFrac:cfg.ops.sg,mtFrac:cfg.ops.mt,tEff:tEff,speed:cfg.ops.speed,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam};
       active.forEach(function(s){tick(s,ctx);});
       if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var k=0;k<4;k++){var ns=spawn(D,Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){ns.friends.push(arr.indexOf(inv[Math.floor(Math.random()*inv.length)]));}arr.push(ns);}}
-      arr.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.eng=0;s.commit=0;drop++;}});
+      arr.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;drop++;}});
       if(w%WEEKS_PER_YEAR===0){arr.forEach(function(s){if(!s.left){s.grade++;if(s.grade>3)s.left=true;}});for(var j=0;j<cfg.ops.intake;j++){var n2=spawn(D,1);var p=arr.filter(function(o){return !o.left&&o.grade<=2;});n2.loner?linkIn(n2,arr,p,0,1):linkIn(n2,arr,p,3,5);arr.push(n2);}}
       var a2=arr.filter(function(s){return !s.left;});
       var favg=a2.length?a2.reduce(function(x,s){return x+s.faith;},0)/a2.length:0;
       var ac=a2.filter(function(s){return s.eng>=0.55;}).length,lo=a2.filter(function(s){return s.eng>=0.3&&s.eng<0.55;}).length;
       hist.push({n:a2.length,f:favg,active:ac,loose:lo,risk:a2.length-ac-lo,drop:drop});
     }
+    hist.seg=segStats(arr);
     return hist;
   }
+  // 취약 분석용 세그먼트 집계. 고정 속성(배경·외톨이·코어)은 누적 이탈률, 학년은 현재 위기 비율로 본다.
+  function segStats(arr){
+    function bk(){return {tot:0,dropped:0,active:0,risk:0};}
+    var by={bg:{mota:bk(),normal:bk(),none:bk()},lon:{y:bk(),n:bk()},core:{y:bk(),n:bk()},grade:{1:bk(),2:bk(),3:bk()}};
+    function add(b,s){b.tot++;if(s.dropped)b.dropped++;if(!s.left){b.active++;if(s.eng<0.3)b.risk++;}}
+    arr.forEach(function(s){add(by.bg[s.bg],s);add(by.lon[s.loner?'y':'n'],s);add(by.core[s.core?'y':'n'],s);if(by.grade[s.grade])add(by.grade[s.grade],s);});
+    return by;
+  }
   function simulate(cfg,weeks,runs){
-    var acc=null;
+    var acc=null,segAcc=null;
     for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks);
-      if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop};});}
-      else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;});}}
+      if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop};});segAcc=h.seg;}
+      else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;});
+        for(var d in h.seg)for(var g in h.seg[d])for(var k in h.seg[d][g])segAcc[d][g][k]+=h.seg[d][g][k];}}
     acc.forEach(function(p){p.n/=runs;p.f/=runs;p.active/=runs;p.loose/=runs;p.risk/=runs;p.drop/=runs;});
+    for(var d2 in segAcc)for(var g2 in segAcc[d2])for(var k2 in segAcc[d2][g2])segAcc[d2][g2][k2]/=runs;
+    acc.seg=segAcc;
     return acc;
   }
   function captureConfig(){return {dist:distFromDOM(),ops:{sg:val('s-sg')/100,mt:val('s-mt')/100,tc:val('s-tc'),intake:val('s-in'),speed:val('s-speed')/100},schedule:schedule.map(function(e){var o={};for(var k in e)o[k]=e[k];return o;})};}
@@ -345,6 +363,35 @@
     box.innerHTML=html;
     drawPairChart('pcv',hA,hB,colA,colB);
   }
+  // ── 취약 분석: 어떤 학생이 가장 빨리 빠지는가 ──
+  function segHTML(seg,weeks){
+    var rate=function(b){return b.tot>0.5?b.dropped/b.tot:0;};
+    var riskRate=function(b){return b.active>0.5?b.risk/b.active:0;};
+    var pc=function(x){return Math.round(x*100)+'%';};
+    function line(title,groups){
+      var max=0;groups.forEach(function(g){if(g.tot>2&&rate(g.b)>max)max=rate(g.b);});
+      var cells=groups.map(function(g){var r=rate(g.b);var hot=(g.tot>2&&r>=max&&max>0);return '<span style="'+(hot?'color:#a33232;font-weight:600':'color:#6b5538')+'">'+g.lab+' '+(g.tot>2?pc(r):'—')+'</span>';}).join('<span style="color:#cbb98f"> · </span>');
+      return '<div style="font-size:12px;margin:3px 0"><span style="color:#8a755a">'+title+'</span> &nbsp;'+cells+'</div>';
+    }
+    var html='<div class="gpanel" style="padding:8px 10px;margin:8px 0 0;background:#f3e7cc"><div class="gsec">취약 분석 — 어떤 학생이 빠지는가 ('+weeks+'주 누적 이탈률)</div>';
+    html+=line('외톨이',[{lab:'외톨이',b:seg.lon.y,tot:seg.lon.y.tot},{lab:'친구 있음',b:seg.lon.n,tot:seg.lon.n.tot}]);
+    html+=line('신앙 배경',[{lab:'비신앙 가정',b:seg.bg.none,tot:seg.bg.none.tot},{lab:'일반',b:seg.bg.normal,tot:seg.bg.normal.tot},{lab:'모태',b:seg.bg.mota,tot:seg.bg.mota.tot}]);
+    html+=line('코어 여부',[{lab:'비코어',b:seg.core.n,tot:seg.core.n.tot},{lab:'코어',b:seg.core.y,tot:seg.core.y.tot}]);
+    // 학년은 현재 활동 중 위기 비율
+    var gr=[{lab:'3학년',b:seg.grade[3]},{lab:'2학년',b:seg.grade[2]},{lab:'1학년',b:seg.grade[1]}];
+    var gmax=0;gr.forEach(function(g){if(g.b.active>2&&riskRate(g.b)>gmax)gmax=riskRate(g.b);});
+    var gcells=gr.map(function(g){var r=riskRate(g.b);var hot=(g.b.active>2&&r>=gmax&&gmax>0);return '<span style="'+(hot?'color:#a33232;font-weight:600':'color:#6b5538')+'">'+g.lab+' '+(g.b.active>2?pc(r):'—')+'</span>';}).join('<span style="color:#cbb98f"> · </span>');
+    html+='<div style="font-size:12px;margin:3px 0"><span style="color:#8a755a">학년별 위기(현재)</span> &nbsp;'+gcells+'</div>';
+    // 목회 한 줄: 고정 속성 중 이탈률 최고 유형 + 학년 메모
+    var cands=[{key:'외톨이',r:rate(seg.lon.y),tot:seg.lon.y.tot,tip:'친구 없는 학생을 소그룹·멘토에 의도적으로 잇는 것이 급선무다.'},
+      {key:'비신앙 가정',r:rate(seg.bg.none),tot:seg.bg.none.tot,tip:'전도형 설교와 가정 연계로 이 학생들을 붙드는 것이 필요하다.'},
+      {key:'비코어',r:rate(seg.core.n),tot:seg.core.n.tot,tip:'주변부 학생을 양육·소그룹으로 끌어들이는 제자훈련이 효과적이다.'}];
+    var top=cands.filter(function(c){return c.tot>2;}).sort(function(a,b){return b.r-a.r;})[0];
+    var read=top&&top.r>0.001?('가장 빨리 빠지는 유형은 <b>'+top.key+'</b>('+pc(top.r)+')다. '+top.tip):'특정 유형에 이탈이 몰리지는 않는다.';
+    if(seg.grade[3].active>2&&riskRate(seg.grade[3])>=gmax&&gmax>0.001)read+=' 3학년 위기군이 특히 두꺼우니 시험기간 전후 케어가 중요하다.';
+    html+='<div style="font-size:12px;color:#4a3a2a;margin-top:6px;line-height:1.6;border-top:1px solid #e0cda0;padding-top:6px">→ '+read+'</div></div>';
+    return html;
+  }
   function projectRun(){
     var plan=captureConfig();
     var base={dist:plan.dist,ops:plan.ops,schedule:[]};
@@ -352,6 +399,7 @@
     var hp=simulate(plan,weeks,runs),hb=simulate(base,weeks,runs);
     renderPair(document.getElementById('pj-result'),hp,hb,'계획','기본 운영','#5fb04e','#9a8e75',weeks,runs,
       '계획대로 했을 때와, 특별 계획 없이 평소 운영(소그룹·멘토·교사)만 했을 때의 '+weeks+'주 뒤 평균 비교다. 차이는 (계획 − 기본 운영). 수치는 검증되지 않은 가정값이므로 방향과 크기로만 읽으라.');
+    document.getElementById('pj-result').insertAdjacentHTML('beforeend',segHTML(hp.seg,weeks));
   }
 
   // ── 처방 엔진(약점 진단 + 검증된 개입 추천) ──

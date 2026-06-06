@@ -36,7 +36,9 @@
 - `weekEffects(sched, w)` : 한 주의 일정을 훑어 `{f(점이벤트 플래그), retreat(참가율·강도 인수), sermon(활성 초점 배열), labels}`를 만든다. `step`과 `simulateOnce`가 공유한다.
 - `simulateOnce(cfg, weeks)` / `simulate(cfg, weeks, runs)` : 화면 없이 한 시나리오를 `weeks`주 돌려 주차별 지표 기록을 반환한다. `simulate`는 `runs`회(기본 8) 평균.
 - `captureConfig()` : 현재 분포·운영(`s-*` 슬라이더)·일정을 시나리오 객체 `{dist, ops, schedule}`로 스냅샷한다. 일정 시작은 절대 주차(1~)이므로 보정 없이 그대로 쓴다.
-- `projectRun()` : 시나리오 모드. 현재 계획과 "기본 운영만(빈 일정)"을 같은 기간 돌려 견준다.
+- `projectRun()` : 시나리오 모드. 현재 계획과 "기본 운영만(빈 일정)"을 같은 기간 돌려 견주고, 아래에 취약 분석을 덧붙인다.
+- `segStats(arr)` / `segHTML(seg, weeks)` : **취약 분석**. 어떤 학생이 빠지는가를 본다. 고정 속성(신앙배경·외톨이·코어)은 누적 이탈률, 학년은 현재 위기 비율로 집계하고, 이탈이 가장 몰리는 유형과 그에 맞는 목회적 한 줄을 제시한다. `simulateOnce`가 최종 상태 `seg`를 `hist.seg`로 붙이고 `simulate`가 평균한다.
+- `record()`는 관찰 모드에서 `#seg-live`에 "위기군이 누구인가"(학년·외톨이·비신앙 가정·비코어 구성)를 실시간으로 보여준다.
 - `adviseRun()` / `candidates()` / `scoreOf()` : 처방 엔진. 계획을 예측해 약점을 진단하고, 후보 개입(회복/양육/전도 설교, 멘토링·소그룹·교사↑, 수련회 강화)을 각각 같은 기간 돌려 개선 점수로 순위를 매겨 상위 3개를 추천한다. 각 카드의 "적용"(`bump`/`addPlanSermon`/`boostRetreatLive`)은 실제 계획·슬라이더에 반영한다.
 - `compareRun()` / `renderPair()` / `drawPairChart()` : 두 시나리오(A/B 또는 계획/기본)를 추이 그래프와 지표 델타 표로 그린다.
 - `draw(t)`, `drawSpark()`, `record()` : 관찰 모드의 캔버스·추이 그래프·지표 카드를 갱신한다.
@@ -55,7 +57,7 @@
 - `commit`(느린 헌신 0~1) : 사역이 천천히 쌓아 올리는 바탕. 친구 효과도 이 값 기준.
 - `eng`(표시 출석) = `clamp(commit + 0.20*retreatGlow - examPress)`. 화면 지표·이탈 판정은 이 값으로 한다.
 
-학생 속성: `grade`, `bg`(mota/normal/none), `core`, `loner`, `commit`, `eng`, `faith`(0~1), `fam`(가정 신앙 0~1), `sg`, `mentor`, `sermonAcc`(설교 양육 누적), `retreatGlow`(수련회 여운), `examPress`(시험 일시 압박), `friends`, `left`.
+학생 속성: `grade`, `bg`(mota/normal/none), `core`, `loner`, `commit`, `eng`, `faith`(0~1), `fam`(가정 신앙 0~1), `sg`, `mentor`, `sermonAcc`(설교 양육 누적), `retreatGlow`(수련회 여운), `examPress`(시험 일시 압박), `friends`, `left`, `dropped`(출석 바닥으로 이탈했는지 — 졸업과 구분해 취약 분석 이탈률에 쓴다).
 
 매주 `commit` 변화량(헌신에 쌓이는 느린 힘):
 ```
