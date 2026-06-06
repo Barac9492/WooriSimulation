@@ -269,6 +269,7 @@
     <button class="gbtn" id="plan-load">불러오기</button>
     <button class="gbtn" id="plan-del">삭제</button>
   </div>
+  <div id="plan-msg" class="ghint" style="margin-top:6px;min-height:14px;color:#3b6d11"></div>
 </div>
 
 </div>
@@ -960,9 +961,10 @@
   }
   document.getElementById('plan-save').addEventListener('click',function(){
     var name=(document.getElementById('plan-name').value||'').trim();if(!name){document.getElementById('plan-name').focus();return;}
-    var p=loadPlans();p[name]=planSnapshot();savePlans(p);refreshPlanList(name);document.getElementById('plan-name').value='';});
-  document.getElementById('plan-load').addEventListener('click',function(){var name=document.getElementById('plan-list').value;if(!name)return;var p=loadPlans();if(p[name])applyPlan(p[name]);});
-  document.getElementById('plan-del').addEventListener('click',function(){var name=document.getElementById('plan-list').value;if(!name)return;var p=loadPlans();delete p[name];savePlans(p);refreshPlanList();});
+    var p=loadPlans();p[name]=planSnapshot();savePlans(p);refreshPlanList(name);document.getElementById('plan-name').value='';planMsg('"'+name+'" 저장됐다. 목록에서 언제든 불러올 수 있다.');});
+  document.getElementById('plan-load').addEventListener('click',function(){var name=document.getElementById('plan-list').value;if(!name)return;var p=loadPlans();if(p[name]){applyPlan(p[name]);planMsg('"'+name+'" 불러와 시작 상태로 적용했다.');}});
+  document.getElementById('plan-del').addEventListener('click',function(){var name=document.getElementById('plan-list').value;if(!name)return;var p=loadPlans();delete p[name];savePlans(p);refreshPlanList();planMsg('"'+name+'" 삭제했다.');});
+  function planMsg(t){var el=document.getElementById('plan-msg');if(!el)return;el.textContent=t;clearTimeout(planMsg._t);planMsg._t=setTimeout(function(){el.textContent='';},4000);}
   refreshPlanList();
 
   // ── 기본 연간 계획(분당우리 한 부 예시) ──
