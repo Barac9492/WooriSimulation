@@ -75,7 +75,20 @@
     <div id="pj-advice" style="margin-top:8px"></div>
     <div id="pj-summary-box" style="margin-top:8px"></div>
   </div>
-  <div class="zhead">② 두 계획 비교 (A/B)</div>
+  <div class="zhead">② 확산 차단 실험 — 누구부터 돌볼까</div>
+  <div class="gpanel" style="padding:10px 12px;margin-bottom:12px;border-color:#a3622a">
+    <div class="ghint" style="margin-bottom:8px">같은 만큼의 집중 돌봄(매주 같은 수의 심방·연결)을 <b>무작위</b>로 줄 때와 <b>번짐의 핵부터</b> 줄 때를 견준다. 백신을 아무 데나 놓을 때보다 길목에 놓을 때 유행이 더 꺾이는지 보는 셈이다(비유). 돌봄의 양이 같으니, 차이가 난다면 그건 진단이 한 일이다.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:#6b5538">주당 돌봄</span>
+      <select id="sx-k"><option value="5">5명</option><option value="8" selected>8명</option><option value="12">12명</option></select>
+      <span style="font-size:12px;color:#6b5538">기간</span>
+      <select id="sx-weeks"><option value="24">1년(24주)</option><option value="48" selected>2년(48주)</option><option value="72">3년(72주)</option></select>
+      <span style="flex:1"></span>
+      <button class="gbtn" id="sx-run" style="background:#a3622a;border-color:#6b3a12;color:#fdf3e6">실험 실행</button>
+    </div>
+    <div id="sx-result"><div class="ghint" style="padding-top:2px">"실험 실행"을 누르면 세 가지(무처치 · 무작위 돌봄 · 핵 우선 돌봄)를 같은 계획·기간으로 여러 번 돌려, 주마다 흔들리는 아이 수의 곡선과 마지막 숫자를 견준다.</div></div>
+  </div>
+  <div class="zhead">③ 두 계획 비교 (A/B)</div>
   <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
     <div class="ghint" style="margin-bottom:8px">두 안을 같은 기간 동안 견준다. 설정 탭에서 한 안을 맞춰 A에 담고, 바꿔서 B에 담은 뒤 비교한다. 예: 수련회를 1년차 vs 2년차.</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
@@ -134,6 +147,10 @@
   </div>
   <div id="statusline" style="font-size:12px;color:#4a3a2a;margin:0 2px 6px;line-height:1.5"></div>
   <div id="weekfx" class="gpanel" style="padding:6px 10px;margin-bottom:12px;font-size:12px;line-height:1.6"></div>
+
+  <!-- 전염 진단: 한 아이가 흔들리면 친구도 흔들린다(비유) -->
+  <div class="zhead" style="color:#a3622a">전염 진단 — 한 아이가 흔들리면 친구도 흔들린다(비유)</div>
+  <div id="conta" class="gpanel" style="padding:9px 12px;margin-bottom:12px;border-color:#a3622a;background:#f6efe2"></div>
 
   <!-- 자세히: 분석 디테일(접힘) -->
   <details class="gpanel" style="padding:9px 12px;margin-bottom:8px">
@@ -286,6 +303,8 @@
   var SP=document.getElementById('spark'),sx=SP.getContext('2d');
   var clamp=function(v,a,b){return v<a?a:v>b?b:v;},rnd=function(a,b){return a+Math.random()*(b-a);};
   var WEEKS_PER_YEAR=24,LEAVE_AFTER=6,MAX_GRADE=6;
+  // 집중 돌봄(심방·연결) 채널: 확산 차단 실험에서 그 주에 지목된 학생(s.cared)에게만 더해지는 힘. 그냥 넣어 본 값이다.
+  var CARE_FORCE=0.075,CARE_FAITH=0.018;
   var GRADE_LABELS=['','중1','중2','중3','고1','고2','고3'];
   // 중3→고1 전환 절벽: 한국 교회 다음세대 이탈의 큰 지점. 헌신이 약하고 외톨이·비신앙일수록 떠나기 쉽다.
   function cliffProb(s){return clamp((0.55-s.commit)+(s.loner?0.15:0)+(s.bg==='none'?0.10:0)-(s.core?0.25:0),0,0.7);}
@@ -303,6 +322,7 @@
   var CHURCH_EVENTS={senior:{label:'담임 말씀 시리즈',color:'#b5651d'},allretreat:{label:'전교인 수련회',color:'#2e8b57'},revival:{label:'부흥회',color:'#c0392b'},season:{label:'절기',color:'#8e7cc3'}};
   var seats=[];for(var r=0;r<12;r++)for(var c=0;c<15;c++)seats.push({x:14+c*20,y:36+r*13,taken:false});
   var students=[],week=0,dropouts=0,playing=false,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null;
+  var conta=null,showSpread=false;
   var churchClimate=0.5,parentVitality=0.5,churchSchedule=[],ceid=0;
   var val=function(id){return +document.getElementById(id).value;};
   function freeSeat(){for(var i=0;i<seats.length;i++)if(!seats[i].taken){seats[i].taken=true;return i;}return -1;}
@@ -393,7 +413,8 @@
     s.sg=s.rSg<ctx.sgFrac;s.mentor=s.rMt<ctx.mtFrac;var sp=ctx.speed;
     var fr=s.friends.map(function(j){return ctx.arr[j];}).filter(function(x){return x&&!x.left;});
     var pull=fr.length?fr.reduce(function(x,y){return x+y.commit;},0)/fr.length:0.5;
-    var force=-0.045+0.11*(pull-0.5)+(s.sg?0.06:0)*ctx.tEff+(s.mentor?0.05:0)*ctx.tEff+0.05*(s.fam-0.5)+(ctx.churchClimate!=null?0.035*(ctx.churchClimate-0.5):0)+(Math.random()-0.5)*0.03;
+    var care=(s.cared&&ctx.careForce)?ctx.careForce:0; // 지목된 학생에게만(확산 차단 실험)
+    var force=-0.045+0.11*(pull-0.5)+(s.sg?0.06:0)*ctx.tEff+(s.mentor?0.05:0)*ctx.tEff+care*ctx.tEff+0.05*(s.fam-0.5)+(ctx.churchClimate!=null?0.035*(ctx.churchClimate-0.5):0)+(Math.random()-0.5)*0.03;
     var f=ctx.f;
     if(f.smallgroup&&s.sg)force+=0.06;
     if(f.service&&(s.core||s.sg))force+=0.04;
@@ -420,7 +441,7 @@
     s.eng=clamp(s.commit+0.20*s.retreatGlow-s.examPress,0,1);
     s.absent=s.eng<0.12?s.absent+1:Math.max(0,s.absent-1);
     // 신앙(느리게)
-    var fd=(s.eng>0.35?0.014:-0.006)+(s.sg?0.012:0)*ctx.tEff+(s.mentor?0.015:0)*ctx.tEff+0.020*(s.fam-0.5)+(ctx.churchClimate!=null?0.015*(ctx.churchClimate-0.5):0)+dFa*s.sermonAcc+(ctx.revival?0.02:0)+(ctx.allRetreat?0.03:0);
+    var fd=(s.eng>0.35?0.014:-0.006)+(s.sg?0.012:0)*ctx.tEff+(s.mentor?0.015:0)*ctx.tEff+((s.cared&&ctx.careFaith)?ctx.careFaith:0)*ctx.tEff+0.020*(s.fam-0.5)+(ctx.churchClimate!=null?0.015*(ctx.churchClimate-0.5):0)+dFa*s.sermonAcc+(ctx.revival?0.02:0)+(ctx.allRetreat?0.03:0);
     s.faith=clamp(s.faith+sp*fd,0,1);
     // 신앙의 갈래(말씀·거룩·소속): 신앙 쪽으로 천천히 모이되, 설교 결이 갈래마다 다르게 기울인다
     var frC=fr.length;
@@ -467,7 +488,45 @@
     var dm=document.getElementById('dims');if(dm)dm.innerHTML='<b style="color:#6b5538">신앙의 결(평균)</b> &nbsp;말씀 <b style="color:#7a5c38">'+Math.round(aw*100)+'%</b> · 거룩 <b style="color:#6b4a8a">'+Math.round(ah*100)+'%</b> · 소속 <b style="color:#2e8b8b">'+Math.round(ab*100)+'%</b>';
     var sl2=document.getElementById('statusline');if(sl2){var rr=(a.length-ac-lo)/(a.length||1),mood=rr>=0.2?'<b style="color:#a33232">여러 학생이 흔들리고 있다</b>':(ac/(a.length||1)>=0.7?'<b style="color:#3b6d11">대체로 건강하다</b>':'보통이다');sl2.innerHTML='지금 '+a.length+'명 중 활발 '+ac+' · 위기 '+(a.length-ac-lo)+' · 평균 신앙 '+Math.round(f*100)+'% — '+mood+'.';}
     updateWeekPanel(week);updateWeekFx(cur,prevMetrics);updatePreview();updateEco();prevMetrics=cur;
+    conta=contagion();updateContagion(conta);
     updateStudCard();updateCareList();renderActions();}
+  // ── 전염 진단(비유): 한 아이가 흔들리면 친구도 흔들린다는 렌즈로 본다. 새 가정을 더하지 않고 친구 효과를 읽기만 한다. ──
+  function friendObjs(s,arr){var o=[],fr=s.friends;for(var k=0;k<fr.length;k++){var f=arr[fr[k]];if(f&&!f.left)o.push(f);}return o;}
+  function liveFriends(s){return friendObjs(s,students);}
+  function spreadScore(s,arr){var w=s.eng<0.3?1:s.eng<0.55?0.4:0;if(!w)return 0;var fr=friendObjs(s,arr);return w*(fr.filter(function(o){return o.eng>=0.3&&o.eng<0.55;}).length+0.4*fr.filter(function(o){return o.eng>=0.55;}).length);}
+  function studTag(s){var t=[GRADE_LABELS[s.grade]];if(s.loner)t.push('외톨이');if(!s.sg)t.push('소그룹 밖');if(s.bg==='none')t.push('비신앙 가정');if(s.core)t.push('코어');return t.join('·');}
+  function contagion(){
+    var a=students.filter(function(s){return !s.left;}),n=a.length;if(!n)return null;
+    var I=[],S=[],R=[];
+    a.forEach(function(s){var e=s.eng;if(e<0.3)I.push(s);else if(e<0.55)S.push(s);else R.push(s);});
+    var baseRate=I.length/n;
+    var exposed=0,localSum=0,infWithFr=0;
+    S.forEach(function(s){var fr=liveFriends(s);if(fr.length&&fr.some(function(o){return o.eng<0.3;}))exposed++;});
+    I.forEach(function(s){var fr=liveFriends(s);if(!fr.length)return;infWithFr++;localSum+=fr.filter(function(o){return o.eng<0.3;}).length/fr.length;});
+    var cluster=baseRate>0.001&&infWithFr?(localSum/infWithFr)/baseRate:0;
+    var spread=a.map(function(s){var sc=spreadScore(s,students);if(sc<=0.5)return null;var fr=liveFriends(s);return {s:s,v:sc,heal:fr.filter(function(o){return o.eng>=0.3;}).length};}).filter(Boolean).sort(function(x,y){return y.v-x.v;}).slice(0,3);
+    var anchor=R.map(function(s){var fr=liveFriends(s);var sc=fr.filter(function(o){return o.eng>=0.3&&o.eng<0.55;}).length+1.3*fr.filter(function(o){return o.eng<0.3;}).length;return sc>0.5?{s:s,v:sc,shaky:fr.filter(function(o){return o.eng<0.55;}).length}:null;}).filter(Boolean).sort(function(x,y){return y.v-x.v;}).slice(0,3);
+    function rr(filt){var g=a.filter(filt);if(g.length<4)return null;var gi=g.filter(function(s){return s.eng<0.3;}).length/g.length;return baseRate>0.001?{rr:gi/baseRate,n:g.length}:null;}
+    var markers=[{k:'외톨이',d:rr(function(s){return s.loner;})},{k:'비신앙 가정',d:rr(function(s){return s.bg==='none';})},{k:'코어 아닌 아이',d:rr(function(s){return !s.core;})},{k:'고등',d:rr(function(s){return s.grade>=4;})}].filter(function(m){return m.d&&m.d.rr>=1.3;}).sort(function(x,y){return y.d.rr-x.d.rr;});
+    return {n:n,S:S.length,I:I.length,R:R.length,exposed:exposed,cluster:cluster,spread:spread,anchor:anchor,markers:markers};
+  }
+  function updateContagion(c){
+    var el=document.getElementById('conta');if(!el)return;
+    if(!c){el.innerHTML='<div class="ghint">아직 시작 전이다. 한 주가 흐르면, 흔들리는 아이가 친구에게 어떻게 번지는지 여기서 살핀다.</div>';return;}
+    var html='<div style="font-size:12px;line-height:1.7"><b style="color:#3b6d11">든든한 아이</b> '+c.R+' · <b style="color:#7a5510">느슨한 아이</b> '+c.S+' · <b style="color:#a33232">흔들리는 아이</b> '+c.I+' &nbsp;<span class="ghint">출석이 흔들리는 것을 전염에 빗대어 본다.</span></div>';
+    if(c.I===0){html+='<div style="font-size:12px;color:#3b6d11;margin-top:5px">지금은 흔들리는 아이가 없다. 활발한 아이들이 공동체를 잘 받쳐 주고 있다.</div>';el.innerHTML=html;return;}
+    var sp=c.S?Math.round(c.exposed/c.S*100):0,cl=Math.round(c.cluster*10)/10;
+    html+='<div style="font-size:12px;line-height:1.7;margin-top:5px">흔들리는 친구 곁에 있어 함께 흔들리기 쉬운 아이 <b style="color:#a33232">'+c.exposed+'명</b>'+(c.S?'(느슨한 아이의 '+sp+'%)':'')+' · 한 무리에 <span class="tip" style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들리는 아이들이 한 친구 무리에 얼마나 쏠렸나. 1배면 흩어져 있고, 2배면 두 배로 몰려 번진다">쏠림</span> <b>'+cl+'배</b></div>';
+    html+='<div class="ghint" style="margin-top:3px">'+(c.cluster>=1.4?'흔들리는 아이들이 같은 친구 무리에 몰려 있다. 한 명씩 따로 챙기기보다 그 무리를 함께 챙기는 게 낫다.':c.cluster>=1.05?'흔들리는 아이들이 친구를 따라 조금씩 늘고 있다.':'흔들리는 아이들이 여기저기 흩어져 있다. 친구 따라 번지기보다 저마다 사정이 다르니 한 명씩 챙기면 된다.')+'</div>';
+    var listLine=function(x,arrow){return '<div class="cline" data-sel="'+students.indexOf(x.s)+'" style="font-size:12px;padding:2px 0;cursor:pointer;line-height:1.5">· '+studTag(x.s)+' · 출석 '+Math.round(x.s.eng*100)+'% <span style="color:#8a755a">'+arrow+'</span></div>';};
+    if(c.spread.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#a33232">번짐의 핵 — 먼저 붙들면 번짐을 끊는다</div>'+c.spread.map(function(x){return listLine(x,'→ 곁에 아직 건강한 친구 '+x.heal+'명이 있다');}).join('');}
+    if(c.anchor.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#3b6d11">곁에서 붙드는 아이 — 흔들리는 벗을 붙들어 준다</div>'+c.anchor.map(function(x){return listLine(x,'→ 곁의 흔들리는 친구 '+x.shaky+'명을 붙들어 준다');}).join('');}
+    if(c.markers.length){html+='<div style="font-size:12px;margin-top:8px;border-top:1px solid #e0cda0;padding-top:6px"><span style="color:#8a755a">누가 잘 흔들리나</span> &nbsp;'+c.markers.map(function(m){return '<b style="color:#a33232">'+m.k+' '+(Math.round(m.d.rr*10)/10)+'배</b>';}).join(' · ')+'</div>';}
+    html+='<div style="margin-top:8px"><button class="gbtn" id="conta-view" style="padding:3px 9px;font-size:12px'+(showSpread?';background:#5fb04e;border-color:#3b6d11;color:#1d3a14':'')+'">'+(showSpread?'전염 경로 숨기기':'교실에서 전염 경로 보기')+'</button></div>';
+    el.innerHTML=html;
+    Array.prototype.forEach.call(el.querySelectorAll('.cline'),function(b){b.addEventListener('click',function(){selStudent=students[+this.dataset.sel]||null;updateStudCard();draw(0);document.getElementById('world').scrollIntoView({block:'center'});});});
+    var v=document.getElementById('conta-view');if(v)v.addEventListener('click',function(){showSpread=!showSpread;updateContagion(conta);draw(0);});
+  }
   // 가장 가까운 해당 종류 일정까지 남은 주(0=진행 중, null=24주 내 없음)
   function weeksUntil(type){for(var d=0;d<=24;d++){var w=week+d,on=false;schedule.forEach(function(ev){if(ev.type===type&&periodActive(ev,w))on=true;});if(on)return d;}return null;}
   // 이번 주 할 일 — 현재 상태와 다가오는 일정을 훑어 시급순으로 액션 아이템을 띄운다(목사·갱신팀의 눈)
@@ -482,6 +541,7 @@
     if(risky/n>=0.18)items.push({u:2,t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)'+trend+' → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
     else if(risky>0)items.push({u:1,t:'위기군 '+risky+'명'+trend+' → 돌봄 명단 확인, 흔들리는 학생 안부.'});
     if(loners>=Math.max(3,n*0.08))items.push({u:2,t:'소그룹 밖 외톨이 <b>'+loners+'명</b> → 또래·소그룹에 의도적으로 연결(가장 큰 이탈 위험).'});
+    if(conta&&conta.spread.length&&conta.exposed>=Math.max(2,n*0.06))items.push({u:2,t:'흔들리는 아이가 친구를 타고 늘고 있다(함께 흔들리기 쉬운 아이 '+conta.exposed+'명) → "전염 진단"의 번짐의 핵 '+conta.spread.length+'명을 먼저 붙들어 번짐을 끊으라.'});
     if(nextSoo!=null&&nextSoo<=4)items.push({u:2,t:'수능 '+(nextSoo===0?'<b>진행 중</b>':'<b>'+nextSoo+'주 뒤</b>')+' → 고3 케어 집중, 수능 후 복귀 환영 준비.'});
     if(toYE<=4&&week>0){var shaky3=a.filter(function(s){return s.grade===3&&s.commit<0.5;}).length;if(shaky3>0)items.push({u:2,t:'곧 중3→고1 전환('+toYE+'주 뒤) → 흔들리는 중3 <b>'+shaky3+'명</b>을 미리 관계로 붙들기(전환 절벽).'});}
     if(nextExam!=null&&nextExam<=3)items.push({u:1,t:'시험기간 '+(nextExam===0?'진행 중':nextExam+'주 뒤')+' → 출석 일시 하락 대비, 시험 후 회복 모임.'});
@@ -546,7 +606,11 @@
     var act=students.filter(function(s){return !s.left;}).length,lines=act<=120;
     if(lines){wx.strokeStyle='rgba(90,70,50,0.14)';wx.lineWidth=1;
       students.forEach(function(s){if(s.left||s.seat<0)return;var a=seats[s.seat];var si=students.indexOf(s);s.friends.forEach(function(j){var fo=students[j];if(fo&&!fo.left&&fo.seat>=0&&j>si){var b=seats[fo.seat];wx.beginPath();wx.moveTo(a.x+1,a.y+1);wx.lineTo(b.x+1,b.y+1);wx.stroke();}});});}
+    if(showSpread&&conta){wx.strokeStyle='rgba(214,90,79,0.6)';wx.lineWidth=1;
+      students.forEach(function(s){if(s.left||s.seat<0||s.eng>=0.3)return;var a=seats[s.seat];s.friends.forEach(function(j){var fo=students[j];if(fo&&!fo.left&&fo.seat>=0&&fo.eng>=0.3){var b=seats[fo.seat];wx.beginPath();wx.moveTo(a.x+1,a.y+1);wx.lineTo(b.x+1,b.y+1);wx.stroke();}});});}
     students.forEach(function(s){if(s.left||s.seat<0)return;var a=seats[s.seat];var bob=Math.round(Math.sin(t/350+s.phase));var x=a.x,y=a.y+bob;wx.fillStyle=color(s);wx.fillRect(x-2,y-1,4,4);wx.fillStyle='#f0c9a0';wx.fillRect(x-1,y-4,2,2);if(s.faith>0.7){wx.fillStyle='#f2c84b';wx.fillRect(x,y-6,1,1);}});
+    if(showSpread&&conta){var ring=function(s,col){if(!s||s.left||s.seat<0)return;var a=seats[s.seat];wx.strokeStyle=col;wx.lineWidth=1;wx.strokeRect(a.x-3,a.y-3,7,8);};
+      conta.spread.forEach(function(x){ring(x.s,'#a33232');});conta.anchor.forEach(function(x){ring(x.s,'#3b6d11');});}
     if(selStudent&&!selStudent.left&&selStudent.seat>=0){var sa=seats[selStudent.seat];
       wx.strokeStyle='rgba(70,120,55,0.55)';wx.lineWidth=1;(selStudent.friends||[]).forEach(function(fi){var fr=students[fi];if(fr&&!fr.left&&fr.seat>=0){var fb=seats[fr.seat];wx.beginPath();wx.moveTo(sa.x+0.5,sa.y+1);wx.lineTo(fb.x+0.5,fb.y+1);wx.stroke();}});
       wx.strokeStyle='#fffaf0';wx.lineWidth=1;wx.strokeRect(sa.x-4,sa.y-4,9,10);wx.strokeStyle='#2b2018';wx.strokeRect(sa.x-3,sa.y-3,7,8);}
@@ -602,17 +666,27 @@
   document.getElementById('care-list').addEventListener('click',function(e){var row=e.target.closest('[data-care]');if(!row)return;var s=students[+row.dataset.care];if(s&&!s.left){selStudent=s;updateStudCard();draw(0);var sc=document.getElementById('stud-card');if(sc&&sc.scrollIntoView)sc.scrollIntoView({block:'center',behavior:'smooth'});}});
 
   // ── 헤드리스 예측 엔진 ──
-  function simulateOnce(cfg,weeks){
+  // 확산 차단 실험용 돌봄 정책: 매주 흔들리는 학생(느슨+위기) 중 k명을 골라 그 주만 집중 돌봄(s.cared).
+  function applyPolicy(arr,policy){
+    var active=arr.filter(function(s){return !s.left;});active.forEach(function(s){s.cared=false;});
+    if(!policy||policy.mode==='none')return;
+    var pool=active.filter(function(s){return s.eng<0.55;}),pick;
+    if(policy.mode==='hub')pick=pool.map(function(s){return {s:s,v:spreadScore(s,arr)};}).filter(function(x){return x.v>0;}).sort(function(a,b){return b.v-a.v;}).slice(0,policy.k).map(function(x){return x.s;});
+    else pick=shuffle(pool.slice()).slice(0,policy.k);
+    pick.forEach(function(s){s.cared=true;});
+  }
+  function simulateOnce(cfg,weeks,policy){
     var D=cfg.dist,arr=[];
     for(var i=0;i<D.n;i++)arr.push(spawn(D,pickGrade6(D.mid,D.high)));
     arr.forEach(function(s){s.loner?linkIn(s,arr,arr,0,1):linkIn(s,arr,arr,3,5);});
     var drop=0,hist=[],cc=0.5,pv=0.5,dara=cfg.ops.daracbang!=null?cfg.ops.daracbang:0.5,csched=cfg.church||[];
     for(var w=1;w<=weeks;w++){
       var active=arr.filter(function(s){return !s.left;});
+      applyPolicy(arr,policy);
       var tEff=Math.min(1,(cfg.ops.tc*8)/Math.max(1,active.length));
       var we=weekEffects(cfg.schedule,w);
       var cu=advanceChurch(cc,pv,csched,w,cfg.ops.speed,dara);cc=cu.cc;pv=cu.pv;
-      var ctx={arr:arr,sgFrac:cfg.ops.sg,mtFrac:cfg.ops.mt,tEff:tEff,speed:cfg.ops.speed,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:pv,churchClimate:cc,allRetreat:cu.allRetreat,revival:cu.revival};
+      var ctx={arr:arr,sgFrac:cfg.ops.sg,mtFrac:cfg.ops.mt,tEff:tEff,speed:cfg.ops.speed,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:pv,churchClimate:cc,allRetreat:cu.allRetreat,revival:cu.revival,careForce:CARE_FORCE,careFaith:CARE_FAITH};
       active.forEach(function(s){tick(s,ctx);});
       if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var k=0;k<4;k++){var ns=spawn(D,Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){ns.friends.push(arr.indexOf(inv[Math.floor(Math.random()*inv.length)]));}arr.push(ns);}}
       arr.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;drop++;}});
@@ -633,9 +707,9 @@
     arr.forEach(function(s){add(by.bg[s.bg],s);add(by.lon[s.loner?'y':'n'],s);add(by.core[s.core?'y':'n'],s);add(by.grade[s.grade<=3?'mid':'high'],s);});
     return by;
   }
-  function simulate(cfg,weeks,runs){
+  function simulate(cfg,weeks,runs,policy){
     var acc=null,segAcc=null,fin=[];
-    for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks);fin.push(h[h.length-1]);
+    for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks,policy);fin.push(h[h.length-1]);
       if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop};});segAcc=h.seg;}
       else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;});
         for(var d in h.seg)for(var g in h.seg[d])for(var k in h.seg[d][g])segAcc[d][g][k]+=h.seg[d][g][k];}}
@@ -945,6 +1019,42 @@
   document.getElementById('ev-type').addEventListener('change',syncFields);
 
   // ── 모드 전환 ──
+  // ── 확산 차단 실험: 같은 돌봄을 무작위 vs 번짐의 핵부터 ──
+  function drawCurves(id,series,cols){
+    var c=document.getElementById(id);if(!c)return;var g=c.getContext('2d');g.clearRect(0,0,320,90);
+    var mx=1;series.forEach(function(arr){arr.forEach(function(v){if(v>mx)mx=v;});});
+    g.strokeStyle='rgba(90,70,50,0.15)';g.lineWidth=1;g.beginPath();g.moveTo(2,86);g.lineTo(318,86);g.stroke();
+    series.forEach(function(arr,i){if(arr.length<2)return;g.strokeStyle=cols[i];g.lineWidth=2;g.beginPath();arr.forEach(function(v,k){var x=k/(arr.length-1)*316+2,y=86-(v/mx)*80;k?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();});
+  }
+  function spreadExperiment(){
+    var box=document.getElementById('sx-result');
+    box.innerHTML='<div class="ghint" style="padding-top:2px">실험 중... 세 가지(무처치·무작위·핵 우선)를 같은 기간 여러 번 돌린다.</div>';
+    setTimeout(function(){
+      var plan=captureConfig(),weeks=val('sx-weeks'),runs=5,K=val('sx-k');
+      var none=simulate(plan,weeks,runs,{mode:'none'}),rnd=simulate(plan,weeks,runs,{mode:'random',k:K}),hub=simulate(plan,weeks,runs,{mode:'hub',k:K});
+      var L0=none[none.length-1],Lr=rnd[rnd.length-1],Lh=hub[hub.length-1];
+      var cols=['#9a8e75','#378add','#a3622a'],labs=['무처치','무작위 돌봄','핵 우선 돌봄'];
+      var html='<div class="gpanel" style="padding:6px;margin:0 0 8px"><canvas id="sxcv" width="320" height="90" style="width:100%;height:auto"></canvas>'+
+        '<div style="display:flex;gap:12px;font-size:11px;color:#6b5538;padding:2px 2px 0;flex-wrap:wrap">'+
+        labs.map(function(l,i){return '<span><span style="display:inline-block;width:10px;height:3px;background:'+cols[i]+';vertical-align:middle"></span> '+l+'</span>';}).join('')+
+        '<span style="margin-left:auto">주마다 흔들리는 아이 수 · '+weeks+'주 · '+runs+'번 평균</span></div></div>';
+      var rows=[['그동안 떠난 수','drop'],['흔들리는 아이','risk'],['든든한 아이','active'],['평균 신앙','f']];
+      var cell=function(t,bg,al,cl){return '<div style="padding:5px 8px;background:'+bg+';text-align:'+al+(cl?';color:'+cl:'')+(al==='right'?';font-family:ui-monospace,monospace':'')+'">'+t+'</div>';};
+      var fmt=function(v,pct){return pct?Math.round(v*100)+'%':Math.round(v);};
+      html+='<div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;font-size:12px;border:2px solid #4a3a2a;border-radius:5px;overflow:hidden">';
+      html+=cell('항목','#e7d8b4','left')+cell('무처치','#e7d8b4','right','#7a6a4a')+cell('무작위','#e7d8b4','right','#378add')+cell('핵 우선','#e7d8b4','right','#a3622a');
+      rows.forEach(function(rw,i){var bg=i%2?'#fbf4e4':'#f3e7cc',pct=rw[1]==='f';
+        html+=cell(rw[0],bg,'left')+cell(fmt(L0[rw[1]],pct),bg,'right')+cell(fmt(Lr[rw[1]],pct),bg,'right')+cell(fmt(Lh[rw[1]],pct),bg,'right');});
+      html+='</div>';
+      var dHubRnd=Lr.drop-Lh.drop,dHubNone=L0.drop-Lh.drop,read;
+      if(dHubRnd>=1)read='매주 <b>'+K+'명</b>을 무작위로 돌볼 때보다, <b>번짐의 핵부터</b> 돌볼 때 그동안 떠난 아이가 <b style="color:#3b6d11">'+Math.round(dHubRnd)+'명</b> 적다('+weeks+'주). 같은 손길도 누구부터 챙기느냐에 따라 결과가 갈린다.';
+      else if(dHubRnd<=-1)read='이번 설정에서는 무작위로 돌볼 때가 핵부터 돌볼 때보다 떠난 아이가 '+Math.round(-dHubRnd)+'명 적게 나온다. 흔들리는 아이들이 흩어져 있으면 길목부터 챙기는 효과가 옅다.';
+      else read='이번 설정에서는 핵부터 돌볼 때와 무작위로 돌볼 때 차이가 뚜렷하지 않다('+Math.round(Math.abs(dHubRnd))+'명 안팎). 흔들리는 아이들이 한 무리에 몰릴수록 핵부터 챙기는 효과가 커진다.';
+      html+='<div style="font-size:12px;color:#4a3a2a;margin-top:8px;line-height:1.6;border-top:1px solid #e0cda0;padding-top:6px">→ '+read+'<br><span class="ghint">아무것도 안 할 때와 견주면, 핵부터 돌볼 때 그동안 떠난 아이가 약 '+Math.round(dHubNone)+'명 준다. 돌봄 효과 수치는 그냥 넣어 본 값이니 방향과 크기로만 읽으라.</span></div>';
+      box.innerHTML=html;
+      drawCurves('sxcv',[none.map(function(p){return p.risk;}),rnd.map(function(p){return p.risk;}),hub.map(function(p){return p.risk;})],cols);
+    },30);
+  }
   function setMode(m){mode=m;
     ['observe','scenario','config'].forEach(function(x){document.getElementById(x).hidden=(x!==m);document.getElementById('mode-'+x).classList.toggle('on',x===m);});}
   document.getElementById('mode-observe').addEventListener('click',function(){setMode('observe');});
@@ -962,6 +1072,7 @@
   document.getElementById('pj-run').addEventListener('click',projectRun);
   document.getElementById('pj-advise').addEventListener('click',adviseRun);
   document.getElementById('pj-summary').addEventListener('click',showSummary);
+  document.getElementById('sx-run').addEventListener('click',spreadExperiment);
   function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
