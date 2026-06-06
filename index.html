@@ -667,11 +667,14 @@
     if(week>0){var weD=weekEffects(schedule,week);if(weD.exam||weD.sooneung){wx.fillStyle='rgba(180,40,40,0.09)';wx.fillRect(0,28,320,162);}else if(weD.retreat){wx.fillStyle='rgba(60,150,70,0.10)';wx.fillRect(0,28,320,162);}}}
   function drawSpark(){sx.clearRect(0,0,320,56);if(hist.length<2)return;sx.strokeStyle='#5fb04e';sx.lineWidth=2;sx.beginPath();hist.forEach(function(h,i){var x=i/(hist.length-1)*316+2,y=54-(h.n/maxN)*48;i?sx.lineTo(x,y):sx.moveTo(x,y);});sx.stroke();sx.strokeStyle='#e0a52f';sx.beginPath();hist.forEach(function(h,i){var x=i/(hist.length-1)*316+2,y=54-h.f*48;i?sx.lineTo(x,y):sx.moveTo(x,y);});sx.stroke();}
 
+  // 흔들리는 아이가 시험 같은 '일시 눌림'인지(곧 돌아옴), 바탕(헌신)이 내려가는 '진짜 하락'인지 가른다.
+  // eng = commit + 수련회여운 - 시험압박. eng가 commit보다 크게 눌렸고 commit이 아직 받쳐 주면 일시.
+  function reversion(s){return (s.commit>=0.45&&(s.commit-s.eng)>=0.08)?'temp':'real';}
   // ── 한 학생 들여다보기(목양: 한 영혼) ──
   function studNote(s){
     var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
     if(s.loner||fr<=1)return '친구가 거의 없다. 또래·소그룹에 의도적으로 잇는 것이 가장 급하다.';
-    if(s.eng<0.3)return '출석이 흔들린다. 이번 주 안부 연락과 심방이 필요하다.';
+    if(s.eng<0.3)return reversion(s)==='temp'?'시험 같은 일로 잠깐 눌린 듯하다. 끝나면 돌아올 수 있으니, 과한 걱정보다 안부 한 번이면 된다.':'바탕(헌신)이 내려가는 중이다. 두면 굳어지니 지금 심방·연결로 붙들어야 한다.';
     if(s.bg==='none'&&s.faith<0.4)return '신앙 배경이 약하다. 꾸준한 관심과 전도형 양육으로 붙들라.';
     if(s.core)return '공동체의 기둥이다. 세워 주고 섬길 자리를 맡기라.';
     if(s.faith>=0.6&&s.eng>=0.55)return '안정적이고 신앙도 깊다. 한 걸음 더 깊은 제자훈련으로 초대하라.';
@@ -706,12 +709,17 @@
   // 이번 주 돌봄 명단: 출석이 무너진 학생을 약한 순서로, 한 줄 처방과 함께
   function updateCareList(){
     var el=document.getElementById('care-list');if(!el||el.hidden)return;
-    var risky=students.filter(function(s){return !s.left&&s.eng<0.3;}).sort(function(a,b){return a.eng-b.eng;});
+    var risky=students.filter(function(s){return !s.left&&s.eng<0.3;});
     if(!risky.length){el.innerHTML='<div class="ghint" style="color:#3b6d11">지금 돌봄이 급한 학생이 없다. 위기 학생이 생기면 여기 약한 순서로 모인다.</div>';return;}
+    // 진짜 하락을 먼저, 일시 눌림은 뒤로(시급순 triage)
+    risky.sort(function(a,b){var ra=reversion(a)==='real'?0:1,rb=reversion(b)==='real'?0:1;return ra!==rb?ra-rb:a.eng-b.eng;});
+    var nReal=risky.filter(function(s){return reversion(s)==='real';}).length,nTemp=risky.length-nReal;
+    var head='<div class="ghint" style="margin-bottom:5px">흔들리는 '+risky.length+'명 중 <b style="color:#a33232">지금 붙들어야 '+nReal+'명</b> · <b style="color:#3b6d11">곧 돌아올 듯 '+nTemp+'명</b>(시험 등 일시).</div>';
     var top=risky.slice(0,12);
-    el.innerHTML=top.map(function(s,i){
+    el.innerHTML=head+top.map(function(s,i){
       var tags=[GRADE_LABELS[s.grade],{mota:'모태',normal:'일반',none:'비신앙 가정'}[s.bg]];if(s.loner)tags.push('외톨이');if(!s.sg)tags.push('소그룹 밖');
-      return '<div data-care="'+students.indexOf(s)+'" style="font-size:12px;padding:4px 0;border-bottom:1px solid #e6d6b0;line-height:1.6;cursor:pointer"><b style="color:#a33232">'+(i+1)+'.</b> '+tags.join(' · ')+' · 출석 '+Math.round(s.eng*100)+'% <span style="color:#3b6d11;font-size:11px">▸ 이 아이 보기</span><br><span style="color:#6b4a16">→ '+studNote(s)+'</span></div>';
+      var tg=reversion(s)==='real'?'<span style="background:#a33232;color:#fff;border-radius:3px;padding:0 5px;font-size:10px">지금 붙들어야</span>':'<span style="background:#6b8e3b;color:#fff;border-radius:3px;padding:0 5px;font-size:10px">곧 돌아올 듯</span>';
+      return '<div data-care="'+students.indexOf(s)+'" style="font-size:12px;padding:4px 0;border-bottom:1px solid #e6d6b0;line-height:1.6;cursor:pointer"><b style="color:#a33232">'+(i+1)+'.</b> '+tg+' '+tags.join(' · ')+' · 출석 '+Math.round(s.eng*100)+'% <span style="color:#3b6d11;font-size:11px">▸ 이 아이 보기</span><br><span style="color:#6b4a16">→ '+studNote(s)+'</span></div>';
     }).join('')+(risky.length>12?'<div class="ghint" style="margin-top:4px">외 '+(risky.length-12)+'명 더 있다.</div>':'');
   }
   document.getElementById('care-toggle').addEventListener('click',function(){var el=document.getElementById('care-list');el.hidden=!el.hidden;this.textContent=el.hidden?'펼치기':'접기';updateCareList();});
