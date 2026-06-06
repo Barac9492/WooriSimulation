@@ -654,7 +654,10 @@
     else if(gap>=2.5){vTxt=labA+' 쪽이 '+labB+'보다 <b>조금 낫다</b>.';vCol='#3b6d11';}
     else if(gap>-2.5){vTxt='둘이 <b>비슷하다</b> — 더 과감한 지렛대가 필요할 수 있다('+labA+' vs '+labB+').';vCol='#9a6c12';}
     else{vTxt=labA+' 쪽이 '+labB+'보다 <b>오히려 약하다</b> — 손볼 필요가 있다.';vCol='#a33232';}
-    var html='<div style="font-size:13px;color:'+vCol+';background:#f3e7cc;border:2px solid '+vCol+';border-radius:5px;padding:7px 10px;margin:2px 0 8px;line-height:1.5">→ '+vTxt+'</div>'+
+    var s0=hA[0],sg=function(v,pct){return (v>0?'+':'')+(pct?Math.round(v*100)+'%p':Math.round(v));};
+    var traj='시작 대비('+labA+'): 활발 '+sg(la.active-s0.active)+' · 위기 '+sg(la.risk-s0.risk)+' · 신앙 '+sg(la.f-s0.f,1)+' — 이 계획이 우리를 시작보다 '+((la.active-s0.active)-(la.risk-s0.risk)+(la.f-s0.f)*40>=3?'<b>들어올린다</b>':'크게 못 올린다')+'.';
+    var html='<div style="font-size:13px;color:'+vCol+';background:#f3e7cc;border:2px solid '+vCol+';border-radius:5px;padding:7px 10px;margin:2px 0 6px;line-height:1.5">→ '+vTxt+'</div>'+
+      '<div class="ghint" style="margin:0 0 8px;color:#6b5538">'+traj+'</div>'+
       '<div class="gpanel" style="padding:6px;margin:4px 0 8px"><canvas id="pcv" width="320" height="90" style="width:100%;height:auto"></canvas>'+
       '<div style="display:flex;gap:14px;font-size:11px;color:#6b5538;padding:2px 2px 0;flex-wrap:wrap">'+
       '<span><span style="display:inline-block;width:10px;height:3px;background:'+colA+';vertical-align:middle"></span> '+labA+' 활발 인원</span>'+
