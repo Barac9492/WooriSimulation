@@ -62,6 +62,11 @@
   .netcanvas{width:100%;height:auto;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;display:block}
   .hold{font-size:12.5px;padding:5px 0;border-top:1px solid var(--line)}
   @media(max-width:560px){.diag-grid{grid-template-columns:1fr}}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:#f3f5f9;color:#4b5563;border-radius:999px;padding:6px 13px;font-size:12.5px;font-family:inherit;cursor:pointer;font-weight:600}
+  .chip:hover{background:#e9edf3}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .reco{background:#f0f6ff;border:1px solid #cfe0ff;border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -115,7 +120,17 @@
 
   <section class="card">
     <div class="sec-h"><span class="dot act"></span><h2>③ 무엇을 할까 — 설교·프로그램</h2></div>
-    <div id="decide-body" class="placeholder">설교·프로그램을 고르면 ①②가 함께 바뀌고 추천이 나온다 — 다음 단계에서</div>
+    <div id="decide-body">
+      <div class="mini-h">이번 학기 설교 결 (하나 고름)</div>
+      <div id="sermon-pick" class="chips"></div>
+      <div class="mini-h" style="margin-top:12px">프로그램 (여럿 가능)</div>
+      <div id="prog-pick" class="chips"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        <button id="apply-plan" class="btn primary">이 결정으로 보기</button>
+        <button id="reco-btn" class="btn">무엇이 가장 좋을까?</button>
+      </div>
+      <div id="reco" style="margin-top:10px"></div>
+    </div>
   </section>
 
   <p class="hint" style="margin-top:14px">효과 수치는 그럴듯하게 넣어 본 값이지 확인된 사실이 아니다. 현실을 맞히는 도구가 아니라, 방향과 크기를 가늠하는 사유 도구다.</p>
@@ -508,6 +523,51 @@
       return '<div style="display:flex;align-items:center;gap:7px;margin:3px 0;font-size:12px"><span style="width:58px;flex:none;color:#4b5563">'+r[0]+'</span><div style="position:relative;flex:1;height:12px;background:#eef1f5;border-radius:3px"><div style="position:absolute;top:0;height:100%;left:'+l+'%;width:'+w+'%;background:'+col+';opacity:.85;border-radius:2px"></div><div style="position:absolute;top:-1px;left:50%;width:1px;height:14px;background:#cbd2dc"></div></div></div>';}).join('')+'<div class="hint" style="margin-top:4px">초록=끌어올림, 빨강=끌어내림. 길이는 상대 비교.</div>';
   }
   function updateProj(){drawIdx();updateAttr();}
+
+  // ── ③ 결정 + 추천 ──
+  var DEC={focus:'nurture',prog:{retreat:true,sg:false,outreach:false,mentor:false}};
+  var PROGS=[{k:'retreat',n:'수련회 강화'},{k:'sg',n:'소그룹 집중'},{k:'mentor',n:'멘토 강화'},{k:'outreach',n:'전도 주간'}];
+  function renderDecide(){
+    document.getElementById('sermon-pick').innerHTML=Object.keys(SERMON_FOCUS).map(function(f){return '<button class="chip'+(DEC.focus===f?' on':'')+'" data-f="'+f+'">'+SERMON_FOCUS[f].label+'</button>';}).join('');
+    document.getElementById('prog-pick').innerHTML=PROGS.map(function(p){return '<button class="chip'+(DEC.prog[p.k]?' on':'')+'" data-p="'+p.k+'">'+p.n+'</button>';}).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('#sermon-pick .chip'),function(b){b.addEventListener('click',function(){DEC.focus=this.dataset.f;renderDecide();});});
+    Array.prototype.forEach.call(document.querySelectorAll('#prog-pick .chip'),function(b){b.addEventListener('click',function(){DEC.prog[this.dataset.p]=!DEC.prog[this.dataset.p];renderDecide();});});
+  }
+  // 결정 → 일정/운영으로 옮기고 처음부터 다시 본다
+  function decToSchedule(){
+    var sc=[];
+    sc.push({id:eid++,type:'sermon',start:4,focus:DEC.focus,weeks:10,repeat:0});
+    if(DEC.prog.outreach)sc.push({id:eid++,type:'outreach',start:16,repeat:8});
+    if(DEC.prog.sg)sc.push({id:eid++,type:'smallgroup',start:6,repeat:6});
+    sc.push(DEC.prog.retreat?{id:eid++,type:'retreat',start:12,nights:3,attendRate:0.82,intensity:0.78,repeat:24}:{id:eid++,type:'retreat',start:12,nights:2,attendRate:0.6,intensity:0.5,repeat:24});
+    sc.push({id:eid++,type:'exam',start:8,weeks:3,repeat:12});
+    sc.push({id:eid++,type:'sooneung',start:18,weeks:6,repeat:24});
+    return sc;
+  }
+  function applyDecision(){
+    schedule=decToSchedule();
+    setSlider('s-mt',DEC.prog.mentor?45:30);
+    setSlider('s-sg',DEC.prog.sg?70:55);
+    generate();
+  }
+  function recommend(){
+    var box=document.getElementById('reco');box.innerHTML='<span class="hint">분석 중... 어떤 결정이 믿음을 가장 끌어올리는지 견준다.</span>';
+    setTimeout(function(){
+      var base=captureConfig(),W=48,R=3;var b=simulate(base,W,R),bIdx=b[b.length-1].idx;
+      var cands=[];
+      Object.keys(SERMON_FOCUS).forEach(function(f){if(f===DEC.focus)return;var c=cloneCfg(base);c.schedule.forEach(function(e){if(e.type==='sermon')e.focus=f;});cands.push({label:SERMON_FOCUS[f].label+' 설교로',sim:c});});
+      if(!DEC.prog.sg){var c1=cloneCfg(base);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'소그룹 집중 더하기',sim:c1});}
+      if(!DEC.prog.mentor){var c2=cloneCfg(base);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'멘토 강화 더하기',sim:c2});}
+      if(!DEC.prog.retreat){var c3=cloneCfg(base);var r=c3.schedule.filter(function(e){return e.type==='retreat';});if(r.length)r.forEach(function(e){e.nights=3;e.attendRate=0.82;e.intensity=0.78;});cands.push({label:'수련회 강화 더하기',sim:c3});}
+      var scored=cands.map(function(cd){var h=simulate(cd.sim,W,R);return {label:cd.label,gain:h[h.length-1].idx-bIdx,drop:h[h.length-1].drop};});
+      scored.sort(function(a,b){return b.gain-a.gain;});
+      var top=scored[0];
+      if(top&&top.gain>=1)box.innerHTML='<div class="reco"><b>추천</b> — 지금 계획에 <b>'+top.label+'</b> 바꾸면 믿음 지수가 약 <b>+'+Math.round(top.gain)+'</b> 더 오른다.<br><span class="hint">이대로 보고 싶으면 위 칩을 그렇게 맞추고 "이 결정으로 보기"를 누르라. 그냥 넣어 본 값이라 방향으로만 읽으라.</span></div>';
+      else box.innerHTML='<div class="reco">지금 결정이 이미 괜찮다. 크게 더 끌어올리는 단일 변화는 안 보인다.<br><span class="hint">설교 결과 프로그램을 바꿔 가며 ①②가 어떻게 움직이는지 살펴보라.</span></div>';
+    },30);
+  }
+  document.getElementById('apply-plan').addEventListener('click',applyDecision);
+  document.getElementById('reco-btn').addEventListener('click',recommend);
   // ── 설정 서랍 ──
   var UNITS={'p-n':'명','p-active':'%','p-risk':'%','p-mid':'%','p-high':'%','p-mota':'%','p-none':'%','p-core':'%','p-loner':'%','s-sg':'%','s-mt':'%','s-tc':'명','s-in':'명','s-speed':'%','s-daracbang':'%'};
   Object.keys(UNITS).forEach(function(id){var el=document.getElementById(id),out=document.getElementById('v-'+id);
@@ -533,7 +593,7 @@
   requestAnimationFrame(loop);
 
   // ── 시작 ──
-  generate();
+  renderDecide();applyDecision();
 })();
 </script>
 </body>
