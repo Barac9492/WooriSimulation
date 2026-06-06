@@ -103,7 +103,14 @@
 
   <section class="card">
     <div class="sec-h"><span class="dot stock"></span><h2>② 전망 — 믿음 지수</h2></div>
-    <div id="proj-body" class="placeholder">믿음 지수 추이 · 무엇이 움직이나 · 위험 · 어디에 힘을 쏟을까 — 다음 단계에서</div>
+    <div id="proj-body">
+      <div class="map-h"><span>믿음 지수 — 이대로 가면(0~100, 높을수록 든든)</span><span id="idx-now" class="hint"></span></div>
+      <canvas id="idxchart" width="600" height="150" class="netcanvas"></canvas>
+      <div class="diag-grid" style="margin-top:12px">
+        <div class="mini"><div class="mini-h">무엇이 믿음을 움직이나(이번 주)</div><div id="attr-bars"></div></div>
+        <div class="mini"><div class="mini-h">위험 — 나쁜 쪽이면</div><div id="risk-box" class="hint"></div></div>
+      </div>
+    </div>
   </section>
 
   <section class="card">
@@ -339,7 +346,8 @@
       var a2=arr.filter(function(s){return !s.left;});
       var favg=a2.length?a2.reduce(function(x,s){return x+s.faith;},0)/a2.length:0;
       var ac=a2.filter(function(s){return s.eng>=0.55;}).length,lo=a2.filter(function(s){return s.eng>=0.3&&s.eng<0.55;}).length;
-      hist.push({n:a2.length,f:favg,active:ac,loose:lo,risk:a2.length-ac-lo,drop:drop});
+      var idx=a2.length?Math.round(a2.reduce(function(x,s){return x+(s.commit+s.faith)/2;},0)/a2.length*100):0;
+      hist.push({n:a2.length,f:favg,active:ac,loose:lo,risk:a2.length-ac-lo,drop:drop,idx:idx});
     }
     hist.seg=segStats(arr);
     return hist;
@@ -355,10 +363,10 @@
   function simulate(cfg,weeks,runs,policy){
     var acc=null,segAcc=null,fin=[];
     for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks,policy);fin.push(h[h.length-1]);
-      if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop};});segAcc=h.seg;}
-      else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;});
+      if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop,idx:p.idx};});segAcc=h.seg;}
+      else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;acc[i].idx+=p.idx;});
         for(var d in h.seg)for(var g in h.seg[d])for(var k in h.seg[d][g])segAcc[d][g][k]+=h.seg[d][g][k];}}
-    acc.forEach(function(p){p.n/=runs;p.f/=runs;p.active/=runs;p.loose/=runs;p.risk/=runs;p.drop/=runs;});
+    acc.forEach(function(p){p.n/=runs;p.f/=runs;p.active/=runs;p.loose/=runs;p.risk/=runs;p.drop/=runs;p.idx/=runs;});
     for(var d2 in segAcc)for(var g2 in segAcc[d2])for(var k2 in segAcc[d2][g2])segAcc[d2][g2][k2]/=runs;
     acc.seg=segAcc;
     var rng=function(key){var mn=1e9,mx=-1e9;fin.forEach(function(p){if(p[key]<mn)mn=p[key];if(p[key]>mx)mx=p[key];});return [mn,mx];};
@@ -382,7 +390,7 @@
     seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];churchClimate=0.5;parentVitality=0.5;
     var N=val('p-n');for(var i=0;i<N;i++)students.push(makeOne(pickGrade()));
     students.forEach(function(s){s.loner?link(s,students,0,1):link(s,students,3,5);});
-    weekInc=0;layoutNet();render();
+    weekInc=0;layoutNet();runProjection();render();
   }
   function step(){
     week++;
@@ -416,7 +424,7 @@
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
-    updateDiag();
+    updateDiag();updateProj();
   }
 
   // ── ① 전염 지도 (COVID 렌즈) ──
@@ -459,6 +467,47 @@
     else hl.innerHTML='';
   }
 
+  // ── ② 전망 (Stock 렌즈): 믿음 지수·요인 분해·위험 ──
+  var projData=null;
+  function runProjection(){var plan=captureConfig();projData=simulate(plan,72,6);drawIdx();updateRisk();}
+  function drawIdx(){
+    var cv=document.getElementById('idxchart');if(!cv||!projData)return;var g=cv.getContext('2d'),W=600,H=150;g.clearRect(0,0,W,H);
+    // 0~100 격자
+    g.strokeStyle='#eef1f5';g.lineWidth=1;[0,25,50,75,100].forEach(function(v){var y=H-8-(v/100)*(H-22);g.beginPath();g.moveTo(34,y);g.lineTo(W-6,y);g.stroke();g.fillStyle='#9aa3b2';g.font='9px sans-serif';g.fillText(v,12,y+3);});
+    // 사역 이벤트 표시(설교·수련회 시작)
+    var n=projData.length;
+    schedule.forEach(function(ev){if(ev.start>n)return;var x=34+((ev.start-1)/(n-1))*(W-40);var col=ev.type==='sermon'?'#2563eb':ev.type==='retreat'?'#16a34a':null;if(!col)return;g.strokeStyle=col;g.globalAlpha=0.25;g.beginPath();g.moveTo(x,8);g.lineTo(x,H-8);g.stroke();g.globalAlpha=1;});
+    // 지수 선
+    g.strokeStyle='#2563eb';g.lineWidth=2.2;g.beginPath();projData.forEach(function(p,i){var x=34+(i/(n-1))*(W-40),y=H-8-(p.idx/100)*(H-22);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+    var L=projData[n-1];document.getElementById('idx-now').textContent='3년 뒤 '+Math.round(L.idx)+' (지금 '+(hist.length?Math.round(hist[hist.length-1].idx):'—')+') · 파란선=설교, 초록선=수련회';
+  }
+  function updateRisk(){
+    var el=document.getElementById('risk-box');if(!el||!projData)return;
+    var pk=0,mdd=0;projData.forEach(function(p){if(p.idx>pk)pk=p.idx;if(pk-p.idx>mdd)mdd=pk-p.idx;});
+    var rr=projData.range?projData.range.risk:null;
+    el.innerHTML='최대 낙폭: 믿음 지수가 정점에서 한때 <b>'+Math.round(mdd)+'</b>까지 빠질 수 있다.'+(rr?'<br>나쁜 해엔 흔들리는 아이가 최대 <b>'+Math.round(rr[1])+'명</b>까지.':'')+'<br><span class="hint">끝값이 좋아도 중간 골을 견딜 채비가 필요하다.</span>';
+  }
+  // 요인 분해: 이번 주 출석힘을 무엇이 끌어올리고 끌어내렸나(tick의 항을 그대로 읽음)
+  function attribution(){
+    if(!lastCtx)return null;var a=students.filter(function(s){return !s.left;});if(!a.length)return null;var ctx=lastCtx;
+    var k={'기본 흐름':0,'친구':0,'소그룹':0,'멘토':0,'가정':0,'교회 분위기':0,'설교':0,'행사':0};
+    a.forEach(function(s){var fr=s.friends.map(function(j){return students[j];}).filter(function(x){return x&&!x.left;});
+      var pull=fr.length?fr.reduce(function(x,y){return x+y.commit;},0)/fr.length:0.5;
+      k['기본 흐름']+=-0.045;k['친구']+=0.11*(pull-0.5);k['소그룹']+=(s.sg?0.06:0)*ctx.tEff;k['멘토']+=(s.mentor?0.05:0)*ctx.tEff;
+      k['가정']+=0.05*(s.fam-0.5);k['교회 분위기']+=ctx.churchClimate!=null?0.035*(ctx.churchClimate-0.5):0;
+      var dEng=0;ctx.sermon.forEach(function(fo){var E=SERMON_FX[fo];if(E&&E.tgt(s))dEng+=E.eng+((E.seek&&(s.bg==='none'||s.faith<0.4))?E.seek:0);});k['설교']+=dEng*s.sermonAcc;
+      var ev=0;if(ctx.f.smallgroup&&s.sg)ev+=0.06;if(ctx.f.service&&(s.core||s.sg))ev+=0.04;if(ctx.f.outreach)ev+=0.03;if(ctx.revival)ev+=0.05;k['행사']+=ev;});
+    var n=a.length;Object.keys(k).forEach(function(x){k[x]/=n;});return k;
+  }
+  function updateAttr(){
+    var el=document.getElementById('attr-bars');if(!el)return;var k=attribution();
+    if(!k){el.innerHTML='<span class="hint">한 주가 흐르면 무엇이 믿음을 끌어올리고 끌어내렸는지 나온다.</span>';return;}
+    var rows=Object.keys(k).map(function(key){return [key,k[key]];}).filter(function(r){return Math.abs(r[1])>=0.0005;}).sort(function(a,b){return Math.abs(b[1])-Math.abs(a[1]);});
+    var mx=1;rows.forEach(function(r){mx=Math.max(mx,Math.abs(r[1]));});
+    el.innerHTML=rows.map(function(r){var px=r[1]/mx*46,l=r[1]<0?50+px:50,w=Math.abs(px),col=r[1]<0?'#dc2626':'#16a34a';
+      return '<div style="display:flex;align-items:center;gap:7px;margin:3px 0;font-size:12px"><span style="width:58px;flex:none;color:#4b5563">'+r[0]+'</span><div style="position:relative;flex:1;height:12px;background:#eef1f5;border-radius:3px"><div style="position:absolute;top:0;height:100%;left:'+l+'%;width:'+w+'%;background:'+col+';opacity:.85;border-radius:2px"></div><div style="position:absolute;top:-1px;left:50%;width:1px;height:14px;background:#cbd2dc"></div></div></div>';}).join('')+'<div class="hint" style="margin-top:4px">초록=끌어올림, 빨강=끌어내림. 길이는 상대 비교.</div>';
+  }
+  function updateProj(){drawIdx();updateAttr();}
   // ── 설정 서랍 ──
   var UNITS={'p-n':'명','p-active':'%','p-risk':'%','p-mid':'%','p-high':'%','p-mota':'%','p-none':'%','p-core':'%','p-loner':'%','s-sg':'%','s-mt':'%','s-tc':'명','s-in':'명','s-speed':'%','s-daracbang':'%'};
   Object.keys(UNITS).forEach(function(id){var el=document.getElementById(id),out=document.getElementById('v-'+id);
