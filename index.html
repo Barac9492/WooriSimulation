@@ -130,6 +130,7 @@
     <div class="gcard"><div class="l">누적 이탈</div><div class="v" id="m-drop">0</div></div>
     <div class="gcard"><div class="l">평균 신앙</div><div class="v" id="m-faith">0%</div></div>
   </div>
+  <div id="statusline" style="font-size:12px;color:#4a3a2a;margin:0 2px 6px;line-height:1.5"></div>
   <div id="weekfx" class="gpanel" style="padding:6px 10px;margin-bottom:12px;font-size:12px;line-height:1.6"></div>
 
   <!-- 자세히: 분석 디테일(접힘) -->
@@ -458,6 +459,7 @@
     var n2=a.length||1,aw=0,ah=0,ab=0;a.forEach(function(s){aw+=s.word;ah+=s.holy;ab+=s.belong;});aw/=n2;ah/=n2;ab/=n2;
     var cur={n:a.length,active:ac,loose:lo,risk:a.length-ac-lo,drop:dropouts,f:f,word:aw,holy:ah,belong:ab};
     var dm=document.getElementById('dims');if(dm)dm.innerHTML='<b style="color:#6b5538">신앙의 결(평균)</b> &nbsp;말씀 <b style="color:#7a5c38">'+Math.round(aw*100)+'%</b> · 거룩 <b style="color:#6b4a8a">'+Math.round(ah*100)+'%</b> · 소속 <b style="color:#2e8b8b">'+Math.round(ab*100)+'%</b>';
+    var sl2=document.getElementById('statusline');if(sl2){var rr=(a.length-ac-lo)/(a.length||1),mood=rr>=0.2?'<b style="color:#a33232">여러 학생이 흔들리고 있다</b>':(ac/(a.length||1)>=0.7?'<b style="color:#3b6d11">대체로 건강하다</b>':'보통이다');sl2.innerHTML='지금 '+a.length+'명 중 활발 '+ac+' · 위기 '+(a.length-ac-lo)+' · 평균 신앙 '+Math.round(f*100)+'% — '+mood+'.';}
     updateWeekPanel(week);updateWeekFx(cur,prevMetrics);updatePreview();updateEco();prevMetrics=cur;
     updateStudCard();updateCareList();renderActions();}
   // 가장 가까운 해당 종류 일정까지 남은 주(0=진행 중, null=24주 내 없음)
