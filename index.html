@@ -68,10 +68,12 @@
       <select id="pj-weeks"><option value="24">1년(24주)</option><option value="48" selected>2년(48주)</option><option value="72">3년(72주, 한 학생의 재학)</option></select>
       <button class="gbtn" id="pj-run" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">시나리오 실행 ▶</button>
       <span style="flex:1"></span>
+      <button class="gbtn" id="pj-tornado-btn">지렛대 민감도</button>
       <button class="gbtn" id="pj-advise">약점·처방</button>
       <button class="gbtn" id="pj-summary">공유 요약</button>
     </div>
-    <div id="pj-result"><div class="ghint" style="padding-top:2px">아래에서 운영·연간 계획·교회 설정을 맞춘 뒤 "시나리오 실행"을 누르면, 그 전제대로 끝까지 흘러간 결과가 여기 나온다. "약점·처방 분석"은 문제를 짚고 효과를 검증한 개입안을 추천한다. "공유 요약"은 교사팀·담임께 붙여 넣을 텍스트를 뽑는다.</div></div>
+    <div id="pj-result"><div class="ghint" style="padding-top:2px">아래에서 운영·연간 계획·교회 설정을 맞춘 뒤 "시나리오 실행"을 누르면, 그 전제대로 끝까지 흘러간 결과가 여기 나온다. "지렛대 민감도"는 어떤 지렛대가 결과를 가장 크게 움직이는지, "약점·처방 분석"은 문제를 짚고 효과를 검증한 개입안을 보여 준다. "공유 요약"은 교사팀·담임께 붙여 넣을 텍스트를 뽑는다.</div></div>
+    <div id="pj-tornado" style="margin-top:8px"></div>
     <div id="pj-advice" style="margin-top:8px"></div>
     <div id="pj-summary-box" style="margin-top:8px"></div>
   </div>
@@ -733,6 +735,37 @@
     },30);
   }
 
+  // ── 지렛대 민감도(토네이도): 각 운영 지렛대를 위아래로 흔들어 결과 출렁임 비교 ──
+  function tornadoRun(){
+    var box=document.getElementById('pj-tornado');
+    box.innerHTML='<div class="ghint" style="padding-top:2px">분석 중... (지렛대를 하나씩 흔들어 보는 중)</div>';
+    var weeks=val('pj-weeks'),runs=5,base=captureConfig();
+    setTimeout(function(){
+      var fa=function(c){var h=simulate(c,weeks,runs);return h[h.length-1].active;};
+      var b=fa(base);
+      var L=[
+        {n:'소그룹 비중',f:function(c,d){c.ops.sg=clamp(c.ops.sg+d*0.15,0,1);}},
+        {n:'멘토링 비중',f:function(c,d){c.ops.mt=clamp(c.ops.mt+d*0.15,0,1);}},
+        {n:'교사 수',f:function(c,d){c.ops.tc=Math.max(6,Math.min(40,c.ops.tc+d*5));}},
+        {n:'변화 속도',f:function(c,d){c.ops.speed=clamp(c.ops.speed+d*0.15,0.2,1);}},
+        {n:'연간 신입',f:function(c,d){c.ops.intake=Math.max(0,c.ops.intake+d*15);}},
+        {n:'부모 다락방',f:function(c,d){c.ops.daracbang=clamp(c.ops.daracbang+d*0.15,0,1);}}
+      ];
+      var rows=L.map(function(k){var clo=cloneCfg(base);k.f(clo,-1);var lo=fa(clo);var chi=cloneCfg(base);k.f(chi,1);var hi=fa(chi);return {n:k.n,lowD:lo-b,highD:hi-b,swing:Math.abs(hi-lo)};});
+      rows.sort(function(a,c){return c.swing-a.swing;});
+      var mx=1;rows.forEach(function(r){mx=Math.max(mx,Math.abs(r.lowD),Math.abs(r.highD));});
+      var seg=function(d){var px=d/mx*48,l=d<0?50+px:50,w=Math.abs(px),col=d<0?'#c0532e':'#3b6d11';return '<div style="position:absolute;top:0;height:100%;left:'+l+'%;width:'+w+'%;background:'+col+';opacity:.82;border-radius:2px"></div>';};
+      var html='<div class="gsec" style="margin-top:4px">지렛대 민감도 — 무엇이 우리를 가장 크게 움직이나</div>'+
+        '<div class="ghint" style="margin-bottom:7px">각 지렛대를 현재에서 위아래로 흔들었을 때 '+weeks+'주 뒤 활발 인원이 얼마나 출렁이는지다. 위쪽일수록 민감한 곳 = 먼저 손볼 곳. <span style="color:#c0532e">빨강</span>=덜 하면 잃는 쪽, <span style="color:#3b6d11">초록</span>=더 하면 얻는 쪽.</div>';
+      rows.forEach(function(r){html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px">'+
+        '<span style="width:74px;flex-shrink:0;color:#4a3a2a">'+r.n+'</span>'+
+        '<div style="position:relative;flex:1;height:15px;background:#efe2c4;border-radius:3px">'+seg(r.lowD)+seg(r.highD)+'<div style="position:absolute;top:-1px;left:50%;width:1px;height:17px;background:#4a3a2a"></div></div>'+
+        '<span style="width:62px;flex-shrink:0;text-align:right;color:#6b5538">±'+Math.round(r.swing)+'명</span></div>';});
+      html+='<div class="ghint" style="margin-top:6px">흔드는 폭(±15%p·±5명 등)에 따라 길이가 달라지니, 절대값이 아니라 지렛대끼리의 상대 비교로 읽으라. 가정값 위의 추정이다.</div>';
+      box.innerHTML=html;
+    },30);
+  }
+
   // ── 처방 엔진(약점 진단 + 검증된 개입 추천) ──
   function scoreOf(l){return l.active+l.f*60-l.risk-0.6*l.drop+0.2*l.n;}
   function bump(id,delta){var el=document.getElementById(id);el.value=Math.min(+el.max,Math.max(+el.min,(+el.value)+delta));el.dispatchEvent(new Event('input'));}
@@ -960,6 +993,7 @@
 
   // ── 버튼 ──
   document.getElementById('pj-run').addEventListener('click',projectRun);
+  document.getElementById('pj-tornado-btn').addEventListener('click',tornadoRun);
   document.getElementById('pj-advise').addEventListener('click',adviseRun);
   document.getElementById('pj-summary').addEventListener('click',showSummary);
   function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
