@@ -339,6 +339,7 @@
 
 <p class="ghint" style="margin:14px 2px 4px">효과 수치(수련회·설교·소그룹이 출석과 신앙을 얼마나 움직이는지)는 그럴듯하게 넣어 본 값이지 확인된 사실이 아니다. 결론을 내리는 도구가 아니라, 계획의 방향과 크기를 가늠하고 생각을 다듬는 도구로 보는 것이 맞다.</p>
 </div>
+<button id="fab-step" title="다음 주로 (스페이스·→ 키로도)" style="position:fixed;right:14px;bottom:14px;z-index:40;background:#e0a52f;border:2px solid #9a6c12;color:#3a2a08;box-shadow:0 2px 7px rgba(74,58,42,.4);padding:11px 15px;font-size:15px;font-family:inherit;border-radius:8px;cursor:pointer">다음 주 ▶</button>
 <script>
 (function(){
   var W=document.getElementById('world'),wx=W.getContext('2d');
@@ -1281,7 +1282,8 @@
     },30);
   }
   function setMode(m){mode=m;
-    ['observe','scenario','config'].forEach(function(x){document.getElementById(x).hidden=(x!==m);document.getElementById('mode-'+x).classList.toggle('on',x===m);});}
+    ['observe','scenario','config'].forEach(function(x){document.getElementById(x).hidden=(x!==m);document.getElementById('mode-'+x).classList.toggle('on',x===m);});
+    var fb=document.getElementById('fab-step');if(fb)fb.style.display=(m==='observe')?'block':'none';}
   document.getElementById('mode-observe').addEventListener('click',function(){setMode('observe');});
   document.getElementById('mode-scenario').addEventListener('click',function(){setMode('scenario');});
   document.getElementById('mode-config').addEventListener('click',function(){setMode('config');});
@@ -1305,6 +1307,7 @@
   function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
+  document.getElementById('fab-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
   // 키보드: 스페이스/→ = 다음 주, P = 재생·멈춤 (입력창 포커스 땐 무시)
   document.addEventListener('keydown',function(e){
     if(mode!=='observe')return;var t=e.target.tagName;if(t==='INPUT'||t==='SELECT'||t==='TEXTAREA'||t==='BUTTON')return;
