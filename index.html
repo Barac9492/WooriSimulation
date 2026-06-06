@@ -749,7 +749,7 @@
     if(weak.length&&top.length){html+='<div class="gsec" style="margin-top:8px;color:#9a6c12">지금은 우선순위가 아님</div>'+weak.map(function(x){var why=x.gain<-8?'지금 우리 상황에선 오히려 역효과로 나온다':'지금 우리 상황에선 효과가 작다(이미 충분하거나 닿지 않는다)';return '<div style="font-size:12px;color:#6b5538;padding:2px 0">· <b>'+x.cd.label+'</b> — '+why+'. 위쪽 처방에 먼저 집중하라.</div>';}).join('');}
     html+='<div class="ghint" style="margin-top:6px">처방 효과는 같은 계획에 그 조치만 더해 '+weeks+'주를 '+runs+'회 돌린 평균의 차이다. 가정값에 기댄 추정이므로 방향으로 읽으라. "적용"은 위 계획·설정에 실제로 반영한다.</div>';
     box.innerHTML=html;
-    Array.prototype.forEach.call(box.querySelectorAll('[data-adopt]'),function(b){b.addEventListener('click',function(){var idx=+this.dataset.adopt;curCands[idx].adopt();this.textContent='적용됨';this.disabled=true;});});
+    Array.prototype.forEach.call(box.querySelectorAll('[data-adopt]'),function(b){b.addEventListener('click',function(){var idx=+this.dataset.adopt;curCands[idx].adopt();this.textContent='적용됨';this.disabled=true;projectRun();});});
   }
 
   // ── 교사팀 공유용 텍스트 요약 ──
