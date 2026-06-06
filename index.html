@@ -105,6 +105,7 @@
     </div>
     <div id="evbar" style="font-size:12px;color:#6b5538;line-height:1.9;min-height:20px">이번 주 입력 —</div>
     <div id="step-next" class="ghint" style="margin-top:5px"></div>
+    <div id="year-notice" style="margin-top:6px;font-size:12px;color:#7a5510;font-weight:600"></div>
   </div>
 
   <!-- 이번 주 할 일: 액션 아이템(가장 눈에 띄게) -->
@@ -433,6 +434,7 @@
   // ── 라이브 1주 ──
   function step(){
     week++;
+    var yn=document.getElementById('year-notice');if(yn)yn.textContent='';
     var active=students.filter(function(s){return !s.left;});
     var sg=val('s-sg')/100,mt=val('s-mt')/100,tc=val('s-tc'),intake=val('s-in'),sp=val('s-speed')/100;
     var tEff=Math.min(1,(tc*8)/Math.max(1,active.length));
@@ -443,10 +445,11 @@
     active.forEach(function(s){tick(s,ctx);});
     if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var i=0;i<4;i++){var ns=makeOne(Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){var fnd=inv[Math.floor(Math.random()*inv.length)];ns.friends.push(students.indexOf(fnd));}students.push(ns);}}
     students.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}});
-    if(week%WEEKS_PER_YEAR===0){students.forEach(function(s){if(!s.left){var was=s.grade;s.grade++;
-        if(s.grade>MAX_GRADE){s.left=true;if(s.seat>=0)seats[s.seat].taken=false;}
-        else if(was===3&&Math.random()<cliffProb(s)){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}}});
-      for(var j=0;j<intake;j++){var n2=makeOne(1);var p=students.filter(function(o){return !o.left&&o.grade<=2;});n2.loner?link(n2,p,0,1):link(n2,p,3,5);students.push(n2);}}
+    if(week%WEEKS_PER_YEAR===0){var grad=0,cliff=0;students.forEach(function(s){if(!s.left){var was=s.grade;s.grade++;
+        if(s.grade>MAX_GRADE){s.left=true;grad++;if(s.seat>=0)seats[s.seat].taken=false;}
+        else if(was===3&&Math.random()<cliffProb(s)){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;cliff++;if(s.seat>=0)seats[s.seat].taken=false;}}});
+      for(var j=0;j<intake;j++){var n2=makeOne(1);var p=students.filter(function(o){return !o.left&&o.grade<=2;});n2.loner?link(n2,p,0,1):link(n2,p,3,5);students.push(n2);}
+      if(yn)yn.innerHTML='새 학년 — 고3 '+grad+'명 졸업 · 중3→고1 전환에서 '+cliff+'명이 흔들려 떠남 · 신입 '+intake+'명 들어옴.';}
     record();
   }
   function record(){var a=students.filter(function(s){return !s.left;});var f=a.length?a.reduce(function(x,s){return x+s.faith;},0)/a.length:0;
