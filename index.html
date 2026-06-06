@@ -77,7 +77,17 @@
   <div class="gpanel" style="display:flex;justify-content:space-between;padding:6px 12px;margin-bottom:6px;font-size:13px">
     <span>주차 <b class="gnum" id="hud-week">0</b></span><span><b class="gnum" id="hud-year">1</b>년차</span><span><b class="gnum" id="hud-term">1</b>학기</span>
   </div>
-  <div id="evbar" style="background:#e7d8b4;border:2px solid #4a3a2a;border-radius:5px;padding:4px 10px;margin-bottom:8px;font-size:12px;color:#6b5538">이번 주 일정: —</div>
+  <div class="gpanel" style="padding:8px 12px;margin-bottom:8px">
+    <div id="evbar" style="font-size:12px;color:#6b5538;line-height:1.9;margin-bottom:8px;min-height:20px">이번 주 입력 —</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="gbtn" id="btn-step" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">다음 주 ▶</button>
+      <button class="gbtn on" id="btn-play">⏸ 자동재생 중</button>
+      <span style="flex:1"></span>
+      <span class="ghint">속도</span>
+      <button class="gbtn spd on" data-s="1">1x</button><button class="gbtn spd" data-s="2">2x</button><button class="gbtn spd" data-s="4">4x</button>
+    </div>
+    <div id="step-next" class="ghint" style="margin-top:7px"></div>
+  </div>
   <div class="gpanel" style="padding:4px;line-height:0;margin-bottom:8px">
     <canvas id="world" width="320" height="190" style="width:100%;height:auto;image-rendering:pixelated;border-radius:3px;cursor:pointer"></canvas>
   </div>
@@ -90,6 +100,7 @@
     <div class="gcard"><div class="l">누적 이탈</div><div class="v" id="m-drop">0</div></div>
     <div class="gcard"><div class="l">평균 신앙</div><div class="v" id="m-faith">0%</div></div>
   </div>
+  <div id="weekfx" class="gpanel" style="padding:6px 10px;margin-bottom:8px;font-size:12px;line-height:1.6"></div>
   <div id="seg-live" class="gpanel" style="padding:7px 10px;margin-bottom:8px;font-size:12px;color:#6b5538;line-height:1.6"></div>
   <div class="gpanel" style="padding:7px 10px;margin-bottom:8px">
     <div style="display:flex;align-items:center;gap:8px"><span class="gsec" style="margin:0;flex:1">이번 주 돌봄 명단</span><button class="gbtn" id="care-toggle" style="padding:3px 9px;font-size:12px">펼치기</button></div>
@@ -100,14 +111,6 @@
     <div style="display:flex;gap:14px;font-size:11px;color:#6b5538;padding:0 2px">
       <span><span style="display:inline-block;width:10px;height:3px;background:#5fb04e;vertical-align:middle"></span> 전체 인원</span>
       <span><span style="display:inline-block;width:10px;height:3px;background:#e0a52f;vertical-align:middle"></span> 평균 신앙 관심도</span>
-    </div>
-  </div>
-  <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
-    <div class="gsec">실행</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="gbtn on" id="btn-play">재생</button>
-      <span style="flex:1"></span>
-      <button class="gbtn spd on" data-s="1">1x</button><button class="gbtn spd" data-s="2">2x</button><button class="gbtn spd" data-s="4">4x</button>
     </div>
   </div>
 </div>
@@ -199,7 +202,7 @@
   var EVENTS={retreat:{label:'수련회',color:'#5fb04e'},outreach:{label:'전도·친구초청',color:'#378add'},smallgroup:{label:'소그룹 집중주간',color:'#7a5cd0'},service:{label:'봉사·단기선교',color:'#1d9e75'},exam:{label:'시험기간',color:'#d65a4f'},sermon:{label:'설교 시리즈',color:'#c9852b'}};
   var SERMON_FOCUS={nurture:{label:'양육형',color:'#c9852b'},evangel:{label:'전도형',color:'#378add'},recovery:{label:'회복형',color:'#9a5bd0'}};
   var seats=[];for(var r=0;r<12;r++)for(var c=0;c<15;c++)seats.push({x:14+c*20,y:36+r*13,taken:false});
-  var students=[],week=0,dropouts=0,playing=true,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null;
+  var students=[],week=0,dropouts=0,playing=true,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null;
   var val=function(id){return +document.getElementById(id).value;};
   function freeSeat(){for(var i=0;i<seats.length;i++)if(!seats[i].taken){seats[i].taken=true;return i;}return -1;}
   function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
@@ -223,7 +226,7 @@
   function linkIn(s,master,pool,mn,mx){var cand=pool.filter(function(o){return o!==s&&!o.left&&Math.abs(o.grade-s.grade)<=1;});shuffle(cand);var n=Math.min(cand.length,mn+Math.floor(Math.random()*(mx-mn+1)));for(var k=0;k<n;k++){var idx=master.indexOf(cand[k]);if(idx>=0&&s.friends.indexOf(idx)<0)s.friends.push(idx);}}
   function link(s,pool,mn,mx){linkIn(s,students,pool,mn,mx);}
   function generate(){
-    seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];maxN=1;selStudent=null;
+    seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];maxN=1;selStudent=null;prevMetrics=null;
     var sc=document.getElementById('stud-card');if(sc)sc.hidden=true;
     var N=val('p-n');for(var i=0;i<N;i++)students.push(makeOne(pickGrade()));
     students.forEach(function(s){s.loner?link(s,students,0,1):link(s,students,3,5);});
@@ -292,9 +295,6 @@
     if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var i=0;i<4;i++){var ns=makeOne(Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){var fnd=inv[Math.floor(Math.random()*inv.length)];ns.friends.push(students.indexOf(fnd));}students.push(ns);}}
     students.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}});
     if(week%WEEKS_PER_YEAR===0){students.forEach(function(s){if(!s.left){s.grade++;if(s.grade>3){s.left=true;if(s.seat>=0)seats[s.seat].taken=false;}}});for(var j=0;j<intake;j++){var n2=makeOne(1);var p=students.filter(function(o){return !o.left&&o.grade<=2;});n2.loner?link(n2,p,0,1):link(n2,p,3,5);students.push(n2);}}
-    var bar=document.getElementById('evbar');
-    if(we.labels.length){bar.textContent='이번 주 일정: '+we.labels.join(', ');var col=we.retreat?EVENTS.retreat.color:(we.exam?EVENTS.exam.color:(we.sermon.length?SERMON_FOCUS[we.sermon[0]].color:EVENTS[Object.keys(we.f)[0]].color));bar.style.background=col;bar.style.color='#fff';}
-    else{bar.textContent='이번 주 일정: —';bar.style.background='#e7d8b4';bar.style.color='#6b5538';}
     record();
   }
   function record(){var a=students.filter(function(s){return !s.left;});var f=a.length?a.reduce(function(x,s){return x+s.faith;},0)/a.length:0;
@@ -307,7 +307,36 @@
       var lon=risky.filter(function(s){return s.loner;}).length,non=risky.filter(function(s){return s.bg==='none';}).length,ncore=risky.filter(function(s){return !s.core;}).length;
       sl.innerHTML='<b style="color:#a33232">위기군 '+risky.length+'명</b> 누가? &nbsp;학년 3/2/1: <b>'+g3+'/'+g2+'/'+g1+'</b> · 외톨이 <b>'+lon+'</b> · 비신앙 가정 <b>'+non+'</b> · 비코어 <b>'+ncore+'</b>';}
       else sl.innerHTML='<span style="color:#3b6d11">지금 위기군(출석 바닥)이 없다.</span> 어떤 학생이 흔들리는지 여기서 바로 짚는다.';}
+    var cur={n:a.length,active:ac,loose:lo,risk:a.length-ac-lo,drop:dropouts,f:f};
+    updateWeekPanel(week);updateWeekFx(cur,prevMetrics);updatePreview();prevMetrics=cur;
     updateStudCard();updateCareList();}
+  // 이번 주 작동 중인 입력(이벤트·설교·수련회·시험)을 칩으로
+  function activeInputs(wk){
+    var out=[];
+    schedule.forEach(function(ev){
+      if(ev.type==='sermon'){if(periodActive(ev,wk))out.push({label:'설교·'+SERMON_FOCUS[ev.focus].label+' '+(wk-ev.start+1)+'/'+ev.weeks+'주',color:SERMON_FOCUS[ev.focus].color});}
+      else if(ev.type==='exam'){if(periodActive(ev,wk))out.push({label:'시험기간 '+(wk-ev.start+1)+'/'+(ev.weeks||3)+'주',color:EVENTS.exam.color});}
+      else if(ev.type==='retreat'){if(fires(ev,wk))out.push({label:'수련회 '+(['','1박2일','2박3일','3박4일'][ev.nights]||'')+' 참가'+Math.round(ev.attendRate*100)+'%',color:EVENTS.retreat.color});}
+      else if(fires(ev,wk))out.push({label:EVENTS[ev.type].label,color:EVENTS[ev.type].color});
+    });
+    return out;
+  }
+  function chip(c){return '<span style="display:inline-block;background:'+c.color+';color:#fff;border-radius:4px;padding:1px 7px;margin:1px 4px 1px 0;font-size:11px">'+c.label+'</span>';}
+  function updateWeekPanel(wk){
+    var bar=document.getElementById('evbar');if(!bar)return;var ins=activeInputs(wk);
+    bar.innerHTML=wk<1?'<b>아직 시작 전.</b> "다음 주 ▶"를 누르거나 자동재생하면 한 주가 흐른다.'
+      :('<b>이번 주 입력</b>('+wk+'주차) &nbsp;'+(ins.length?ins.map(chip).join(''):'<span style="color:#8a755a">평상시(특별 일정 없음)</span>'));
+  }
+  function updateWeekFx(cur,prev){
+    var el=document.getElementById('weekfx');if(!el)return;
+    if(!prev){el.innerHTML='<span style="color:#8a755a">시작 상태. 한 주가 흐르면 여기에 그 주의 효과(지난주 대비)가 나온다.</span>';return;}
+    var d=function(lab,c,p,goodUp,pct){var v=c-p;if(Math.abs(v)<(pct?0.005:0.5))return '<span style="color:#9a8e75">'+lab+' 0'+(pct?'%p':'')+'</span>';var g=goodUp?v>0:v<0;return '<span style="color:'+(g?'#3b6d11':'#a33232')+'">'+lab+' '+(v>0?'+':'')+(pct?Math.round(v*100)+'%p':Math.round(v))+'</span>';};
+    el.innerHTML='<b style="color:#6b5538">이번 주 효과(지난주 대비)</b> &nbsp;'+[d('활발',cur.active,prev.active,true),d('위기',cur.risk,prev.risk,false),d('이탈',cur.drop,prev.drop,false),d('신앙',cur.f,prev.f,true,true)].join('<span style="color:#cbb98f"> · </span>');
+  }
+  function updatePreview(){
+    var el=document.getElementById('step-next');if(!el)return;var ins=activeInputs(week+1);
+    el.innerHTML='다음 주('+(week+1)+'주차) 예정: '+(ins.length?ins.map(function(c){return '<b>'+c.label+'</b>';}).join(', '):'평상시');
+  }
   function color(s){return s.eng>=0.55?'#5fb04e':s.eng>=0.3?'#e0a52f':'#d65a4f';}
   function draw(t){for(var y=0;y<190;y+=16)for(var x=0;x<320;x+=16){wx.fillStyle=((x/16+y/16)%2===0)?'#efe2c4':'#e7d8b4';wx.fillRect(x,y,16,16);}
     wx.fillStyle='#d9c39a';wx.fillRect(0,0,320,28);wx.fillStyle='#8a6d4b';wx.fillRect(150,9,20,12);
@@ -630,7 +659,9 @@
   document.getElementById('pj-run').addEventListener('click',projectRun);
   document.getElementById('pj-advise').addEventListener('click',adviseRun);
   document.getElementById('pj-summary').addEventListener('click',showSummary);
-  document.getElementById('btn-play').addEventListener('click',function(){playing=!playing;this.classList.toggle('on',playing);this.textContent=playing?'재생':'멈춤';});
+  function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
+  document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
+  document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
   document.getElementById('btn-gen').addEventListener('click',function(){generate();renderSched();});
   document.getElementById('btn-add').addEventListener('click',function(){
     var t=document.getElementById('ev-type').value,start=Math.max(1,val('ev-start'));
