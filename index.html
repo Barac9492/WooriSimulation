@@ -81,7 +81,7 @@
     <div id="evbar" style="font-size:12px;color:#6b5538;line-height:1.9;margin-bottom:8px;min-height:20px">이번 주 입력 —</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="gbtn" id="btn-step" style="background:#e0a52f;border-color:#9a6c12;color:#3a2a08">다음 주 ▶</button>
-      <button class="gbtn on" id="btn-play">⏸ 자동재생 중</button>
+      <button class="gbtn" id="btn-play">▶ 자동재생</button>
       <span style="flex:1"></span>
       <span class="ghint">속도</span>
       <button class="gbtn spd on" data-s="1">1x</button><button class="gbtn spd" data-s="2">2x</button><button class="gbtn spd" data-s="4">4x</button>
@@ -116,8 +116,17 @@
   </div>
 </div>
 
-<!-- ── 설정 탭: 운영·연간 계획·교회·저장 ───────────── -->
+<!-- ── 설정 탭: 주간 계획표·운영·교회·연간 계획·저장 ───── -->
 <div id="config" hidden>
+<div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+    <span class="gsec" style="margin:0;flex:1">주간 계획표 — 각 주에 무엇을 할지</span>
+    <select id="plan-horizon"><option value="24" selected>1년(24주)</option><option value="48">2년(48주)</option></select>
+  </div>
+  <div class="ghint" style="margin-bottom:6px">한 주를 누르면 아래 폼이 그 주로 맞춰진다. 종류를 고르고 "추가"하면 그 주에 들어간다. 다 짠 뒤 "이 계획대로 돌려보기"로 관찰에서 한 주씩(또는 자동으로) 실행한다.</div>
+  <div id="timeline" style="max-height:300px;overflow-y:auto;border:2px solid #4a3a2a;border-radius:5px;background:#fffaf0;padding:2px 8px"></div>
+  <button class="gbtn" id="btn-runplan" style="width:100%;margin-top:8px;background:#5fb04e;border-color:#3b6d11;color:#1d3a14">이 계획대로 돌려보기 ▶</button>
+</div>
 <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
   <div class="gsec">운영 설정 (평소 사역의 밀도)</div>
   <div class="grow"><span class="glab">소그룹 비중</span><input type="range" id="s-sg" min="0" max="100" step="1" value="55"><span class="gval" id="v-s-sg">55%</span></div>
@@ -227,7 +236,7 @@
   var SERMON_FOCUS={nurture:{label:'양육형',color:'#c9852b'},evangel:{label:'전도형',color:'#378add'},recovery:{label:'회복형',color:'#9a5bd0'}};
   var CHURCH_EVENTS={senior:{label:'담임 말씀 시리즈',color:'#b5651d'},allretreat:{label:'전교인 수련회',color:'#2e8b57'},revival:{label:'부흥회',color:'#c0392b'},season:{label:'절기',color:'#8e7cc3'}};
   var seats=[];for(var r=0;r<12;r++)for(var c=0;c<15;c++)seats.push({x:14+c*20,y:36+r*13,taken:false});
-  var students=[],week=0,dropouts=0,playing=true,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null;
+  var students=[],week=0,dropouts=0,playing=false,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null;
   var churchClimate=0.5,parentVitality=0.5,churchSchedule=[],ceid=0;
   var val=function(id){return +document.getElementById(id).value;};
   function freeSeat(){for(var i=0;i<seats.length;i++)if(!seats[i].taken){seats[i].taken=true;return i;}return -1;}
@@ -692,13 +701,13 @@
       else{var e=EVENTS[ev.type];col=e.color;lab=e.label;extra=ev.start+'주차'+(ev.repeat?' · 매'+ev.repeat+'주':' · 1회');}
       return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px solid #e6d6b0"><span style="width:9px;height:9px;border-radius:50%;background:'+col+';flex:none"></span><span style="flex:1">'+lab+' <span style="color:#8a755a">('+extra+')</span></span><button class="gbtn" data-del="'+ev.id+'" style="padding:2px 7px;font-size:11px">삭제</button></div>';
     }).join(''):'<div style="font-size:12px;color:#8a755a">계획이 비어 있다. 위에서 설교 시리즈나 수련회를 더해 보라.</div>';
-    Array.prototype.forEach.call(c.querySelectorAll('[data-del]'),function(b){b.addEventListener('click',function(){var id=+this.dataset.del;schedule=schedule.filter(function(e){return e.id!==id;});renderSched();});});}
+    Array.prototype.forEach.call(c.querySelectorAll('[data-del]'),function(b){b.addEventListener('click',function(){var id=+this.dataset.del;schedule=schedule.filter(function(e){return e.id!==id;});renderSched();});});renderTimeline();}
   function renderCSched(){churchSchedule.sort(function(a,b){return a.start-b.start;});var c=document.getElementById('csched');
     c.innerHTML=churchSchedule.length?churchSchedule.map(function(ev){
       var e=CHURCH_EVENTS[ev.type],extra=ev.start+'주차'+((ev.type==='senior'||ev.type==='revival')?' · '+ev.weeks+'주간':'')+(ev.repeat?' · 매'+ev.repeat+'주':' · 1회');
       return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px solid #e6d6b0"><span style="width:9px;height:9px;border-radius:50%;background:'+e.color+';flex:none"></span><span style="flex:1">'+e.label+' <span style="color:#8a755a">('+extra+')</span></span><button class="gbtn" data-cdel="'+ev.id+'" style="padding:2px 7px;font-size:11px">삭제</button></div>';
     }).join(''):'<div style="font-size:12px;color:#8a755a">전체 교회 일정이 비어 있다. 담임 말씀 시리즈나 전교인 수련회를 더해 보라.</div>';
-    Array.prototype.forEach.call(c.querySelectorAll('[data-cdel]'),function(b){b.addEventListener('click',function(){var id=+this.dataset.cdel;churchSchedule=churchSchedule.filter(function(e){return e.id!==id;});renderCSched();});});}
+    Array.prototype.forEach.call(c.querySelectorAll('[data-cdel]'),function(b){b.addEventListener('click',function(){var id=+this.dataset.cdel;churchSchedule=churchSchedule.filter(function(e){return e.id!==id;});renderCSched();});});renderTimeline();}
   var CEXPLAIN={
     senior:'담임목사의 어른 예배 말씀 시리즈. 교회 전체 분위기를 서서히 끌어올리고, 그것이 부모 다락방을 거쳐 학생 가정신앙으로 흐른다.',
     allretreat:'전교인 수련회는 온 가족이 함께 참여한다. 교회 분위기를 크게 올리고 학생에게도 직접 큰 힘이 된다(고등부 수련회와 별개).',
@@ -714,6 +723,21 @@
     var ev={id:ceid++,type:t,start:start,repeat:val('cev-rep')};
     if(t==='senior'||t==='revival')ev.weeks=Math.max(1,val('cev-weeks'));
     churchSchedule.push(ev);renderCSched();});
+  // ── 주간 계획표(타임라인): 각 주에 무엇이 들어가는지 한눈에, 주를 눌러 그 주에 추가 ──
+  function renderTimeline(){
+    var el=document.getElementById('timeline');if(!el)return;var horizon=val('plan-horizon')||24,html='';
+    for(var w=1;w<=horizon;w++){var ins=activeInputs(w);
+      html+='<div class="twk" data-wk="'+w+'" style="display:flex;align-items:center;gap:6px;padding:3px 2px;border-bottom:1px solid #efe2c4;cursor:pointer">'+
+        '<span style="width:40px;color:#8a755a;font-size:11px;flex:none">'+w+'주</span>'+
+        '<span style="flex:1;line-height:1.9">'+(ins.length?ins.map(chip).join(''):'<span style="color:#c9b89a">—</span>')+'</span>'+
+        '<span style="padding:1px 7px;font-size:11px;flex:none;color:#3b6d11;border:1px solid #3b6d11;border-radius:4px">+ 이 주</span></div>';}
+    el.innerHTML=html;
+    Array.prototype.forEach.call(el.querySelectorAll('.twk'),function(r){r.addEventListener('click',function(){
+      var w=this.dataset.wk;document.getElementById('ev-start').value=w;document.getElementById('cev-start').value=w;
+      var t=document.getElementById('ev-type');t.scrollIntoView({block:'center'});try{t.focus();}catch(e){}});});
+  }
+  document.getElementById('plan-horizon').addEventListener('change',renderTimeline);
+  document.getElementById('btn-runplan').addEventListener('click',function(){generate();renderTimeline();setMode('observe');window.scrollTo(0,0);});
 
   // ── 입력 동기화 ──
   var units={'s-sg':'%','s-mt':'%','s-tc':'','s-in':'','s-speed':'%','s-daracbang':'%','p-n':'명','p-g1':'','p-g2':'','p-g3':'','p-mota':'%','p-none':'%','p-core':'%','p-loner':'%','ev-attend':'%','ev-intensity':'%'};
