@@ -29,8 +29,24 @@
 </style>
 </head>
 <body>
+<div id="intro" style="position:fixed;inset:0;background:rgba(74,58,42,0.55);z-index:50;display:none;align-items:center;justify-content:center;padding:16px">
+  <div class="gpanel" style="max-width:460px;width:100%;padding:18px 20px;background:#fbf4e4">
+    <div style="font-size:16px;font-weight:600;margin-bottom:6px;color:#4a3a2a">중고등부 갱신 시뮬레이터</div>
+    <div class="ghint" style="margin-bottom:12px">우리 부의 지금을 진단하고, 한 해 계획(설교·수련회·행사)을 짜서, 그대로 흘려보며 "이 계획이 우리를 들어올리는가"를 본다. 숫자를 맞히는 도구가 아니라 방향을 가늠하는 사유 도구다.</div>
+    <div style="font-size:13px;line-height:1.95;margin-bottom:14px;color:#4a3a2a">
+      <b>① 설정 → 현재 진단</b> : 우리 부의 지금(규모·건강·중등/고등)을 넣는다.<br>
+      <b>② 설정 → 주간 계획 캘린더</b> : 설교·수련회·담임 말씀을 주차에 채운다.<br>
+      <b>③ 관찰</b> : "다음 주 ▶"로 한 주씩 넘기며 그 효과를 본다.<br>
+      <b>④ 시나리오</b> : 끝까지 돌려 결과·취약 분석·처방을 받는다.
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="gbtn" id="intro-start" style="flex:1;background:#5fb04e;border-color:#3b6d11;color:#1d3a14">설정에서 시작하기</button>
+      <button class="gbtn" id="intro-close">둘러보기</button>
+    </div>
+  </div>
+</div>
 <div class="wrap">
-<h1>중고등부 목회 계획 시뮬레이터</h1>
+<div style="display:flex;align-items:center;gap:8px;margin:6px 2px 6px"><h1 style="margin:0;flex:1">중고등부 목회 계획 시뮬레이터</h1><button class="gbtn" id="btn-guide" style="padding:4px 10px;font-size:12px;flex:none">가이드</button></div>
 <details class="gpanel" style="padding:9px 12px;margin:0 0 10px;background:#f3e7cc;border-color:#9a6c12">
   <summary style="font-size:12px;color:#6b4a16;cursor:pointer;font-weight:600;list-style:none">전제 — 현실 예측이 아니라 "이 전제대로라면 이렇게 흘러간다"는 한 가지 시나리오다. <span style="font-weight:400;color:#8a755a">(자세히 ▾)</span></summary>
   <div class="ghint" style="color:#6b5538;margin-top:6px">출석과 신앙이 친구 관계와 사역(소그룹·멘토·설교·수련회)으로 천천히 움직인다고 가정한다. 효과 수치는 그럴듯하게 넣은 가정값이지 검증된 사실이 아니다. 분당우리교회 중고등부 한 부(약 150명) 기준.</div>
@@ -822,6 +838,13 @@
   document.getElementById('mode-observe').addEventListener('click',function(){setMode('observe');});
   document.getElementById('mode-scenario').addEventListener('click',function(){setMode('scenario');});
   document.getElementById('mode-config').addEventListener('click',function(){setMode('config');});
+  // ── 첫 사용 가이드 ──
+  function showIntro(){document.getElementById('intro').style.display='flex';}
+  function hideIntro(){document.getElementById('intro').style.display='none';try{localStorage.setItem('woori_intro_seen','1');}catch(e){}}
+  document.getElementById('intro-close').addEventListener('click',hideIntro);
+  document.getElementById('intro-start').addEventListener('click',function(){hideIntro();setMode('config');window.scrollTo(0,0);});
+  document.getElementById('btn-guide').addEventListener('click',showIntro);
+  try{if(!localStorage.getItem('woori_intro_seen'))showIntro();}catch(e){}
 
   // ── 버튼 ──
   document.getElementById('pj-run').addEventListener('click',projectRun);
