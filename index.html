@@ -632,9 +632,9 @@
   // ── 결과 렌더(예측·A/B 공용) ──
   function drawPairChart(id,hA,hB,colA,colB){
     var c=document.getElementById(id);if(!c)return;var g=c.getContext('2d');g.clearRect(0,0,320,90);
-    var mx=1;hA.concat(hB).forEach(function(p){if(p.n>mx)mx=p.n;});
+    var mx=1;hA.concat(hB).forEach(function(p){if(p.active>mx)mx=p.active;});
     g.strokeStyle='rgba(90,70,50,0.15)';g.lineWidth=1;g.beginPath();g.moveTo(2,86);g.lineTo(318,86);g.stroke();
-    function line(h,col){g.strokeStyle=col;g.lineWidth=2;g.beginPath();h.forEach(function(p,i){var x=i/(h.length-1)*316+2,y=86-(p.n/mx)*80;i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();}
+    function line(h,col){g.strokeStyle=col;g.lineWidth=2;g.beginPath();h.forEach(function(p,i){var x=i/(h.length-1)*316+2,y=86-(p.active/mx)*80;i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();}
     line(hB,colB);line(hA,colA);
   }
   function renderPair(box,hA,hB,labA,labB,colA,colB,weeks,runs,note){
@@ -648,8 +648,8 @@
     var html='<div style="font-size:13px;color:'+vCol+';background:#f3e7cc;border:2px solid '+vCol+';border-radius:5px;padding:7px 10px;margin:2px 0 8px;line-height:1.5">→ '+vTxt+'</div>'+
       '<div class="gpanel" style="padding:6px;margin:4px 0 8px"><canvas id="pcv" width="320" height="90" style="width:100%;height:auto"></canvas>'+
       '<div style="display:flex;gap:14px;font-size:11px;color:#6b5538;padding:2px 2px 0;flex-wrap:wrap">'+
-      '<span><span style="display:inline-block;width:10px;height:3px;background:'+colA+';vertical-align:middle"></span> '+labA+' 전체 인원</span>'+
-      '<span><span style="display:inline-block;width:10px;height:3px;background:'+colB+';vertical-align:middle"></span> '+labB+' 전체 인원</span>'+
+      '<span><span style="display:inline-block;width:10px;height:3px;background:'+colA+';vertical-align:middle"></span> '+labA+' 활발 인원</span>'+
+      '<span><span style="display:inline-block;width:10px;height:3px;background:'+colB+';vertical-align:middle"></span> '+labB+' 활발 인원</span>'+
       '<span style="margin-left:auto">'+weeks+'주 · '+runs+'회 평균</span></div></div>';
     var rows=[['전체 인원',la.n,lb.n,'g',0],['활발',la.active,lb.active,'g',0],['느슨',la.loose,lb.loose,'g',0],['위기',la.risk,lb.risk,'b',0],['누적 이탈',la.drop,lb.drop,'b',0],['평균 신앙',la.f,lb.f,'g',1]];
     var fmt=function(v,pct){return pct?Math.round(v*100)+'%':Math.round(v);};
