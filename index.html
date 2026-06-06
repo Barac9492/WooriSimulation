@@ -150,7 +150,7 @@
   <div id="conta" class="gpanel" style="padding:9px 12px;margin-bottom:12px;border-color:#a3622a;background:#f6efe2"></div>
 
   <!-- 자세히: 분석 디테일(접힘) -->
-  <details class="gpanel" style="padding:9px 12px;margin-bottom:8px">
+  <details id="more" class="gpanel" style="padding:9px 12px;margin-bottom:8px">
     <summary style="font-size:12px;font-weight:600;color:#6b5538;cursor:pointer">자세히 보기 — 교회 생태계 · 신앙의 결 · 위기군 구성 · 돌봄 명단 · 추이 ▾</summary>
     <div style="margin-top:10px">
       <div id="eco" style="font-size:12px;color:#6b5538;line-height:2;margin-bottom:8px"></div>
@@ -540,10 +540,10 @@
     var loners=a.filter(function(s){return s.loner&&!s.sg;}).length;
     var noneA=a.filter(function(s){return s.bg==='none';}).length,noneR=risk.filter(function(s){return s.bg==='none';}).length;
     var nextSoo=weeksUntil('sooneung'),nextExam=weeksUntil('exam'),toYE=WEEKS_PER_YEAR-(week%WEEKS_PER_YEAR);
-    if(risky/n>=0.18)items.push({u:2,t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)이 두껍다 → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
-    else if(risky>0)items.push({u:1,t:'위기군 '+risky+'명 → 돌봄 명단 확인, 흔들리는 학생 안부.'});
+    if(risky/n>=0.18)items.push({u:2,go:'care',t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)이 두껍다 → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
+    else if(risky>0)items.push({u:1,go:'care',t:'위기군 '+risky+'명 → 돌봄 명단 확인, 흔들리는 학생 안부.'});
     if(loners>=Math.max(3,n*0.08))items.push({u:2,t:'소그룹 밖 외톨이 <b>'+loners+'명</b> → 또래·소그룹에 의도적으로 연결(가장 큰 이탈 위험).'});
-    if(conta&&conta.spread.length&&conta.exposed>=Math.max(2,n*0.06))items.push({u:2,t:'흔들림이 친구를 타고 번지는 중(취약 '+conta.exposed+'명 노출) → "전염 진단"의 <b>번짐의 핵 '+conta.spread.length+'명</b>을 먼저 붙들어 무리 확산을 끊으라.'});
+    if(conta&&conta.spread.length&&conta.exposed>=Math.max(2,n*0.06))items.push({u:2,go:'conta',t:'흔들림이 친구를 타고 번지는 중(취약 '+conta.exposed+'명 노출) → "전염 진단"의 <b>번짐의 핵 '+conta.spread.length+'명</b>을 먼저 붙들어 무리 확산을 끊으라.'});
     if(nextSoo!=null&&nextSoo<=4)items.push({u:2,t:'수능 '+(nextSoo===0?'<b>진행 중</b>':'<b>'+nextSoo+'주 뒤</b>')+' → 고3 케어 집중, 수능 후 복귀 환영 준비.'});
     if(toYE<=4&&week>0){var shaky3=a.filter(function(s){return s.grade===3&&s.commit<0.5;}).length;if(shaky3>0)items.push({u:2,t:'곧 중3→고1 전환('+toYE+'주 뒤) → 흔들리는 중3 <b>'+shaky3+'명</b>을 미리 관계로 붙들기(전환 절벽).'});}
     if(nextExam!=null&&nextExam<=3)items.push({u:1,t:'시험기간 '+(nextExam===0?'진행 중':nextExam+'주 뒤')+' → 출석 일시 하락 대비, 시험 후 회복 모임.'});
@@ -552,7 +552,14 @@
     if(!items.length)items.push({u:0,t:'큰 불은 없다 → 코어 제자훈련을 한 걸음 더, 다음 절기·전환을 미리 준비.'});
     items.sort(function(x,y){return y.u-x.u;});
     var col=['#6b8e3b','#9a6c12','#a33232'],lab=['여유','살핌','시급'];
-    el.innerHTML=items.slice(0,6).map(function(it,i){return '<div style="font-size:12px;line-height:1.55;padding:4px 0'+(i?';border-top:1px solid #f0ddd5':'')+'"><span style="display:inline-block;min-width:28px;font-size:10px;color:#fff;background:'+col[it.u]+';border-radius:3px;padding:1px 5px;text-align:center;margin-right:7px;vertical-align:middle">'+lab[it.u]+'</span>'+it.t+'</div>';}).join('');
+    el.innerHTML=items.slice(0,6).map(function(it,i){return '<div style="font-size:12px;line-height:1.55;padding:4px 0'+(i?';border-top:1px solid #f0ddd5':'')+'"><span style="display:inline-block;min-width:28px;font-size:10px;color:#fff;background:'+col[it.u]+';border-radius:3px;padding:1px 5px;text-align:center;margin-right:7px;vertical-align:middle">'+lab[it.u]+'</span>'+it.t+(it.go?' <span class="goto" data-go="'+it.go+'" style="cursor:pointer;color:#a3622a;font-weight:600;white-space:nowrap">→ 바로 보기</span>':'')+'</div>';}).join('');
+    Array.prototype.forEach.call(el.querySelectorAll('.goto'),function(b){b.addEventListener('click',function(){goTo(this.dataset.go);});});
+  }
+  // 액션에서 해당 자리로 데려간다(목사가 "그래서 누구"로 바로 내려가게)
+  function goTo(tok){
+    if(tok==='care'){var m=document.getElementById('more');if(m)m.open=true;var cl=document.getElementById('care-list'),tg=document.getElementById('care-toggle');
+      if(cl){cl.hidden=false;if(tg)tg.textContent='접기';updateCareList();cl.scrollIntoView({block:'center'});}}
+    else if(tok==='conta'){var c=document.getElementById('conta');if(c)c.scrollIntoView({block:'center'});}
   }
   // 이번 주 작동 중인 입력(이벤트·설교·수련회·시험)을 칩으로
   function activeInputs(wk){
