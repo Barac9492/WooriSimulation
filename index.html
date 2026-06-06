@@ -566,7 +566,8 @@
     el.innerHTML='<div style="font-size:12px;line-height:1.7;color:#4a3a2a">'+
       '<b>선택한 학생</b> &nbsp;'+stat+'<br>'+
       GRADE_LABELS[s.grade]+' · '+bgL+(tags.length?' · '+tags.join(' · '):'')+'<br>'+
-      '출석 '+Math.round(s.eng*100)+'% · 신앙 관심 '+Math.round(s.faith*100)+'% · 친구 '+fr+'명'+
+      '출석 '+Math.round(s.eng*100)+'% · 신앙 관심 '+Math.round(s.faith*100)+'% · 친구 '+fr+'명<br>'+
+      '<span style="font-size:11px;color:#8a755a">신앙의 결 — 말씀 '+Math.round(s.word*100)+'% · 거룩 '+Math.round(s.holy*100)+'% · 소속 '+Math.round(s.belong*100)+'%</span>'+
       '<div style="color:#6b4a16;margin-top:5px;border-top:1px solid #e0cda0;padding-top:5px">→ '+studNote(s)+'</div></div>';
   }
   document.getElementById('world').addEventListener('click',function(e){
