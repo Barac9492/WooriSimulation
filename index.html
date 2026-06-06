@@ -34,7 +34,6 @@
 <div id="intro" style="position:fixed;inset:0;background:rgba(74,58,42,0.55);z-index:50;display:none;align-items:center;justify-content:center;padding:16px">
   <div class="gpanel" style="max-width:460px;width:100%;padding:18px 20px;background:#fbf4e4">
     <div style="font-size:16px;font-weight:600;margin-bottom:6px;color:#4a3a2a">중고등부 갱신 시뮬레이터</div>
-    <div style="font-size:12px;line-height:1.75;color:#6b4a16;border-left:3px solid #c9a24b;padding:2px 0 2px 10px;margin:0 0 12px">“그 잃어버린 자를 내가 찾으며 쫓기는 자를 내가 돌아오게 하며 상한 자를 내가 싸매 주며 병든 자를 내가 강하게 하려니와” <span style="color:#9a8e75">(에스겔 34:16)</span></div>
     <div class="ghint" style="margin-bottom:12px">우리 부의 지금을 진단하고, 한 해 계획(설교·수련회·행사)을 짜서, 그대로 흘려보며 "이 계획이 우리를 들어올리는가"를 본다. 숫자를 맞히는 도구가 아니라 방향을 가늠하는 사유 도구다.</div>
     <div style="font-size:13px;line-height:1.95;margin-bottom:14px;color:#4a3a2a">
       <b>① 설정 → 현재 진단</b> : 우리 부의 지금(규모·건강·중등/고등)을 넣는다.<br>
@@ -151,7 +150,6 @@
 
   <!-- 전염 진단: 한 아이가 흔들리면 친구도 흔들린다(비유) -->
   <div class="zhead" style="color:#a3622a">전염 진단 — 한 아이가 흔들리면 친구도 흔들린다(비유)</div>
-  <div style="font-size:11px;color:#9a6c12;border-left:3px solid #d8c07a;padding-left:8px;margin:0 2px 7px">“적은 누룩이 온 덩이에 퍼지느니라” (갈라디아서 5:9)</div>
   <div id="conta" class="gpanel" style="padding:9px 12px;margin-bottom:12px;border-color:#a3622a;background:#f6efe2"></div>
 
   <!-- 자세히: 분석 디테일(접힘) -->
@@ -161,8 +159,7 @@
       <div id="eco" style="font-size:12px;color:#6b5538;line-height:2;margin-bottom:8px"></div>
       <div id="dims" style="font-size:12px;color:#6b5538;line-height:1.6;margin-bottom:8px"></div>
       <div id="seg-live" style="font-size:12px;color:#6b5538;line-height:1.6;margin-bottom:8px"></div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span class="gsec" style="margin:0;flex:1">이번 주 돌봄 명단</span><button class="gbtn" id="care-toggle" style="padding:3px 9px;font-size:12px">펼치기</button></div>
-      <div style="font-size:11px;color:#9a6c12;border-left:3px solid #d8c07a;padding-left:8px;margin:0 0 7px">“마음이 약한 자들을 격려하고 힘이 없는 자들을 붙들어 주며” (데살로니가전서 5:14)</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="gsec" style="margin:0;flex:1">이번 주 돌봄 명단</span><button class="gbtn" id="care-toggle" style="padding:3px 9px;font-size:12px">펼치기</button></div>
       <div id="care-list" hidden style="margin-bottom:10px"></div>
       <div style="border:2px solid #4a3a2a;border-radius:5px;padding:6px;background:#fffaf0">
         <canvas id="spark" width="320" height="56" style="width:100%;height:auto"></canvas>
@@ -525,15 +522,15 @@
   function updateContagion(c){
     var el=document.getElementById('conta');if(!el)return;
     if(!c){el.innerHTML='<div class="ghint">아직 시작 전이다. 한 주가 흐르면, 흔들리는 아이가 친구에게 어떻게 번지는지 여기서 살핀다.</div>';return;}
-    var html='<div style="font-size:12px;line-height:1.7"><b style="color:#3b6d11">면역</b>(활발) '+c.R+' · <b style="color:#9a6c12">취약</b>(느슨) '+c.S+' · <b style="color:#a33232">감염</b>(위기) '+c.I+' &nbsp;<span class="ghint">출석이 흔들리는 모습을 전염에 빗대 본다.</span></div>';
+    var html='<div style="font-size:12px;line-height:1.7"><b style="color:#3b6d11">든든한 아이</b> '+c.R+' · <b style="color:#9a6c12">느슨한 아이</b> '+c.S+' · <b style="color:#a33232">흔들리는 아이</b> '+c.I+' &nbsp;<span class="ghint">출석이 흔들리는 것을 전염에 빗대어 본다.</span></div>';
     if(c.I===0){html+='<div style="font-size:12px;color:#3b6d11;margin-top:5px">지금은 흔들리는 아이가 없다. 활발한 아이들이 공동체를 잘 받쳐 주고 있다.</div>';el.innerHTML=html;return;}
     var sp=c.S?Math.round(c.exposed/c.S*100):0,cl=Math.round(c.cluster*10)/10;
-    html+='<div style="font-size:12px;line-height:1.7;margin-top:5px"><b class="tip" style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들리는 친구 곁에 있어 다음에 흔들리기 쉬운 학생이 얼마나 되나">전파압</b> &nbsp;흔들리는 친구를 곁에 둔 취약 학생 <b style="color:#a33232">'+c.exposed+'명</b>'+(c.S?'(취약군의 '+sp+'%)':'')+' · <span class="tip" style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들리는 아이들이 친구 무리에 얼마나 몰렸나. 1배면 흩어져 있고, 2배면 한 무리에 두 배로 몰려 번진다">군집도</span> <b>'+cl+'배</b></div>';
+    html+='<div style="font-size:12px;line-height:1.7;margin-top:5px">흔들리는 친구 곁에 있어 함께 흔들리기 쉬운 아이 <b style="color:#a33232">'+c.exposed+'명</b>'+(c.S?'(느슨한 아이의 '+sp+'%)':'')+' · 한 무리에 <span class="tip" style="cursor:help;border-bottom:1px dotted #a3622a" title="흔들리는 아이들이 한 친구 무리에 얼마나 쏠렸나. 1배면 흩어져 있고, 2배면 두 배로 몰려 번진다">쏠림</span> <b>'+cl+'배</b></div>';
     html+='<div class="ghint" style="margin-top:3px">'+(c.cluster>=1.4?'흔들리는 아이들이 같은 친구 무리에 몰려 있다. 한 명씩 따로 챙기기보다 그 무리를 함께 챙기는 게 낫다.':c.cluster>=1.05?'흔들리는 아이들이 친구를 따라 조금씩 늘고 있다.':'흔들리는 아이들이 여기저기 흩어져 있다. 친구 따라 번지기보다 저마다 사정이 다르니 한 명씩 챙기면 된다.')+'</div>';
     var listLine=function(x,arrow){return '<div class="cline" data-sel="'+students.indexOf(x.s)+'" style="font-size:12px;padding:2px 0;cursor:pointer;line-height:1.5">· '+studTag(x.s)+' · 출석 '+Math.round(x.s.eng*100)+'% <span style="color:#8a755a">'+arrow+'</span></div>';};
     if(c.spread.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#a33232">번짐의 핵 — 먼저 붙들면 번짐을 끊는다</div>'+c.spread.map(function(x){return listLine(x,'→ 곁에 아직 건강한 친구 '+x.heal+'명이 있다');}).join('');}
-    if(c.anchor.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#3b6d11">면역 거점 — 세우면 곁의 친구를 잡아준다</div>'+c.anchor.map(function(x){return listLine(x,'→ 곁의 흔들리는 친구 '+x.shaky+'명을 붙잡아 준다');}).join('');}
-    if(c.markers.length){html+='<div style="font-size:12px;margin-top:8px;border-top:1px solid #e0cda0;padding-top:6px"><span style="color:#8a755a">위험 표지(누가 잘 흔들리나)</span> &nbsp;'+c.markers.map(function(m){return '<b style="color:#a33232">'+m.k+' '+(Math.round(m.d.rr*10)/10)+'배</b>';}).join(' · ')+'</div>';}
+    if(c.anchor.length){html+='<div class="gsec" style="margin:8px 0 3px;color:#3b6d11">곁에서 붙드는 아이 — 흔들리는 벗을 붙들어 준다</div>'+c.anchor.map(function(x){return listLine(x,'→ 곁의 흔들리는 친구 '+x.shaky+'명을 붙들어 준다');}).join('');}
+    if(c.markers.length){html+='<div style="font-size:12px;margin-top:8px;border-top:1px solid #e0cda0;padding-top:6px"><span style="color:#8a755a">누가 잘 흔들리나</span> &nbsp;'+c.markers.map(function(m){return '<b style="color:#a33232">'+m.k+' '+(Math.round(m.d.rr*10)/10)+'배</b>';}).join(' · ')+'</div>';}
     html+='<div style="margin-top:8px"><button class="gbtn" id="conta-view" style="padding:3px 9px;font-size:12px'+(showSpread?';background:#5fb04e;border-color:#3b6d11;color:#1d3a14':'')+'">'+(showSpread?'전염 경로 숨기기':'교실에서 전염 경로 보기')+'</button></div>';
     el.innerHTML=html;
     Array.prototype.forEach.call(el.querySelectorAll('.cline'),function(b){b.addEventListener('click',function(){selStudent=students[+this.dataset.sel]||null;updateStudCard();document.getElementById('world').scrollIntoView({block:'center'});});});
@@ -552,7 +549,7 @@
     if(risky/n>=0.18)items.push({u:2,go:'care',t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)이 두껍다 → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
     else if(risky>0)items.push({u:1,go:'care',t:'위기군 '+risky+'명 → 돌봄 명단 확인, 흔들리는 학생 안부.'});
     if(loners>=Math.max(3,n*0.08))items.push({u:2,t:'소그룹 밖 외톨이 <b>'+loners+'명</b> → 또래·소그룹에 의도적으로 연결(가장 큰 이탈 위험).'});
-    if(conta&&conta.spread.length&&conta.exposed>=Math.max(2,n*0.06))items.push({u:2,go:'conta',t:'흔들리는 아이가 친구를 타고 늘고 있다(취약 '+conta.exposed+'명 노출) → "전염 진단"의 <b>번짐의 핵 '+conta.spread.length+'명</b>을 먼저 붙들어 번짐을 끊으라.'});
+    if(conta&&conta.spread.length&&conta.exposed>=Math.max(2,n*0.06))items.push({u:2,go:'conta',t:'흔들리는 아이가 친구를 타고 늘고 있다(함께 흔들리기 쉬운 아이 '+conta.exposed+'명) → "전염 진단"의 <b>번짐의 핵 '+conta.spread.length+'명</b>을 먼저 붙들어 번짐을 끊으라.'});
     if(nextSoo!=null&&nextSoo<=4)items.push({u:2,t:'수능 '+(nextSoo===0?'<b>진행 중</b>':'<b>'+nextSoo+'주 뒤</b>')+' → 고3 케어 집중, 수능 후 복귀 환영 준비.'});
     if(toYE<=4&&week>0){var shaky3=a.filter(function(s){return s.grade===3&&s.commit<0.5;}).length;if(shaky3>0)items.push({u:2,t:'곧 중3→고1 전환('+toYE+'주 뒤) → 흔들리는 중3 <b>'+shaky3+'명</b>을 미리 관계로 붙들기(전환 절벽).'});}
     if(nextExam!=null&&nextExam<=3)items.push({u:1,t:'시험기간 '+(nextExam===0?'진행 중':nextExam+'주 뒤')+' → 출석 일시 하락 대비, 시험 후 회복 모임.'});
@@ -848,8 +845,8 @@
       html+='</div>';
       var dHubRnd=Lr.drop-Lh.drop,dHubNone=L0.drop-Lh.drop,read;
       if(dHubRnd>=1)read='매주 <b>'+K+'명</b>을 무작위로 돌볼 때보다, <b>번짐의 핵부터</b> 돌볼 때 누적 이탈이 <b style="color:#3b6d11">'+Math.round(dHubRnd)+'명</b> 적다('+weeks+'주). 같은 손길도 누구부터 챙기느냐에 따라 결과가 갈린다.';
-      else if(dHubRnd<=-1)read='이번 설정에서는 무작위로 돌볼 때가 핵부터 돌볼 때보다 이탈이 '+Math.round(-dHubRnd)+'명 적게 나온다. 흔들리는 아이들이 흩어져 있으면(군집도 낮음) 길목부터 챙기는 효과가 옅다.';
-      else read='이번 설정에서는 핵부터 돌볼 때와 무작위로 돌볼 때 차이가 뚜렷하지 않다('+Math.round(Math.abs(dHubRnd))+'명 안팎). 흔들리는 아이들이 친구 무리에 몰릴수록(군집도 높을수록) 핵부터 챙기는 효과가 커진다.';
+      else if(dHubRnd<=-1)read='이번 설정에서는 무작위로 돌볼 때가 핵부터 돌볼 때보다 이탈이 '+Math.round(-dHubRnd)+'명 적게 나온다. 흔들리는 아이들이 흩어져 있으면 길목부터 챙기는 효과가 옅다.';
+      else read='이번 설정에서는 핵부터 돌볼 때와 무작위로 돌볼 때 차이가 뚜렷하지 않다('+Math.round(Math.abs(dHubRnd))+'명 안팎). 흔들리는 아이들이 한 무리에 몰릴수록 핵부터 챙기는 효과가 커진다.';
       html+='<div style="font-size:12px;color:#4a3a2a;margin-top:8px;line-height:1.6;border-top:1px solid #e0cda0;padding-top:6px">→ '+read+'<br><span class="ghint">아무것도 안 할 때와 견주면, 핵부터 돌볼 때 누적 이탈이 약 '+Math.round(dHubNone)+'명 준다. 돌봄 효과 수치는 가정값이니 방향과 크기로만 읽으라.</span></div>';
       box.innerHTML=html;
       drawCurves('sxcv',[none.map(function(p){return p.risk;}),rnd.map(function(p){return p.risk;}),hub.map(function(p){return p.risk;})],cols);
