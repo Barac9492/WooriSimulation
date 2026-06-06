@@ -115,6 +115,17 @@
     </div>
     <div id="sv-result"><div class="ghint" style="padding-top:2px">"잔존 보기"를 누르면, 지금 명단이 해마다 어떻게 남고 빠지는지 곡선과 마지막 숫자로 나온다.</div></div>
   </div>
+  <div class="zhead">⑤ 나쁜 해가 오면 — 스트레스 테스트</div>
+  <div class="gpanel" style="padding:10px 12px;margin-bottom:8px;border-color:#8a4a2a">
+    <div class="ghint" style="margin-bottom:8px">우리 계획에 큰 악재(교사 이탈·사역 공백·교회 침체)가 닥치면 얼마나 더 나빠지는지 견준다. 평소엔 안 보이지만 한번 오면 크게 흔드는 충격에 우리 부가 얼마나 버티나(은행 스트레스 테스트를 옮긴 것). 가장 아픈 충격이 가장 먼저 대비할 곳이다.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:#6b5538">기간</span>
+      <select id="st-weeks"><option value="24">1년</option><option value="48" selected>2년</option><option value="72">3년</option></select>
+      <span style="flex:1"></span>
+      <button class="gbtn" id="st-run" style="background:#8a4a2a;border-color:#5a2e16;color:#f6ece4">충격 견뎌 보기</button>
+    </div>
+    <div id="st-result"><div class="ghint" style="padding-top:2px">"충격 견뎌 보기"를 누르면, 평소 계획과 악재가 닥친 경우를 같은 기간 돌려 활발·이탈이 얼마나 더 나빠지는지 보여 준다.</div></div>
+  </div>
 </div>
 
 <!-- ── 관찰 모드(메인) ───────────────────────────── -->
@@ -864,6 +875,9 @@
       renderPair(box,hp,hb,'계획','기본 운영','#5fb04e','#9a8e75',weeks,runs,
         '계획대로 했을 때와, 특별 계획 없이 평소 운영(소그룹·멘토·교사)만 했을 때의 '+weeks+'주 뒤 평균 비교다. 차이는 (계획 − 기본 운영). 수치는 확인되지 않은, 그냥 넣어 본 값이므로 방향과 크기로만 읽으라.');
       box.insertAdjacentHTML('beforeend',segHTML(hp.seg,weeks));
+      // 최대 낙폭: 기간 중 활발 인원이 정점에서 최저로 가장 크게 빠진 폭(금융의 max drawdown)
+      var pk=0,mdd=0;hp.forEach(function(p){if(p.active>pk)pk=p.active;if(pk-p.active>mdd)mdd=pk-p.active;});
+      box.insertAdjacentHTML('beforeend','<div class="ghint" style="margin-top:6px">최대 낙폭: 이 기간 활발 인원이 정점에서 최저로 한때 <b>'+Math.round(mdd)+'명</b>까지 빠진 적이 있다(평균 궤적 기준). 끝값이 좋아도 중간에 이만큼 흔들릴 수 있으니, 그 골을 견딜 채비가 필요하다.</div>');
     },30);
   }
 
@@ -1191,6 +1205,31 @@
       line('grad','#9a8e75');line('dropped','#a33232');line('active','#3b6d11');
     },30);
   }
+  // ── 스트레스 테스트: 악재가 닥쳤을 때 우리 계획이 얼마나 더 나빠지나(은행 스트레스 테스트 비유) ──
+  function stressRun(){
+    var box=document.getElementById('st-result');
+    box.innerHTML='<div class="ghint" style="padding-top:2px">충격 돌리는 중... 평소와 악재 경우를 견준다.</div>';
+    setTimeout(function(){
+      var plan=captureConfig(),weeks=val('st-weeks'),runs=6,Lb=simulate(plan,weeks,runs);Lb=Lb[Lb.length-1];
+      var stresses=[
+        {n:'핵심 교사 절반이 빠지면',mut:function(c){c.ops.tc=Math.max(6,Math.round(c.ops.tc/2));}},
+        {n:'수련회·설교가 다 사라지면',mut:function(c){c.schedule=c.schedule.filter(function(e){return e.type!=='sermon'&&e.type!=='retreat';});}},
+        {n:'전체 교회가 침체에 빠지면',mut:function(c){c.church=[];c.ops.daracbang=clamp(c.ops.daracbang*0.5,0,1);}},
+        {n:'소그룹이 절반으로 줄면',mut:function(c){c.ops.sg=clamp(c.ops.sg*0.5,0,1);}}
+      ];
+      var rows=stresses.map(function(st){var c=cloneCfg(plan);st.mut(c);var L=simulate(c,weeks,runs);L=L[L.length-1];return {n:st.n,dAct:L.active-Lb.active,dDrop:L.drop-Lb.drop};});
+      rows.sort(function(a,b){return a.dAct-b.dAct;});
+      var cell=function(t,bg,al,cl){return '<div style="padding:5px 8px;background:'+bg+';text-align:'+al+(cl?';color:'+cl:'')+(al==='right'?';font-family:ui-monospace,monospace':'')+'">'+t+'</div>';};
+      var dv=function(v,goodDown){var z=Math.round(v);if(z===0)return '<span style="color:#8a755a">0</span>';var bad=goodDown?z>0:z<0;return '<span style="color:'+(bad?'#a33232':'#3b6d11')+'">'+(z>0?'+':'')+z+'</span>';};
+      var html='<div style="display:grid;grid-template-columns:1.7fr 1fr 1fr;font-size:12px;border:2px solid #4a3a2a;border-radius:5px;overflow:hidden">';
+      html+=cell('이런 충격이 오면','#e7d8b4','left')+cell('활발 변화','#e7d8b4','right')+cell('이탈 변화','#e7d8b4','right');
+      rows.forEach(function(r,i){var bg=i%2?'#fbf4e4':'#f3e7cc';html+=cell(r.n,bg,'left')+cell(dv(r.dAct,false),bg,'right')+cell(dv(r.dDrop,true),bg,'right');});
+      html+='</div>';
+      var w=rows[0];
+      html+='<div style="font-size:12px;color:#4a3a2a;margin-top:8px;line-height:1.6;border-top:1px solid #e0cda0;padding-top:6px">→ 가장 크게 흔드는 건 「'+w.n+'」다. 그때 활발 '+Math.round(w.dAct)+'명, 이탈 '+(w.dDrop>=0?'+':'')+Math.round(w.dDrop)+'명. <b>먼저 대비할 곳</b>이다(대비책·예비 인력). <span class="ghint">평소 계획 대비 차이다. 그냥 넣어 본 값이니 방향·크기로만 읽으라.</span></div>';
+      box.innerHTML=html;
+    },30);
+  }
   function setMode(m){mode=m;
     ['observe','scenario','config'].forEach(function(x){document.getElementById(x).hidden=(x!==m);document.getElementById('mode-'+x).classList.toggle('on',x===m);});}
   document.getElementById('mode-observe').addEventListener('click',function(){setMode('observe');});
@@ -1211,6 +1250,7 @@
   document.getElementById('pj-summary').addEventListener('click',showSummary);
   document.getElementById('sx-run').addEventListener('click',spreadExperiment);
   document.getElementById('sv-run').addEventListener('click',survivalRun);
+  document.getElementById('st-run').addEventListener('click',stressRun);
   function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
