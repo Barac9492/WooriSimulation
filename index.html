@@ -86,7 +86,7 @@
       <span style="flex:1"></span>
       <button class="gbtn" id="sx-run" style="background:#a3622a;border-color:#6b3a12;color:#fdf3e6">실험 실행</button>
     </div>
-    <div id="sx-result"><div class="ghint" style="padding-top:2px">"실험 실행"을 누르면 세 전략(무처치 · 무작위 돌봄 · 핵 우선 돌봄)을 같은 계획·기간으로 여러 번 돌려, 주별 위기(감염) 인원 곡선과 최종 지표를 견준다.</div></div>
+    <div id="sx-result"><div class="ghint" style="padding-top:2px">"실험 실행"을 누르면 세 가지(무처치 · 무작위 돌봄 · 핵 우선 돌봄)를 같은 계획·기간으로 여러 번 돌려, 주마다 흔들리는 아이 수의 곡선과 마지막 숫자를 견준다.</div></div>
   </div>
   <div class="gpanel" style="padding:10px 12px;margin-bottom:8px">
     <div class="gsec">시나리오 비교 (A/B)</div>
@@ -154,7 +154,7 @@
 
   <!-- 자세히: 분석 디테일(접힘) -->
   <details id="more" class="gpanel" style="padding:9px 12px;margin-bottom:8px">
-    <summary style="font-size:12px;font-weight:600;color:#6b5538;cursor:pointer">자세히 보기 — 교회 생태계 · 신앙의 결 · 위기군 구성 · 돌봄 명단 · 추이 ▾<span id="more-badge" style="color:#a33232;font-weight:600"></span></summary>
+    <summary style="font-size:12px;font-weight:600;color:#6b5538;cursor:pointer">자세히 보기 — 교회·가정 분위기 · 신앙의 결 · 흔들리는 아이들 · 돌봄 명단 · 추이 ▾<span id="more-badge" style="color:#a33232;font-weight:600"></span></summary>
     <div style="margin-top:10px">
       <div id="eco" style="font-size:12px;color:#6b5538;line-height:2;margin-bottom:8px"></div>
       <div id="dims" style="font-size:12px;color:#6b5538;line-height:1.6;margin-bottom:8px"></div>
@@ -480,8 +480,8 @@
     var mb=document.getElementById('more-badge');if(mb)mb.textContent=risky.length?'  ·  돌봄 '+risky.length+'명':'';
     if(sl){if(risky.length){var mid=risky.filter(function(s){return s.grade<=3;}).length,high=risky.filter(function(s){return s.grade>=4;}).length,go3=risky.filter(function(s){return s.grade===6;}).length;
       var lon=risky.filter(function(s){return s.loner;}).length,non=risky.filter(function(s){return s.bg==='none';}).length,ncore=risky.filter(function(s){return !s.core;}).length;
-      sl.innerHTML='<b style="color:#a33232">위기군 '+risky.length+'명</b> 누가? &nbsp;중등 <b>'+mid+'</b> 고등 <b>'+high+'</b>(고3 '+go3+') · 외톨이 <b>'+lon+'</b> · 비신앙 가정 <b>'+non+'</b> · 비코어 <b>'+ncore+'</b>';}
-      else sl.innerHTML='<span style="color:#3b6d11">지금 위기군(출석 바닥)이 없다.</span> 어떤 학생이 흔들리는지 여기서 바로 짚는다.';}
+      sl.innerHTML='<b style="color:#a33232">흔들리는 아이 '+risky.length+'명</b>, 누구? &nbsp;중등 <b>'+mid+'</b> 고등 <b>'+high+'</b>(고3 '+go3+') · 외톨이 <b>'+lon+'</b> · 비신앙 가정 <b>'+non+'</b> · 코어 아닌 아이 <b>'+ncore+'</b>';}
+      else sl.innerHTML='<span style="color:#3b6d11">지금은 흔들리는 아이가 없다.</span> 누가 흔들리는지 여기서 바로 짚는다.';}
     var n2=a.length||1,aw=0,ah=0,ab=0;a.forEach(function(s){aw+=s.word;ah+=s.holy;ab+=s.belong;});aw/=n2;ah/=n2;ab/=n2;
     var cur={n:a.length,active:ac,loose:lo,risk:a.length-ac-lo,drop:dropouts,f:f,word:aw,holy:ah,belong:ab};
     var dm=document.getElementById('dims');if(dm)dm.innerHTML='<b style="color:#6b5538">신앙의 결(평균)</b> &nbsp;말씀 <b style="color:#7a5c38">'+Math.round(aw*100)+'%</b> · 거룩 <b style="color:#6b4a8a">'+Math.round(ah*100)+'%</b> · 소속 <b style="color:#2e8b8b">'+Math.round(ab*100)+'%</b>';
@@ -546,9 +546,9 @@
     var loners=a.filter(function(s){return s.loner&&!s.sg;}).length;
     var noneA=a.filter(function(s){return s.bg==='none';}).length,noneR=risk.filter(function(s){return s.bg==='none';}).length;
     var nextSoo=weeksUntil('sooneung'),nextExam=weeksUntil('exam'),toYE=WEEKS_PER_YEAR-(week%WEEKS_PER_YEAR);
-    if(risky/n>=0.18)items.push({u:2,go:'care',t:'위기군 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)이 두껍다 → "이번 주 돌봄 명단"을 펼쳐 약한 순으로 심방·연락.'});
-    else if(risky>0)items.push({u:1,go:'care',t:'위기군 '+risky+'명 → 돌봄 명단 확인, 흔들리는 학생 안부.'});
-    if(loners>=Math.max(3,n*0.08))items.push({u:2,t:'소그룹 밖 외톨이 <b>'+loners+'명</b> → 또래·소그룹에 의도적으로 연결(가장 큰 이탈 위험).'});
+    if(risky/n>=0.18)items.push({u:2,go:'care',t:'흔들리는 아이가 <b>'+risky+'명</b>(전체의 '+Math.round(risky/n*100)+'%)으로 많다 → "이번 주 돌봄 명단"을 펴서 약한 아이부터 심방·연락.'});
+    else if(risky>0)items.push({u:1,go:'care',t:'흔들리는 아이 '+risky+'명 → 돌봄 명단 보고 안부 묻기.'});
+    if(loners>=Math.max(3,n*0.08))items.push({u:2,t:'소그룹에 없는 외톨이 <b>'+loners+'명</b> → 또래·소그룹에 일부러라도 이어 주기(가장 크게 떠나기 쉬운 아이).'});
     if(conta&&conta.spread.length&&conta.exposed>=Math.max(2,n*0.06))items.push({u:2,go:'conta',t:'흔들리는 아이가 친구를 타고 늘고 있다(함께 흔들리기 쉬운 아이 '+conta.exposed+'명) → "전염 진단"의 <b>번짐의 핵 '+conta.spread.length+'명</b>을 먼저 붙들어 번짐을 끊으라.'});
     if(nextSoo!=null&&nextSoo<=4)items.push({u:2,t:'수능 '+(nextSoo===0?'<b>진행 중</b>':'<b>'+nextSoo+'주 뒤</b>')+' → 고3 케어 집중, 수능 후 복귀 환영 준비.'});
     if(toYE<=4&&week>0){var shaky3=a.filter(function(s){return s.grade===3&&s.commit<0.5;}).length;if(shaky3>0)items.push({u:2,t:'곧 중3→고1 전환('+toYE+'주 뒤) → 흔들리는 중3 <b>'+shaky3+'명</b>을 미리 관계로 붙들기(전환 절벽).'});}
@@ -620,7 +620,7 @@
   function updateEco(){
     var el=document.getElementById('eco');if(!el)return;
     var bar=function(v,col){var w=Math.round(v*60);return '<span style="display:inline-block;width:60px;height:7px;border:1px solid #4a3a2a;border-radius:3px;vertical-align:middle;background:linear-gradient(90deg,'+col+' '+w+'px,#e7d8b4 '+w+'px)"></span>';};
-    el.innerHTML='<b style="color:#6b4a16">교회 생태계</b> &nbsp;교회 분위기 '+bar(churchClimate,'#b5651d')+' '+Math.round(churchClimate*100)+'% &nbsp;·&nbsp; 부모 다락방 '+bar(parentVitality,'#2e8b57')+' '+Math.round(parentVitality*100)+'%';
+    el.innerHTML='<b style="color:#6b4a16">교회·가정 분위기</b> &nbsp;교회 분위기 '+bar(churchClimate,'#b5651d')+' '+Math.round(churchClimate*100)+'% &nbsp;·&nbsp; 부모 다락방 '+bar(parentVitality,'#2e8b57')+' '+Math.round(parentVitality*100)+'%';
   }
   function color(s){return s.eng>=0.55?'#5fb04e':s.eng>=0.3?'#e0a52f':'#d65a4f';}
   function draw(t){for(var y=0;y<190;y+=16)for(var x=0;x<320;x+=16){wx.fillStyle=((x/16+y/16)%2===0)?'#efe2c4':'#e7d8b4';wx.fillRect(x,y,16,16);}
@@ -651,14 +651,14 @@
     var el=document.getElementById('stud-card');if(!el)return;var s=selStudent;
     if(!s){el.hidden=true;return;}
     var closeX='<span class="closex" title="닫기" style="float:right;cursor:pointer;color:#8a755a;font-weight:700;padding:0 2px;line-height:1">✕</span>';
-    if(s.left){el.hidden=false;el.innerHTML='<div style="font-size:12px;color:#6b5538">'+closeX+'<b>선택한 학생</b> · 이미 공동체를 떠났다(이탈 또는 졸업).</div>';return;}
+    if(s.left){el.hidden=false;el.innerHTML='<div style="font-size:12px;color:#6b5538">'+closeX+'<b>고른 아이</b> · 이미 떠났다(그만뒀거나 졸업).</div>';return;}
     var bgL={mota:'모태신앙',normal:'일반 가정',none:'비신앙 가정'}[s.bg];
     var stat=s.eng>=0.55?'<span style="color:#3b6d11;font-weight:600">활발</span>':s.eng>=0.3?'<span style="color:#9a6c12;font-weight:600">느슨</span>':'<span style="color:#a33232;font-weight:600">위기</span>';
     var tags=[];if(s.core)tags.push('코어');if(s.loner)tags.push('외톨이');if(s.sg)tags.push('소그룹');if(s.mentor)tags.push('멘토 연결');
     var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
     el.hidden=false;
     el.innerHTML='<div style="font-size:12px;line-height:1.7;color:#4a3a2a">'+closeX+
-      '<b>선택한 학생</b> &nbsp;'+stat+'<br>'+
+      '<b>고른 아이</b> &nbsp;'+stat+'<br>'+
       GRADE_LABELS[s.grade]+' · '+bgL+(tags.length?' · '+tags.join(' · '):'')+'<br>'+
       '출석 '+Math.round(s.eng*100)+'% · 신앙 관심 '+Math.round(s.faith*100)+'% · 친구 '+fr+'명'+
       '<div style="color:#6b4a16;margin-top:5px;border-top:1px solid #e0cda0;padding-top:5px">→ '+studNote(s)+'</div></div>';
@@ -766,12 +766,12 @@
     var fmt=function(v,pct){return pct?Math.round(v*100)+'%':Math.round(v);};
     var cell=function(txt,bg,al,cl){return '<div style="padding:5px 8px;background:'+bg+';text-align:'+al+(cl?';color:'+cl:'')+(al==='right'?';font-family:ui-monospace,monospace':'')+'">'+txt+'</div>';};
     html+='<div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;font-size:12px;border:2px solid #4a3a2a;border-radius:5px;overflow:hidden">';
-    html+=cell('지표','#e7d8b4','left')+cell(labA,'#e7d8b4','right','#3b6d11')+cell(labB,'#e7d8b4','right','#7a6a4a')+cell('차이','#e7d8b4','right');
+    html+=cell('항목','#e7d8b4','left')+cell(labA,'#e7d8b4','right','#3b6d11')+cell(labB,'#e7d8b4','right','#7a6a4a')+cell('차이','#e7d8b4','right');
     rows.forEach(function(rw,i){var bg=i%2?'#fbf4e4':'#f3e7cc';var pct=rw[4];var dv=rw[1]-rw[2];var good=(rw[3]==='g')?dv>0:dv<0;var dc=Math.abs(dv)<(pct?0.005:0.5)?'#8a755a':(good?'#3b6d11':'#a33232');var dt=(dv>0?'+':'')+(pct?Math.round(dv*100)+'%p':Math.round(dv));
       html+=cell(rw[0],bg,'left')+cell(fmt(rw[1],pct),bg,'right')+cell(fmt(rw[2],pct),bg,'right')+cell(dt,bg,'right',dc);});
     html+='</div>';
     if(hA.range){var R=hA.range,ri=function(a){return Math.round(a[0])+'~'+Math.round(a[1]);};
-      html+='<div class="ghint" style="margin-top:6px">'+labA+' 변동 폭('+runs+'회 중): 전체 '+ri(R.n)+' · 활발 '+ri(R.active)+' · 위기 '+ri(R.risk)+' · 이탈 '+ri(R.drop)+' · 신앙 '+Math.round(R.f[0]*100)+'~'+Math.round(R.f[1]*100)+'%. 폭이 넓을수록 결과가 불확실하니 단일 숫자로 단정하지 말라.</div>';}
+      html+='<div class="ghint" style="margin-top:6px">'+labA+' 오르내림 폭('+runs+'번 중): 전체 '+ri(R.n)+' · 활발 '+ri(R.active)+' · 위기 '+ri(R.risk)+' · 이탈 '+ri(R.drop)+' · 신앙 '+Math.round(R.f[0]*100)+'~'+Math.round(R.f[1]*100)+'%. 폭이 넓을수록 결과가 들쭉날쭉하니 숫자 하나로 단정하지 말라.</div>';}
     if(note)html+='<div class="ghint" style="margin-top:6px">'+note+'</div>';
     box.innerHTML=html;
     drawPairChart('pcv',hA,hB,colA,colB);
@@ -786,23 +786,23 @@
       var cells=groups.map(function(g){var r=rate(g.b);var hot=(g.tot>2&&r>=max&&max>0);return '<span style="'+(hot?'color:#a33232;font-weight:600':'color:#6b5538')+'">'+g.lab+' '+(g.tot>2?pc(r):'—')+'</span>';}).join('<span style="color:#cbb98f"> · </span>');
       return '<div style="font-size:12px;margin:3px 0"><span style="color:#8a755a">'+title+'</span> &nbsp;'+cells+'</div>';
     }
-    var html='<div class="gpanel" style="padding:8px 10px;margin:8px 0 0;background:#f3e7cc"><div class="gsec">취약 분석 — 어떤 학생이 빠지는가 ('+weeks+'주 누적 이탈률)</div>';
+    var html='<div class="gpanel" style="padding:8px 10px;margin:8px 0 0;background:#f3e7cc"><div class="gsec">어떤 아이가 빠지나 ('+weeks+'주 동안 떠난 비율)</div>';
     html+=line('외톨이',[{lab:'외톨이',b:seg.lon.y,tot:seg.lon.y.tot},{lab:'친구 있음',b:seg.lon.n,tot:seg.lon.n.tot}]);
     html+=line('신앙 배경',[{lab:'비신앙 가정',b:seg.bg.none,tot:seg.bg.none.tot},{lab:'일반',b:seg.bg.normal,tot:seg.bg.normal.tot},{lab:'모태',b:seg.bg.mota,tot:seg.bg.mota.tot}]);
-    html+=line('코어 여부',[{lab:'비코어',b:seg.core.n,tot:seg.core.n.tot},{lab:'코어',b:seg.core.y,tot:seg.core.y.tot}]);
+    html+=line('코어인지',[{lab:'코어 아닌 아이',b:seg.core.n,tot:seg.core.n.tot},{lab:'코어',b:seg.core.y,tot:seg.core.y.tot}]);
     // 중등/고등 현재 위기 비율
     var gr=[{lab:'고등',b:seg.grade.high},{lab:'중등',b:seg.grade.mid}];
     var gmax=0;gr.forEach(function(g){if(g.b.active>2&&riskRate(g.b)>gmax)gmax=riskRate(g.b);});
     var gcells=gr.map(function(g){var r=riskRate(g.b);var hot=(g.b.active>2&&r>=gmax&&gmax>0);return '<span style="'+(hot?'color:#a33232;font-weight:600':'color:#6b5538')+'">'+g.lab+' '+(g.b.active>2?pc(r):'—')+'</span>';}).join('<span style="color:#cbb98f"> · </span>');
-    html+='<div style="font-size:12px;margin:3px 0"><span style="color:#8a755a">중등·고등 위기(현재)</span> &nbsp;'+gcells+'</div>';
-    // 목회 한 줄: 고정 속성 중 이탈률 최고 유형 + 학년 메모
-    var cands=[{key:'외톨이',r:rate(seg.lon.y),tot:seg.lon.y.tot,tip:'친구 없는 학생을 소그룹·멘토에 의도적으로 잇는 것이 급선무다.'},
-      {key:'비신앙 가정',r:rate(seg.bg.none),tot:seg.bg.none.tot,tip:'전도형 설교와 가정 연계로 이 학생들을 붙드는 것이 필요하다.'},
-      {key:'비코어',r:rate(seg.core.n),tot:seg.core.n.tot,tip:'주변부 학생을 양육·소그룹으로 끌어들이는 제자훈련이 효과적이다.'}];
+    html+='<div style="font-size:12px;margin:3px 0"><span style="color:#8a755a">지금 흔들리는 비율(중등·고등)</span> &nbsp;'+gcells+'</div>';
+    // 목회 한 줄: 가장 잘 빠지는 부류 + 학년 메모
+    var cands=[{key:'외톨이',r:rate(seg.lon.y),tot:seg.lon.y.tot,tip:'친구 없는 아이를 소그룹·멘토에 일부러라도 이어 주는 게 먼저다.'},
+      {key:'비신앙 가정',r:rate(seg.bg.none),tot:seg.bg.none.tot,tip:'전도형 설교와 가정 연결로 이 아이들을 붙들어야 한다.'},
+      {key:'코어 아닌 아이',r:rate(seg.core.n),tot:seg.core.n.tot,tip:'겉도는 아이를 양육·소그룹으로 끌어들이는 제자훈련이 잘 듣는다.'}];
     var top=cands.filter(function(c){return c.tot>2;}).sort(function(a,b){return b.r-a.r;})[0];
-    var read=top&&top.r>0.001?('가장 빨리 빠지는 유형은 <b>'+top.key+'</b>('+pc(top.r)+')다. '+top.tip):'특정 유형에 이탈이 몰리지는 않는다.';
-    if(seg.grade.high.active>2&&riskRate(seg.grade.high)>=gmax&&gmax>0.001)read+=' 고등(특히 고3 수능 시즌) 위기가 두껍다. 또 중3→고1 전환에서 흔들리는 학생을 미리 붙드는 것이 중요하다.';
-    else if(seg.grade.mid.active>2&&riskRate(seg.grade.mid)>=gmax&&gmax>0.001)read+=' 중등 위기가 두껍다. 중3→고1 전환 절벽을 넘기 전에 관계로 묶어 두는 것이 관건이다.';
+    var read=top&&top.r>0.001?('가장 빨리 빠지는 건 <b>'+top.key+'</b>('+pc(top.r)+')다. '+top.tip):'특별히 한 부류로 몰려 빠지지는 않는다.';
+    if(seg.grade.high.active>2&&riskRate(seg.grade.high)>=gmax&&gmax>0.001)read+=' 고등(특히 고3 수능 철)에 흔들리는 아이가 많다. 중3에서 고1로 올라갈 때 흔들리는 아이를 미리 붙드는 게 중요하다.';
+    else if(seg.grade.mid.active>2&&riskRate(seg.grade.mid)>=gmax&&gmax>0.001)read+=' 중등에 흔들리는 아이가 많다. 중3에서 고1로 넘어가는 고비 전에 관계로 단단히 묶어 두는 게 관건이다.';
     html+='<div style="font-size:12px;color:#4a3a2a;margin-top:6px;line-height:1.6;border-top:1px solid #e0cda0;padding-top:6px">→ '+read+'</div></div>';
     return html;
   }
@@ -834,12 +834,12 @@
       var html='<div class="gpanel" style="padding:6px;margin:0 0 8px"><canvas id="sxcv" width="320" height="90" style="width:100%;height:auto"></canvas>'+
         '<div style="display:flex;gap:12px;font-size:11px;color:#6b5538;padding:2px 2px 0;flex-wrap:wrap">'+
         labs.map(function(l,i){return '<span><span style="display:inline-block;width:10px;height:3px;background:'+cols[i]+';vertical-align:middle"></span> '+l+'</span>';}).join('')+
-        '<span style="margin-left:auto">주별 위기(감염) 인원 · '+weeks+'주 · '+runs+'회 평균</span></div></div>';
-      var rows=[['누적 이탈','drop'],['위기(감염)','risk'],['활발(면역)','active'],['평균 신앙','f']];
+        '<span style="margin-left:auto">주마다 흔들리는 아이 수 · '+weeks+'주 · '+runs+'번 평균</span></div></div>';
+      var rows=[['그동안 떠난 수','drop'],['흔들리는 아이','risk'],['든든한 아이','active'],['평균 신앙','f']];
       var cell=function(t,bg,al,cl){return '<div style="padding:5px 8px;background:'+bg+';text-align:'+al+(cl?';color:'+cl:'')+(al==='right'?';font-family:ui-monospace,monospace':'')+'">'+t+'</div>';};
       var fmt=function(v,pct){return pct?Math.round(v*100)+'%':Math.round(v);};
       html+='<div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;font-size:12px;border:2px solid #4a3a2a;border-radius:5px;overflow:hidden">';
-      html+=cell('지표','#e7d8b4','left')+cell('무처치','#e7d8b4','right','#7a6a4a')+cell('무작위','#e7d8b4','right','#378add')+cell('핵 우선','#e7d8b4','right','#a3622a');
+      html+=cell('항목','#e7d8b4','left')+cell('무처치','#e7d8b4','right','#7a6a4a')+cell('무작위','#e7d8b4','right','#378add')+cell('핵 우선','#e7d8b4','right','#a3622a');
       rows.forEach(function(rw,i){var bg=i%2?'#fbf4e4':'#f3e7cc',pct=rw[1]==='f';
         html+=cell(rw[0],bg,'left')+cell(fmt(L0[rw[1]],pct),bg,'right')+cell(fmt(Lr[rw[1]],pct),bg,'right')+cell(fmt(Lh[rw[1]],pct),bg,'right');});
       html+='</div>';
@@ -872,11 +872,11 @@
     var plan=captureConfig(),weeks=val('pj-weeks'),runs=6;
     var hp=simulate(plan,weeks,runs),L=hp[hp.length-1],mid=hp[Math.floor(hp.length/2)],N0=plan.dist.n,base=scoreOf(L);
     var diag=[];
-    if(L.drop>=N0*0.25)diag.push('한 해 동안 누적 이탈이 시작 인원의 4분의 1을 넘는다(약 '+Math.round(L.drop)+'명).');
-    if(L.risk>=L.n*0.18)diag.push('이탈 위기군이 두껍다(약 '+Math.round(L.risk)+'명).');
-    if(L.f<mid.f-0.02)diag.push('평균 신앙 관심도가 후반으로 갈수록 내려간다.');
-    if(L.n<N0*0.9)diag.push('전체 인원이 시작보다 줄어든다(약 '+Math.round(N0-L.n)+'명 감소).');
-    if(!diag.length)diag.push('큰 문제는 두드러지지 않는다. 아래는 더 끌어올릴 여지다.');
+    if(L.drop>=N0*0.25)diag.push('한 해 동안 떠난 아이가 처음 인원의 4분의 1을 넘는다(약 '+Math.round(L.drop)+'명).');
+    if(L.risk>=L.n*0.18)diag.push('흔들리는 아이가 많다(약 '+Math.round(L.risk)+'명).');
+    if(L.f<mid.f-0.02)diag.push('평균 신앙 관심도가 갈수록 내려간다.');
+    if(L.n<N0*0.9)diag.push('전체 인원이 처음보다 준다(약 '+Math.round(N0-L.n)+'명 줄어듦).');
+    if(!diag.length)diag.push('큰 문제는 안 보인다. 아래는 더 끌어올릴 여지다.');
     curCands=candidates();
     var scored=curCands.map(function(cd,i){var c=cloneCfg(plan);cd.mut(c);var ll=simulate(c,weeks,runs);ll=ll[ll.length-1];return {i:i,cd:cd,l:ll,gain:scoreOf(ll)-base};});
     scored.sort(function(a,b){return b.gain-a.gain;});
@@ -907,9 +907,9 @@
   }
   function vulnTop(seg){
     var rate=function(b){return b.tot>0.5?b.dropped/b.tot:0;};
-    var c=[{k:'외톨이',r:rate(seg.lon.y),t:seg.lon.y.tot},{k:'비신앙 가정',r:rate(seg.bg.none),t:seg.bg.none.tot},{k:'비코어',r:rate(seg.core.n),t:seg.core.n.tot}];
+    var c=[{k:'외톨이',r:rate(seg.lon.y),t:seg.lon.y.tot},{k:'비신앙 가정',r:rate(seg.bg.none),t:seg.bg.none.tot},{k:'코어 아닌 아이',r:rate(seg.core.n),t:seg.core.n.tot}];
     var top=c.filter(function(x){return x.t>2;}).sort(function(a,b){return b.r-a.r;})[0];
-    return top&&top.r>0.001?(top.k+' '+Math.round(top.r*100)+'%'):'뚜렷한 취약 유형 없음';
+    return top&&top.r>0.001?(top.k+' '+Math.round(top.r*100)+'%'):'뚜렷이 빠지는 부류 없음';
   }
   function topRx(plan,weeks){
     var L=simulate(plan,weeks,4);L=L[L.length-1];var base=scoreOf(L),best=null;
@@ -937,7 +937,7 @@
     lines.push('  전체 '+Math.round(L.n)+'명 / 활발 '+Math.round(L.active)+' / 느슨 '+Math.round(L.loose)+' / 위기 '+Math.round(L.risk)+' / 누적이탈 '+Math.round(L.drop)+' / 평균신앙 '+Math.round(L.f*100)+'%');
     lines.push('  계획 효과(기본운영 대비): 활발 '+(L.active-B.active>=0?'+':'')+Math.round(L.active-B.active)+' · 이탈 '+(L.drop-B.drop>=0?'+':'')+Math.round(L.drop-B.drop)+' · 신앙 '+((L.f-B.f)>=0?'+':'')+Math.round((L.f-B.f)*100)+'%p');
     lines.push('');
-    lines.push('· 취약: 가장 빨리 빠지는 유형은 '+vulnTop(hp.seg)+'.');
+    lines.push('· 잘 빠지는 아이: 가장 빨리 빠지는 건 '+vulnTop(hp.seg)+'.');
     lines.push('· 추천 처방 1순위: '+rx.txt);
     return lines.join('\n');
   }
