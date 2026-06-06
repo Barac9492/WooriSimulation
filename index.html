@@ -712,13 +712,17 @@
     return html;
   }
   function projectRun(){
-    var plan=captureConfig();
-    var base={dist:plan.dist,ops:plan.ops,schedule:[],church:[]};
-    var weeks=val('pj-weeks'),runs=8;
-    var hp=simulate(plan,weeks,runs),hb=simulate(base,weeks,runs);
-    renderPair(document.getElementById('pj-result'),hp,hb,'계획','기본 운영','#5fb04e','#9a8e75',weeks,runs,
-      '계획대로 했을 때와, 특별 계획 없이 평소 운영(소그룹·멘토·교사)만 했을 때의 '+weeks+'주 뒤 평균 비교다. 차이는 (계획 − 기본 운영). 수치는 검증되지 않은 가정값이므로 방향과 크기로만 읽으라.');
-    document.getElementById('pj-result').insertAdjacentHTML('beforeend',segHTML(hp.seg,weeks));
+    var box=document.getElementById('pj-result');
+    box.innerHTML='<div class="ghint" style="padding-top:2px">돌리는 중... (8회 평균을 내는 중)</div>';
+    setTimeout(function(){
+      var plan=captureConfig();
+      var base={dist:plan.dist,ops:plan.ops,schedule:[],church:[]};
+      var weeks=val('pj-weeks'),runs=8;
+      var hp=simulate(plan,weeks,runs),hb=simulate(base,weeks,runs);
+      renderPair(box,hp,hb,'계획','기본 운영','#5fb04e','#9a8e75',weeks,runs,
+        '계획대로 했을 때와, 특별 계획 없이 평소 운영(소그룹·멘토·교사)만 했을 때의 '+weeks+'주 뒤 평균 비교다. 차이는 (계획 − 기본 운영). 수치는 검증되지 않은 가정값이므로 방향과 크기로만 읽으라.');
+      box.insertAdjacentHTML('beforeend',segHTML(hp.seg,weeks));
+    },30);
   }
 
   // ── 처방 엔진(약점 진단 + 검증된 개입 추천) ──
@@ -737,6 +741,8 @@
   ];}
   function adviseRun(){
     var box=document.getElementById('pj-advice');
+    box.innerHTML='<div class="ghint" style="padding-top:2px">분석 중... (후보 처방을 각각 돌려 검증)</div>';
+    setTimeout(function(){
     var plan=captureConfig(),weeks=val('pj-weeks'),runs=6;
     var hp=simulate(plan,weeks,runs),L=hp[hp.length-1],mid=hp[Math.floor(hp.length/2)],N0=plan.dist.n,base=scoreOf(L);
     var diag=[];
@@ -764,6 +770,7 @@
     html+='<div class="ghint" style="margin-top:6px">처방 효과는 같은 계획에 그 조치만 더해 '+weeks+'주를 '+runs+'회 돌린 평균의 차이다. 가정값에 기댄 추정이므로 방향으로 읽으라. "적용"은 위 계획·설정에 실제로 반영한다.</div>';
     box.innerHTML=html;
     Array.prototype.forEach.call(box.querySelectorAll('[data-adopt]'),function(b){b.addEventListener('click',function(){var idx=+this.dataset.adopt;curCands[idx].adopt();this.textContent='적용됨';this.disabled=true;projectRun();});});
+    },30);
   }
 
   // ── 교사팀 공유용 텍스트 요약 ──
