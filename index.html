@@ -126,6 +126,17 @@
     </div>
     <div id="st-result"><div class="ghint" style="padding-top:2px">"충격 견뎌 보기"를 누르면, 평소 계획과 악재가 닥친 경우를 같은 기간 돌려 활발·이탈이 얼마나 더 나빠지는지 보여 준다.</div></div>
   </div>
+  <div class="zhead">⑥ 손길을 어디에 둘까 — 배합 효율</div>
+  <div class="gpanel" style="padding:10px 12px;margin-bottom:8px;border-color:#5a6b2e">
+    <div class="ghint" style="margin-bottom:8px">한정된 손길(교사·시간)을 어디에 모을지 본다. 몇 가지 배합을 같은 기간 돌려 기대 활발(얻는 것)과 변동 폭(흔들림·위험)으로 견준다. 다른 배합에 모든 면에서 밀리는 건 "굳이"다. 같은 위험에 더 높은 결과를 찾는 포트폴리오 이론을 옮긴 것 — 정밀한 최적해가 아니라 상대 비교다.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:#6b5538">기간</span>
+      <select id="fr-weeks"><option value="24">1년</option><option value="48" selected>2년</option><option value="72">3년</option></select>
+      <span style="flex:1"></span>
+      <button class="gbtn" id="fr-run" style="background:#5a6b2e;border-color:#3a481a;color:#eef3e2">배합 견주기</button>
+    </div>
+    <div id="fr-result"><div class="ghint" style="padding-top:2px">"배합 견주기"를 누르면, 멘토 집중·소그룹 집중·교사 증원 같은 배합을 같은 기간 돌려 효율을 표로 보여 준다.</div></div>
+  </div>
 </div>
 
 <!-- ── 관찰 모드(메인) ───────────────────────────── -->
@@ -1230,6 +1241,35 @@
       box.innerHTML=html;
     },30);
   }
+  // ── 배합 효율: 몇 가지 손길 배합을 기대 활발 vs 변동 폭으로 견준다(포트폴리오 이론 비유) ──
+  function frontierRun(){
+    var box=document.getElementById('fr-result');
+    box.innerHTML='<div class="ghint" style="padding-top:2px">배합 돌리는 중... 몇 가지를 같은 기간 견준다.</div>';
+    setTimeout(function(){
+      var plan=captureConfig(),weeks=val('fr-weeks'),runs=6;
+      var cands=[
+        {n:'지금 계획',mut:function(){}},
+        {n:'멘토 집중',mut:function(c){c.ops.mt=clamp(c.ops.mt+0.25,0,1);c.ops.sg=clamp(c.ops.sg-0.1,0,1);}},
+        {n:'소그룹 집중',mut:function(c){c.ops.sg=clamp(c.ops.sg+0.2,0,1);}},
+        {n:'교사 증원',mut:function(c){c.ops.tc=Math.min(40,c.ops.tc+8);}},
+        {n:'수련회 강화',mut:function(c){var r=c.schedule.filter(function(e){return e.type==='retreat';});if(r.length)r.forEach(function(e){e.attendRate=clamp(e.attendRate+0.15,0,1);e.intensity=clamp(e.intensity+0.15,0,1);});else c.schedule.push({type:'retreat',start:12,nights:2,attendRate:0.8,intensity:0.75,repeat:24});}},
+        {n:'고루 강화',mut:function(c){c.ops.sg=clamp(c.ops.sg+0.1,0,1);c.ops.mt=clamp(c.ops.mt+0.1,0,1);c.ops.tc=Math.min(40,c.ops.tc+4);}}
+      ];
+      var pts=cands.map(function(cd){var c=cloneCfg(plan);cd.mut(c);var h=simulate(c,weeks,runs);var L=h[h.length-1],rg=h.range.active;return {n:cd.n,ret:L.active,risk:rg[1]-rg[0]};});
+      pts.forEach(function(p){p.dom=pts.some(function(q){return q!==p&&q.ret>=p.ret&&q.risk<=p.risk&&(q.ret>p.ret+0.3||q.risk<p.risk-0.3);});});
+      pts.sort(function(a,b){return b.ret-a.ret;});
+      var cell=function(t,bg,al,cl){return '<div style="padding:5px 8px;background:'+bg+';text-align:'+al+(cl?';color:'+cl:'')+(al==='right'?';font-family:ui-monospace,monospace':'')+'">'+t+'</div>';};
+      var html='<div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.9fr;font-size:12px;border:2px solid #4a3a2a;border-radius:5px;overflow:hidden">';
+      html+=cell('배합','#e7d8b4','left')+cell('기대 활발','#e7d8b4','right')+cell('변동(위험)','#e7d8b4','right')+cell('판정','#e7d8b4','right');
+      pts.forEach(function(p,i){var bg=i%2?'#fbf4e4':'#f3e7cc';var jud=p.dom?'<span style="color:#8a755a">굳이</span>':'<span style="color:#3b6d11">효율</span>';html+=cell(p.n,bg,'left')+cell('±'+Math.round(p.ret),bg,'right')+cell('±'+Math.round(p.risk),bg,'right')+cell(jud,bg,'right');});
+      html+='</div>';
+      var eff=pts.filter(function(p){return !p.dom;}),best=eff.slice().sort(function(a,b){return (b.ret-b.risk*0.5)-(a.ret-a.risk*0.5);})[0],doms=pts.filter(function(p){return p.dom;});
+      var read='적은 흔들림으로 가장 많은 활발을 주는 쪽은 <b>'+best.n+'</b>다.';
+      if(doms.length)read+=' '+doms.map(function(p){return '「'+p.n+'」';}).join('·')+'는 다른 배합에 밀리니 굳이 아니다.';
+      html+='<div style="font-size:12px;color:#4a3a2a;margin-top:8px;line-height:1.6;border-top:1px solid #e0cda0;padding-top:6px">→ '+read+' <span class="ghint">정밀한 최적이 아니라 배합끼리의 상대 비교다. 그냥 넣어 본 값이니 방향으로만 읽으라.</span></div>';
+      box.innerHTML=html;
+    },30);
+  }
   function setMode(m){mode=m;
     ['observe','scenario','config'].forEach(function(x){document.getElementById(x).hidden=(x!==m);document.getElementById('mode-'+x).classList.toggle('on',x===m);});}
   document.getElementById('mode-observe').addEventListener('click',function(){setMode('observe');});
@@ -1251,6 +1291,7 @@
   document.getElementById('sx-run').addEventListener('click',spreadExperiment);
   document.getElementById('sv-run').addEventListener('click',survivalRun);
   document.getElementById('st-run').addEventListener('click',stressRun);
+  document.getElementById('fr-run').addEventListener('click',frontierRun);
   function setPlay(on){playing=on;var p=document.getElementById('btn-play');p.classList.toggle('on',on);p.textContent=on?'⏸ 자동재생 중':'▶ 자동재생';}
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing);});
   document.getElementById('btn-step').addEventListener('click',function(){if(mode!=='observe')return;if(playing)setPlay(false);step();});
