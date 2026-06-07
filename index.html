@@ -132,6 +132,7 @@
       <span class="wk"><b id="wk">0</b>주차 · <b id="yr">1</b>년차</span>
       <button id="btn-step" class="btn primary">다음 주 ▶</button>
       <button id="btn-play" class="btn">자동재생</button>
+      <button id="btn-report" class="btn ghost">보고서</button>
       <button id="btn-settings" class="btn ghost">우리 부 설정</button>
     </div>
   </header>
@@ -1064,6 +1065,39 @@
   document.getElementById('pre-grow').addEventListener('click',function(){setSlider('p-active',68);setSlider('p-risk',8);setSlider('s-daracbang',70);});
   var drawer=document.getElementById('settings');
   document.getElementById('btn-settings').addEventListener('click',function(){drawer.hidden=false;});
+  // 당회·교사팀 보고용 한 장 리포트(인쇄·PDF 저장)
+  function buildReport(){
+    var a=students.filter(function(s){return !s.left;});if(!a.length){alert('먼저 "우리 부 설정"에서 시작하거나 몇 주 진행하세요.');return;}
+    var actR=Math.round(a.filter(function(s){return s.eng>=0.55;}).length/a.length*100),ownR=ownRate(a),frag=fragIndex(a),ewi=earlyWarn(a),sd=stageDist(a);
+    var carry=(gradKeep+gradLapse)?Math.round(gradKeep/(gradKeep+gradLapse)*100):(projData&&projData.length&&projData[projData.length-1].carry!=null?Math.round(projData[projData.length-1].carry):null);
+    var f=projData&&projData.length?projData[projData.length-1]:null;
+    var visit=a.filter(function(s){return s.eng<0.3;}).sort(function(x,y){return spreadScore(y,students)-spreadScore(x,students);}).slice(0,5);
+    var hidden=a.filter(function(s){return s.eng>=0.55;}).map(function(s){return {s:s,fr:fragility(s)};}).filter(function(o){return o.fr>=0.32;}).sort(function(x,y){return y.fr-x.fr;}).slice(0,5);
+    var li=function(arr,f2){return arr.length?'<ul style="margin:4px 0 0;padding-left:18px">'+arr.map(f2).join('')+'</ul>':'<p style="margin:4px 0;color:#666">해당 없음</p>';};
+    var html='<html><head><meta charset="utf-8"><title>중고등부 진단 보고서</title><style>'+
+      'body{font-family:system-ui,"Malgun Gothic",sans-serif;max-width:720px;margin:30px auto;color:#1a2233;line-height:1.6;padding:0 16px}'+
+      'h1{font-size:21px;border-bottom:2px solid #1a2233;padding-bottom:8px}h2{font-size:15px;margin-top:22px;color:#0f172a}'+
+      '.big{font-size:40px;font-weight:800}.row{display:flex;gap:24px;flex-wrap:wrap;margin:8px 0}.k{background:#f1f5f9;border-radius:8px;padding:10px 14px;min-width:120px}'+
+      '.k b{display:block;font-size:22px}.k span{font-size:12px;color:#555}.note{color:#666;font-size:12px}ul{font-size:14px}@media print{body{margin:0}}</style></head><body>'+
+      '<h1>중고등부 목회 진단 보고서</h1>'+
+      '<p class="note">'+new Date().toLocaleDateString('ko-KR')+' · '+Math.floor(week/WEEKS_PER_YEAR)+'년차 '+(week%WEEKS_PER_YEAR)+'주차 · 현재 '+a.length+'명. 수치는 가정값 기반 시나리오이며 현실 예측이 아니다.</p>'+
+      '<h2>1. 북극성 — 졸업 후에도 신앙을 지킬 아이</h2>'+(carry!=null?'<div class="big">'+carry+'%</div><p class="note">졸업하는 아이 중 자기 믿음으로 서서 신앙을 들고 나갈 비율. 출석 수보다 이 숫자가 진짜 성적표.</p>':'<p>아직 졸업 표본 없음(전망 기준).</p>')+
+      '<h2>2. 겉과 속</h2><div class="row">'+
+      '<div class="k"><b>'+actR+'%</b><span>겉 — 출석으로 든든</span></div>'+
+      '<div class="k"><b>'+ownR+'%</b><span>속 — 믿음이 자기 것</span></div>'+
+      '<div class="k"><b>'+frag+'%</b><span>모래성(외부 의존)</span></div>'+
+      '<div class="k"><b>'+ewi+'</b><span>조기경보</span></div></div>'+
+      '<p class="note">믿음 단계 — 부여된 '+sd[0]+'명 · 탐색 '+sd[1]+'명 · 내면화 '+sd[2]+'명.</p>'+
+      (f?'<h2>3. 이대로 가면(3년 전망)</h2><p>함께하는 아이 약 <b>'+Math.round(f.n)+'명</b>, 그동안 떠나는 아이 약 <b>'+Math.round(f.drop)+'명</b>, 졸업 신앙 잔존 약 <b>'+(f.carry!=null?Math.round(f.carry):'—')+'%</b>.</p>':'')+
+      '<h2>4. 이번 주 먼저 만날 아이</h2>'+li(visit,function(s){return '<li>'+studName(s)+' — 출석 흔들림'+(s.loner?', 친구 적음':'')+(s.bg==='none'?', 혼자 다님':'')+'</li>';})+
+      '<h2>5. 잘 나오지만 속이 빈 아이(전환기 위험)</h2>'+li(hidden,function(o){return '<li>'+studName(o.s)+' — 출석 '+Math.round(o.s.eng*100)+', 내면화 '+Math.round((o.s.owned||0)*100)+'</li>';})+
+      (recoState?'<h2>6. 권하는 한 수</h2><p>'+recoState.action.replace(/<[^>]+>/g,'')+'</p>':'')+
+      '<p class="note" style="margin-top:24px">계수는 그럴듯하게 넣어 본 가정값이며 한국 데이터로 보정되지 않았다. 방향과 크기 비교로만 읽으라. 근거: CLAUDE.md·SURVEY.md.</p>'+
+      '</body></html>';
+    var w=window.open('','_blank');if(!w){alert('팝업이 막혀 있습니다. 팝업을 허용해 주세요.');return;}
+    w.document.write(html);w.document.close();w.focus();setTimeout(function(){w.print();},300);
+  }
+  document.getElementById('btn-report').addEventListener('click',buildReport);
   document.getElementById('set-close').addEventListener('click',function(){drawer.hidden=true;});
   drawer.addEventListener('click',function(e){if(e.target===drawer)drawer.hidden=true;});
   document.getElementById('set-apply').addEventListener('click',function(){drawer.hidden=true;roster=null;document.getElementById('roster-status').textContent='';generate();});
