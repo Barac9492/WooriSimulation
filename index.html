@@ -68,6 +68,19 @@
   .chip:hover{background:#e9edf3}
   .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .reco{background:#f0f6ff;border:1px solid #cfe0ff;border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.6}
+  .plain-h{font-size:15px;font-weight:700;margin:0 0 7px}
+  .plain-p{font-size:14.5px;line-height:1.8;color:#2a2f3a}
+  .verdict{display:flex;gap:14px;align-items:flex-start}
+  .light{font-size:34px;line-height:1;flex:none}
+  .vtext{font-size:18px;font-weight:800;line-height:1.45}
+  .vsub{font-size:14px;color:var(--mut);font-weight:500;margin-top:5px;line-height:1.6}
+  .visit{display:flex;gap:10px;padding:11px 0;border-top:1px solid var(--line);font-size:14.5px;line-height:1.6}
+  .visit:first-child{border-top:none}
+  .visit .who{font-weight:800;flex:none;min-width:66px}
+  .callout{background:#f0f6ff;border:1px solid #cfe0ff;border-radius:12px;padding:14px 16px;font-size:15.5px;line-height:1.7}
+  .callout b{color:var(--stock)}
+  .summary-h{font-size:14px;font-weight:700;color:#4b5563;cursor:pointer;list-style:none}
+  details>summary::-webkit-details-marker{display:none}
 </style>
 </head>
 <body>
@@ -85,54 +98,77 @@
     </div>
   </header>
 
-  <section class="card">
-    <div class="sec-h"><span class="dot covid"></span><h2>① 지금 진단 — 전염 지도</h2></div>
-    <p class="muted">한 아이가 흔들리면 친구도 흔들린다. 지금 우리 부가 어떤 상태인지 본다.</p>
-    <div class="stats" id="stat-row"></div>
-    <div id="diag-body">
-      <div class="diag-grid">
-        <div class="mini">
-          <div class="mini-h">번짐세 — 한 명 주변에서 번지는 속도</div>
-          <div id="rt-val" class="rt">—</div>
-          <div id="rt-note" class="hint"></div>
-        </div>
-        <div class="mini">
-          <div class="mini-h">주마다 흔들리는 아이</div>
-          <canvas id="curve" width="300" height="90"></canvas>
-        </div>
-      </div>
-      <div class="map-h"><span>관계 지도 — 점은 아이, 선은 친구, 색은 상태</span><span id="map-leg" class="hint"></span></div>
-      <canvas id="net" width="600" height="300" class="netcanvas"></canvas>
-      <div id="hold-list"></div>
-    </div>
+  <!-- 핵심 진단서 (열자마자) -->
+  <section class="card" id="verdict-card">
+    <div id="verdict" class="verdict"><div class="light">⏳</div><div><div class="vtext">한 주를 넘기면 진단이 나옵니다.</div><div class="vsub">위 "다음 주 ▶"를 눌러 보세요.</div></div></div>
   </section>
 
   <section class="card">
-    <div class="sec-h"><span class="dot stock"></span><h2>② 전망 — 믿음 지수</h2></div>
-    <div id="proj-body">
-      <div class="map-h"><span>믿음 지수 — 이대로 가면(0~100, 높을수록 든든)</span><span id="idx-now" class="hint"></span></div>
-      <canvas id="idxchart" width="600" height="150" class="netcanvas"></canvas>
-      <div class="diag-grid" style="margin-top:12px">
-        <div class="mini"><div class="mini-h">무엇이 믿음을 움직이나(이번 주)</div><div id="attr-bars"></div></div>
-        <div class="mini"><div class="mini-h">위험 — 나쁜 쪽이면</div><div id="risk-box" class="hint"></div></div>
-      </div>
-    </div>
+    <h2 class="plain-h">이번 주 꼭 만날 아이</h2>
+    <div id="visit-list"><p class="muted">한 주가 흐르면, 가장 먼저 챙길 아이가 여기 모입니다.</p></div>
   </section>
 
   <section class="card">
-    <div class="sec-h"><span class="dot act"></span><h2>③ 무엇을 할까 — 설교·프로그램</h2></div>
-    <div id="decide-body">
-      <div class="mini-h">이번 학기 설교 결 (하나 고름)</div>
-      <div id="sermon-pick" class="chips"></div>
-      <div class="mini-h" style="margin-top:12px">프로그램 (여럿 가능)</div>
-      <div id="prog-pick" class="chips"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-        <button id="apply-plan" class="btn primary">이 결정으로 보기</button>
-        <button id="reco-btn" class="btn">무엇이 가장 좋을까?</button>
-      </div>
-      <div id="reco" style="margin-top:10px"></div>
+    <h2 class="plain-h">이번에 하면 좋은 것</h2>
+    <div id="action-one"><p class="muted">계획을 정하면 추천 한 줄이 나옵니다.</p></div>
+    <div class="mini-h" style="margin-top:16px">직접 골라 보기 — 이번 학기 설교 결 (하나)</div>
+    <div id="sermon-pick" class="chips"></div>
+    <div class="mini-h" style="margin-top:10px">프로그램 (여럿 가능)</div>
+    <div id="prog-pick" class="chips"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+      <button id="apply-plan" class="btn primary">이 결정으로 보기</button>
+      <button id="reco-btn" class="btn">다른 수도 견줘 보기</button>
     </div>
+    <div id="reco" style="margin-top:10px"></div>
   </section>
+
+  <!-- 더 보기: 왜·효과·앞날 (평이한 문장) -->
+  <details class="card">
+    <summary class="summary-h">더 보기 — 왜 흔들리나 · 내가 한 게 효과 있었나 · 이대로면 앞날 ▾</summary>
+    <div style="margin-top:14px">
+      <h3 class="plain-h">왜 흔들리나</h3>
+      <div id="why" class="plain-p"></div>
+      <h3 class="plain-h" style="margin-top:16px">내가 한 게 효과 있었나</h3>
+      <div id="effect" class="plain-p"></div>
+      <h3 class="plain-h" style="margin-top:16px">이대로면 앞날은</h3>
+      <div id="forecast" class="plain-p"></div>
+    </div>
+  </details>
+
+  <!-- 자세히: 전염 지도·믿음 지수 (그래프) -->
+  <details class="card">
+    <summary class="summary-h">자세히 — 전염 지도와 믿음 지수 (그래프) ▾</summary>
+    <div style="margin-top:14px">
+      <div class="sec-h"><span class="dot covid"></span><h2>전염 지도</h2></div>
+      <p class="muted">한 아이가 흔들리면 친구도 흔들린다. 번지는 모습을 그림으로 본다.</p>
+      <div class="stats" id="stat-row"></div>
+      <div id="diag-body">
+        <div class="diag-grid">
+          <div class="mini">
+            <div class="mini-h">번짐세 — 한 명 주변에서 번지는 속도</div>
+            <div id="rt-val" class="rt">—</div>
+            <div id="rt-note" class="hint"></div>
+          </div>
+          <div class="mini">
+            <div class="mini-h">주마다 흔들리는 아이</div>
+            <canvas id="curve" width="300" height="90"></canvas>
+          </div>
+        </div>
+        <div class="map-h"><span>관계 지도 — 점은 아이, 선은 친구, 색은 상태</span><span id="map-leg" class="hint"></span></div>
+        <canvas id="net" width="600" height="300" class="netcanvas"></canvas>
+        <div id="hold-list"></div>
+      </div>
+      <div class="sec-h" style="margin-top:18px"><span class="dot stock"></span><h2>믿음 지수</h2></div>
+      <div id="proj-body">
+        <div class="map-h"><span>믿음 지수 — 이대로 가면(0~100, 높을수록 든든)</span><span id="idx-now" class="hint"></span></div>
+        <canvas id="idxchart" width="600" height="150" class="netcanvas"></canvas>
+        <div class="diag-grid" style="margin-top:12px">
+          <div class="mini"><div class="mini-h">무엇이 믿음을 움직이나(이번 주)</div><div id="attr-bars"></div></div>
+          <div class="mini"><div class="mini-h">위험 — 나쁜 쪽이면</div><div id="risk-box" class="hint"></div></div>
+        </div>
+      </div>
+    </div>
+  </details>
 
   <p class="hint" style="margin-top:14px">효과 수치는 그럴듯하게 넣어 본 값이지 확인된 사실이 아니다. 현실을 맞히는 도구가 아니라, 방향과 크기를 가늠하는 사유 도구다.</p>
 </div>
@@ -406,7 +442,7 @@
     seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];churchClimate=0.5;parentVitality=0.5;
     var N=val('p-n');for(var i=0;i<N;i++)students.push(makeOne(pickGrade()));
     students.forEach(function(s){s.loner?link(s,students,0,1):link(s,students,3,5);});
-    weekInc=0;layoutNet();runProjection();render();
+    weekInc=0;layoutNet();runProjection();runReco();render();
   }
   function step(){
     week++;
@@ -440,7 +476,69 @@
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
+    updateVerdict();updateVisitList();updateWhy();updateReadouts();
     updateDiag();updateProj();
+  }
+  // ── 평이한 문장 진단서 (목사용 기본 화면) ──
+  function updateVerdict(){
+    var a=students.filter(function(s){return !s.left;});if(!a.length)return;
+    var ri=a.filter(function(s){return s.eng<0.3;}).length,share=ri/a.length,trend=0;
+    if(hist.length>=5){var p=hist[hist.length-5];trend=ri-(p.risk||0);}
+    var light,txt,col;
+    if(share<0.10&&trend<=1){light='🟢';col='var(--good)';txt='지금 우리 부는 든든합니다.';}
+    else if(share>=0.18||(share>=0.10&&trend>=3)){light='🔴';col='var(--bad)';txt='흔들리는 아이가 많고, 더 번지는 중입니다.';}
+    else{light='🟡';col='var(--warn)';txt='조심할 때입니다. 흔들리는 아이가 조금씩 늘고 있어요.';}
+    var dir=trend>=3?'지난달보다 늘었습니다':trend<=-3?'지난달보다 줄었습니다':'지난달과 비슷합니다';
+    var sub='지금 '+a.length+'명 중 <b>'+ri+'명</b>이 흔들리고 있습니다. '+dir+'.';
+    document.getElementById('verdict').innerHTML='<div class="light">'+light+'</div><div><div class="vtext">'+txt+'</div><div class="vsub">'+sub+'</div></div>';
+    document.getElementById('verdict-card').style.borderLeft='5px solid '+col;
+  }
+  function updateVisitList(){
+    var el=document.getElementById('visit-list');var shaken=students.filter(function(s){return !s.left&&s.eng<0.3;});
+    if(!shaken.length){el.innerHTML='<p class="muted" style="color:var(--good)">지금은 급히 만날 아이가 없습니다. 든든한 아이들을 한 걸음 더 깊이 양육하세요.</p>';return;}
+    shaken.sort(function(a,b){return spreadScore(b,students)-spreadScore(a,students)||a.eng-b.eng;});
+    el.innerHTML=shaken.slice(0,5).map(function(s){
+      var frN=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length,why=[],what;
+      if(s.loner||frN<=1){why.push('친구가 거의 없고');what='또래·소그룹에 이어 주기';}
+      if(s.bg==='none')why.push('믿는 가정이 아니고');
+      why.push('요즘 출석이 흔들립니다');
+      if(!what)what='이번 주 안부 전화 한 번';
+      return '<div class="visit"><span class="who">'+GRADE_LABELS[s.grade]+' 한 명</span><span>'+why.join(' ')+' → <b>'+what+'</b></span></div>';
+    }).join('')+(shaken.length>5?'<p class="hint" style="margin-top:6px">외 '+(shaken.length-5)+'명 더 있습니다.</p>':'');
+  }
+  function updateWhy(){
+    var el=document.getElementById('why');if(!el)return;var k=attribution();
+    if(!k){el.innerHTML='한 주가 흐르면 무엇 때문인지 여기 나옵니다.';return;}
+    var neg=Object.keys(k).map(function(key){return [key,k[key]];}).filter(function(r){return r[1]<0&&r[0]!=='기본 흐름';}).sort(function(a,b){return a[1]-b[1];});
+    var pos=Object.keys(k).map(function(key){return [key,k[key]];}).filter(function(r){return r[1]>0;}).sort(function(a,b){return b[1]-a[1];});
+    var s='';
+    if(neg.length)s+='지금 아이들을 가장 끌어내리는 건 <b>'+neg[0][0]+'</b>입니다'+(neg[1]?', 그다음은 '+neg[1][0]+'고요':'')+'. ';
+    if(pos.length)s+='반대로 <b>'+pos[0][0]+'</b>이(가) 가장 크게 받쳐 주고 있습니다.';
+    el.innerHTML=s||'특별히 한쪽으로 쏠리지는 않습니다.';
+  }
+  // 추천·효과·앞날 한 줄(무거운 계산 → 생성/결정 때만)
+  var recoState=null;
+  function runReco(){
+    var plan=captureConfig(),W=48,R=3;
+    var P=simulate(plan,W,R);P=P[P.length-1];
+    var B=simulate({dist:plan.dist,ops:plan.ops,schedule:[],church:plan.church},W,R);B=B[B.length-1];
+    var dIdx=P.idx-B.idx,dDrop=B.drop-P.drop;
+    var effect=dIdx>=2?'지금 계획은 아무것도 안 할 때보다 믿음 지수를 약 <b>'+Math.round(dIdx)+'</b> 더 올리고, 떠나는 아이를 약 <b>'+Math.round(dDrop)+'명</b> 줄입니다. 효과가 있습니다.':'지금 계획은 평소 운영과 큰 차이가 없습니다. 한 걸음 더 과감한 설교·프로그램이 필요할 수 있어요.';
+    var f=projData?projData[projData.length-1]:P;
+    var forecast='이대로 가면 3년 뒤 약 <b>'+Math.round(f.n)+'명</b>이 함께하고, 그동안 떠나는 아이는 약 <b>'+Math.round(f.drop)+'명</b>입니다. 중3에서 고1로 올라갈 때 가장 많이 빠집니다.';
+    var cands=[];
+    Object.keys(SERMON_FOCUS).forEach(function(fo){if(fo===DEC.focus)return;var c=cloneCfg(plan);c.schedule.forEach(function(e){if(e.type==='sermon')e.focus=fo;});cands.push({label:SERMON_FOCUS[fo].label+' 설교',sim:c});});
+    if(!DEC.prog.sg){var c1=cloneCfg(plan);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'소그룹 집중',sim:c1});}
+    if(!DEC.prog.mentor){var c2=cloneCfg(plan);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'멘토 강화',sim:c2});}
+    var best=null;cands.forEach(function(cd){var h=simulate(cd.sim,W,R);var g=h[h.length-1].idx-P.idx;if(!best||g>best.g)best={label:cd.label,g:g};});
+    var action=best&&best.g>=1.5?'지금 계획에 <b>'+best.label+'</b>을(를) 더하면 믿음 지수가 약 <b>'+Math.round(best.g)+'</b> 더 오릅니다. 위 칩을 그렇게 맞추고 "이 결정으로 보기"를 눌러 보세요.':'지금 계획이 이미 괜찮습니다. 흔들리는 아이를 꾸준히 붙드는 데 집중하세요.';
+    recoState={effect:effect,forecast:forecast,action:action};updateReadouts();
+  }
+  function updateReadouts(){
+    if(!recoState)return;
+    var ao=document.getElementById('action-one');if(ao)ao.innerHTML='<div class="callout">'+recoState.action+'</div>';
+    var ef=document.getElementById('effect');if(ef)ef.innerHTML=recoState.effect;
+    var fc=document.getElementById('forecast');if(fc)fc.innerHTML=recoState.forecast;
   }
 
   // ── ① 전염 지도 (COVID 렌즈) ──
