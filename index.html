@@ -81,14 +81,21 @@
   .callout b{color:var(--stock)}
   .summary-h{font-size:14px;font-weight:700;color:#4b5563;cursor:pointer;list-style:none}
   details>summary::-webkit-details-marker{display:none}
+  .tier{font-size:11px;font-weight:800;color:#fff;padding:3px 10px;border-radius:999px;display:inline-block}
+  .tier.s{background:#3a4a6b}.tier.o{background:#9a5b2b}.tier.t{background:#1d6b4f}
+  .tier-sub{font-size:12px;color:var(--mut);margin:6px 0 12px}
+  .opline{font-size:14px;line-height:1.75;padding:2px 0}
+  .stepn{display:flex;gap:10px;padding:9px 0;border-top:1px dashed var(--line);font-size:14px;line-height:1.55}
+  .stepn:first-child{border-top:none}
+  .stepn .sn{font-weight:800;color:var(--stock);flex:none;min-width:54px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="topbar">
     <div class="brand">
-      <h1>믿음 대시보드</h1>
-      <p class="lead">이번 학기, 우리 아이들의 믿음을 어떻게 끌어올릴까</p>
+      <h1>다음세대 작전 상황실</h1>
+      <p class="lead">영적 전쟁이다. 우리 싸움은 혈과 육이 아니다(엡 6:12). 흔들리는 아이를 붙들어 믿음에 세운다.</p>
     </div>
     <div class="controls">
       <span class="wk"><b id="wk">0</b>주차 · <b id="yr">1</b>년차</span>
@@ -98,25 +105,40 @@
     </div>
   </header>
 
-  <!-- 핵심 진단서 (열자마자) -->
+  <!-- 전략 · 연간 전쟁 -->
+  <section class="card">
+    <span class="tier s">전략 · 연간 전쟁</span>
+    <div class="tier-sub">왜 싸우나, 어디로 가나 (한 해 단위, 잘 바뀌지 않는다)</div>
+    <div id="war-aim" class="opline"></div>
+    <div id="war-index" class="opline"></div>
+  </section>
+
+  <!-- 작전 · 이번 시즌 -->
+  <section class="card">
+    <span class="tier o">작전 · 이번 시즌</span>
+    <div class="tier-sub">무엇을 언제 (설교 시리즈·수련회 같은 한 묶음의 전투, D-day, 병력)</div>
+    <div id="op-series" class="opline"></div>
+    <div id="op-dday" class="opline"></div>
+    <div id="op-force" class="opline"></div>
+    <div id="op-front" class="opline"></div>
+  </section>
+
+  <!-- 전술 · 이번 주 전투 -->
   <section class="card" id="verdict-card">
-    <div id="verdict" class="verdict"><div class="light">⏳</div><div><div class="vtext">한 주를 넘기면 진단이 나옵니다.</div><div class="vsub">위 "다음 주 ▶"를 눌러 보세요.</div></div></div>
-  </section>
-
-  <section class="card">
-    <h2 class="plain-h">이번 주 꼭 만날 아이</h2>
-    <div id="visit-list"><p class="muted">한 주가 흐르면, 가장 먼저 챙길 아이가 여기 모입니다.</p></div>
-  </section>
-
-  <section class="card">
-    <h2 class="plain-h">이번에 하면 좋은 것</h2>
-    <div id="action-one"><p class="muted">계획을 정하면 추천 한 줄이 나옵니다.</p></div>
-    <div class="mini-h" style="margin-top:16px">직접 골라 보기 — 이번 학기 설교 결 (하나)</div>
+    <span class="tier t">전술 · 이번 주 전투</span>
+    <div class="tier-sub">누구를 어떻게 (이번 주)</div>
+    <div id="verdict" class="verdict" style="margin-top:4px"><div class="light">⏳</div><div><div class="vtext">한 주를 넘기면 전세가 나옵니다.</div><div class="vsub">위 "다음 주 ▶"를 눌러 보세요.</div></div></div>
+    <h2 class="plain-h" style="margin-top:18px">이번 주 붙들 병사 (최전선)</h2>
+    <div id="visit-list"><p class="muted">한 주가 흐르면, 가장 먼저 붙들 아이가 여기 모입니다.</p></div>
+    <h2 class="plain-h" style="margin-top:18px">이번 주 명령</h2>
+    <div id="action-one"><p class="muted">작전을 정하면 명령이 나옵니다.</p></div>
+    <div id="step-list" style="margin-top:10px"></div>
+    <div class="mini-h" style="margin-top:18px">작전 바꾸기 — 설교 결 (하나)</div>
     <div id="sermon-pick" class="chips"></div>
     <div class="mini-h" style="margin-top:10px">프로그램 (여럿 가능)</div>
     <div id="prog-pick" class="chips"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-      <button id="apply-plan" class="btn primary">이 결정으로 보기</button>
+      <button id="apply-plan" class="btn primary">이 작전으로 보기</button>
       <button id="reco-btn" class="btn">다른 수도 견줘 보기</button>
     </div>
     <div id="reco" style="margin-top:10px"></div>
@@ -476,7 +498,7 @@
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
-    updateVerdict();updateVisitList();updateWhy();updateReadouts();
+    updateVerdict();updateVisitList();updateWhy();updateWar();updateReadouts();
     updateDiag();updateProj();
   }
   // ── 평이한 문장 진단서 (목사용 기본 화면) ──
@@ -485,9 +507,9 @@
     var ri=a.filter(function(s){return s.eng<0.3;}).length,share=ri/a.length,trend=0;
     if(hist.length>=5){var p=hist[hist.length-5];trend=ri-(p.risk||0);}
     var light,txt,col;
-    if(share<0.10&&trend<=1){light='🟢';col='var(--good)';txt='지금 우리 부는 든든합니다.';}
-    else if(share>=0.18||(share>=0.10&&trend>=3)){light='🔴';col='var(--bad)';txt='흔들리는 아이가 많고, 더 번지는 중입니다.';}
-    else{light='🟡';col='var(--warn)';txt='조심할 때입니다. 흔들리는 아이가 조금씩 늘고 있어요.';}
+    if(share<0.10&&trend<=1){light='🟢';col='var(--good)';txt='전선이 든든합니다.';}
+    else if(share>=0.18||(share>=0.10&&trend>=3)){light='🔴';col='var(--bad)';txt='전선이 뚫리는 중입니다 — 흔들리는 아이가 번집니다.';}
+    else{light='🟡';col='var(--warn)';txt='전선이 조금씩 밀립니다. 지금 손써야 합니다.';}
     var dir=trend>=3?'지난달보다 늘었습니다':trend<=-3?'지난달보다 줄었습니다':'지난달과 비슷합니다';
     var sub='지금 '+a.length+'명 중 <b>'+ri+'명</b>이 흔들리고 있습니다. '+dir+'.';
     document.getElementById('verdict').innerHTML='<div class="light">'+light+'</div><div><div class="vtext">'+txt+'</div><div class="vsub">'+sub+'</div></div>';
@@ -495,7 +517,7 @@
   }
   function updateVisitList(){
     var el=document.getElementById('visit-list');var shaken=students.filter(function(s){return !s.left&&s.eng<0.3;});
-    if(!shaken.length){el.innerHTML='<p class="muted" style="color:var(--good)">지금은 급히 만날 아이가 없습니다. 든든한 아이들을 한 걸음 더 깊이 양육하세요.</p>';return;}
+    if(!shaken.length){el.innerHTML='<p class="muted" style="color:var(--good)">지금 최전선에 무너지는 병사가 없습니다. 든든한 아이들을 한 걸음 더 깊이 세우세요.</p>';return;}
     shaken.sort(function(a,b){return spreadScore(b,students)-spreadScore(a,students)||a.eng-b.eng;});
     el.innerHTML=shaken.slice(0,5).map(function(s){
       var frN=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length,why=[],what;
@@ -531,7 +553,7 @@
     if(!DEC.prog.sg){var c1=cloneCfg(plan);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'소그룹 집중',sim:c1});}
     if(!DEC.prog.mentor){var c2=cloneCfg(plan);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'멘토 강화',sim:c2});}
     var best=null;cands.forEach(function(cd){var h=simulate(cd.sim,W,R);var g=h[h.length-1].idx-P.idx;if(!best||g>best.g)best={label:cd.label,g:g};});
-    var action=best&&best.g>=1.5?'지금 계획에 <b>'+best.label+'</b>을(를) 더하면 믿음 지수가 약 <b>'+Math.round(best.g)+'</b> 더 오릅니다. 위 칩을 그렇게 맞추고 "이 결정으로 보기"를 눌러 보세요.':'지금 계획이 이미 괜찮습니다. 흔들리는 아이를 꾸준히 붙드는 데 집중하세요.';
+    var action=best&&best.g>=1.5?'📣 명령: 지금 작전에 <b>'+best.label+'</b>을(를) 더하라. 전세 지수가 약 <b>+'+Math.round(best.g)+'</b> 오른다. 아래 칩을 그렇게 맞추고 "이 작전으로 보기".':'📣 명령: 지금 작전이 이미 괜찮다. 최전선의 흔들리는 아이를 꾸준히 붙드는 데 집중하라.';
     recoState={effect:effect,forecast:forecast,action:action};updateReadouts();
   }
   function updateReadouts(){
@@ -539,6 +561,33 @@
     var ao=document.getElementById('action-one');if(ao)ao.innerHTML='<div class="callout">'+recoState.action+'</div>';
     var ef=document.getElementById('effect');if(ef)ef.innerHTML=recoState.effect;
     var fc=document.getElementById('forecast');if(fc)fc.innerHTML=recoState.forecast;
+  }
+  // ── 전쟁 위계(전략·작전·전술) 채우기 — 매주, 가벼운 계산 ──
+  function sermonProg(){var s=null;schedule.forEach(function(ev){if(ev.type==='sermon'&&periodActive(ev,week))s=ev;});return s?{focus:s.focus,x:week-s.start+1,y:s.weeks}:null;}
+  function nextBigOp(){var T={retreat:'수련회',sooneung:'수능',exam:'시험기간',outreach:'전도 주간',smallgroup:'소그룹 집중'};
+    for(var d=0;d<=24;d++){var w=week+d,found=null;schedule.forEach(function(ev){if(!T[ev.type]||found)return;var on=(ev.type==='exam'||ev.type==='sooneung')?periodActive(ev,w):fires(ev,w);if(on)found={label:T[ev.type],d:d};});if(found)return found;}return null;}
+  function stepRow(n,t,d){return '<div class="stepn"><span class="sn">STEP '+n+'</span><span><b>'+t+'</b> — '+d+'</span></div>';}
+  function updateWar(){
+    var a=students.filter(function(s){return !s.left;}),n=a.length||1;
+    var aim=document.getElementById('war-aim');if(aim)aim.innerHTML='🎯 올해의 전쟁: 흔들리는 우리 아이들을 붙들어 믿음에 굳게 세운다. 지금 전략은 <b>'+SERMON_FOCUS[DEC.focus].label+' 설교</b>로 바탕을 다지는 것.';
+    var wi=document.getElementById('war-index');
+    if(wi){var nowIdx=hist.length?Math.round(hist[hist.length-1].idx):beliefIndex(a);var y1=(projData&&projData[23])?Math.round(projData[23].idx):null;
+      var arrow=y1==null?'':y1>nowIdx+1?'<b style="color:var(--good)">오르는 중 ▲</b>':y1<nowIdx-1?'<b style="color:var(--bad)">내리는 중 ▼</b>':'제자리';
+      wi.innerHTML='⚔️ 전세 지수 지금 <b>'+nowIdx+'</b>'+(y1!=null?' → 이대로 1년 뒤 <b>'+y1+'</b> ('+arrow+')':'')+' <span class="hint">0~100, 높을수록 든든</span>';}
+    var sp=sermonProg(),os=document.getElementById('op-series');
+    if(os)os.innerHTML=sp?'📖 이번 작전: <b>'+SERMON_FOCUS[sp.focus].label+' 설교</b> 시리즈 '+Math.max(1,sp.x)+'/'+sp.y+'주차':'📖 지금 진행 중인 설교 작전이 없다(대기 중).';
+    var op=nextBigOp(),od=document.getElementById('op-dday');
+    if(od)od.innerHTML=op?'⏰ 다가오는 큰 작전: <b>'+op.label+'</b>까지 '+(op.d===0?'<b>이번 주</b>':'<b>'+op.d+'주</b>'):'⏰ 24주 안에 잡힌 큰 작전이 없다 — 하나 잡으면 전세를 끌어올린다.';
+    var tc=val('s-tc'),of=document.getElementById('op-force');
+    if(of)of.innerHTML='🛡 병력: 교사 <b>'+tc+'명</b> (한 명이 학생 약 '+Math.round(n/Math.max(1,tc))+'명 담당)';
+    var ri=a.filter(function(s){return s.eng<0.3;}).length,rt=rtCalc(),ofr=document.getElementById('op-front');
+    if(ofr){var f=(rt!=null&&rt>=1.15)?'<b style="color:var(--bad)">번지는 중</b> — 최전선부터 막아야 한다':(ri/n>=0.15?'<b style="color:var(--warn)">흔들림</b> — 곳곳에서 밀린다':'<b style="color:var(--good)">잠잠</b> — 방어선이 버틴다');ofr.innerHTML='📡 전선: '+f;}
+    var sl=document.getElementById('step-list');
+    if(sl){var prog=sp?(SERMON_FOCUS[sp.focus].label+' 설교'):'이번 주 설교';
+      var s3=op?(op.label+'('+(op.d===0?'이번 주':op.d+'주 뒤')+') 준비 시작 — 참가 독려·교사 배치'):'다음 수련회·전도 작전을 달력에 잡기';
+      sl.innerHTML=stepRow(1,'사수','흔들리는 아이 '+ri+'명 중 위 "최전선" 아이부터 이번 주 붙들기(안부·또래 연결).')+
+        stepRow(2,'화력','이번 주 '+prog+'로 전체를 끌어올리기.')+
+        stepRow(3,'다음 작전',s3);}
   }
 
   // ── ① 전염 지도 (COVID 렌즈) ──
