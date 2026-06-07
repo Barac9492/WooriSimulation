@@ -94,6 +94,16 @@
   .gauge-fill{height:100%;border-radius:7px}
   .gauge-fill.att{background:var(--warn)}.gauge-fill.own{background:var(--stock)}
   .gauge .hint{font-size:11.5px;margin-top:2px}
+  .northstar{display:flex;align-items:baseline;gap:10px;background:#0f172a;color:#fff;border-radius:12px;padding:13px 16px;margin:4px 0 10px}
+  .northstar .ns-v{font-size:30px;font-weight:800;line-height:1}
+  .northstar .ns-l{font-size:13px;color:#cbd5e1;line-height:1.4}
+  .northstar .ns-l b{color:#fff}
+  .stagebar{display:flex;height:16px;border-radius:7px;overflow:hidden;border:1px solid var(--line);margin-top:4px}
+  .stagebar .s1{background:#cbd5e1}.stagebar .s2{background:var(--warn)}.stagebar .s3{background:var(--good)}
+  .stage-leg{display:flex;gap:13px;font-size:11.5px;color:var(--mut);margin-top:5px;flex-wrap:wrap}
+  .stage-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:middle;margin-right:4px}
+  .stage-leg i.s1{background:#cbd5e1}.stage-leg i.s2{background:var(--warn)}.stage-leg i.s3{background:var(--good)}
+  .ewi-chip{display:inline-block;font-size:12.5px;font-weight:600;padding:4px 11px;border-radius:999px;margin-top:8px}
   .card.ctx{padding:11px 15px;background:#f7f9fc}
   .card.ctx .opline{font-size:13px;line-height:1.6}
   .card.hero{border:1.5px solid #c9d4e6;box-shadow:0 2px 8px rgba(20,30,50,.07)}
@@ -134,8 +144,11 @@
     <div id="verdict" class="verdict" style="margin-top:10px"><div class="light">⏳</div><div><div class="vtext">한 주를 넘기면 지금 상태가 나옵니다.</div><div class="vsub">위 "다음 주 ▶"를 눌러 보세요.</div></div></div>
     <div class="mini-h" style="margin-top:14px">지금 우리 부 — 한 줄로</div>
     <div id="frontbar"></div>
-    <div class="mini-h" style="margin-top:16px">겉(출석)과 속(믿음) — 둘은 다르다</div>
+    <div id="northstar-box"></div>
+    <div class="mini-h" style="margin-top:14px">겉(출석)과 속(믿음) — 둘은 다르다</div>
     <div id="gauges"></div>
+    <div class="mini-h" style="margin-top:14px">믿음 단계 — 빌려온 믿음에서 자기 믿음으로</div>
+    <div id="stage-box"></div>
     <h2 class="plain-h" style="margin-top:16px">이번 주 먼저 만날 아이</h2>
     <div id="visit-list"><p class="muted">한 주가 흐르면, 가장 먼저 만날 아이가 여기 모입니다.</p></div>
     <h2 class="plain-h" style="margin-top:16px">이번 주 할 일</h2>
@@ -686,22 +699,40 @@
     updateVerdict();updateFront();updateGauges();updateVisitList();updateWhy();updateWar();updateReadouts();updateRecap();
     updateDiag();updateProj();
   }
-  // 겉(출석)과 속(내면화)을 두 눈금으로 나란히. 둘의 차이가 핵심 메시지다. + 전환기 카운트다운.
+  // 겉(출석)/속(내면화) 두 눈금 + 북극성(졸업 신앙 잔존) + 모래성 경고 + 믿음 단계 + 전환기 카운트다운.
   function updateGauges(){
     var el=document.getElementById('gauges');if(!el)return;
     var a=students.filter(function(s){return !s.left;});if(!a.length){el.innerHTML='';return;}
     var actR=Math.round(a.filter(function(s){return s.eng>=0.55;}).length/a.length*100);
-    var ownR=ownRate(a),gap=actR-ownR;
-    var read=gap>=20?'<b style="color:var(--bad)">출석은 받쳐 주지만 속이 비어 갑니다.</b> 습관으로 나오는 아이가 많습니다. 믿음이 자기 것이 되게 하는 양육(부모·멘토·의심을 나눌 자리)이 필요합니다.'
-      :gap>=10?'겉은 든든하나, 믿음이 아직 자기 것이 안 된 아이가 있습니다. 한 걸음 더 깊이 세우세요.'
-      :'출석과 속이 함께 갑니다. 든든합니다.';
+    var ownR=ownRate(a),gap=actR-ownR,frag=fragIndex(a),ewi=earlyWarn(a);
     function bar(label,v,cls,hint){return '<div class="gauge"><div class="gauge-top"><span>'+label+'</span><b>'+v+'%</b></div><div class="gauge-bar"><div class="gauge-fill '+cls+'" style="width:'+v+'%"></div></div><div class="hint">'+hint+'</div></div>';}
     var rem=week%WEEKS_PER_YEAR,toY=rem===0?WEEKS_PER_YEAR:WEEKS_PER_YEAR-rem;
     var g3=a.filter(function(s){return s.grade===3;}),g3risk=g3.filter(function(s){return cliffProb(s)>=0.35;}).length;
-    var trans='<div class="hint" style="margin-top:8px">⏳ 다음 진급(중3→고1 전환·고3 졸업)까지 약 <b>'+toY+'주</b>. 지금이면 중3 '+g3.length+'명 중 <b>'+g3risk+'명</b>이 전환에서 흔들릴 수 있습니다(헌신·내면화 약함).</div>';
+    var sand=frag>=30?'<div class="callout" style="margin-top:8px;font-size:14px;background:#fef2f2;border-color:#fecaca"><b style="color:var(--bad)">모래성 경고.</b> 지금 출석의 약 <b>'+frag+'%</b>는 믿음이 아니라 외부(부모·또래·습관)가 떠받치는 몫입니다. 전환기에 그 받침이 사라지면 무너질 수 있습니다.</div>'
+      :gap>=12?'<div class="callout" style="margin-top:8px;font-size:14px">겉은 든든하나, 믿음이 아직 자기 것이 안 된 아이가 있습니다(출석의 '+frag+'%가 외부 의존). 한 걸음 더 깊이 세우세요.</div>'
+      :'<div class="callout" style="margin-top:8px;font-size:14px">출석과 속이 함께 갑니다. 든든합니다.</div>';
+    var ewc=ewi>=35?'background:#fef2f2;color:var(--bad)':ewi>=22?'background:#fffbeb;color:#b45309':'background:#f0fdf4;color:#15803d';
+    var trans='<div class="hint" style="margin-top:8px">⏳ 다음 진급(중3→고1 전환·고3 졸업)까지 약 <b>'+toY+'주</b>. 지금이면 중3 '+g3.length+'명 중 <b>'+g3risk+'명</b>이 전환에서 흔들릴 수 있습니다.</div>'+
+      '<span class="ewi-chip" style="'+ewc+'">조기경보 '+ewi+' — 출석이 무너지기 전, 속에서 자라는 위험</span>';
     el.innerHTML=bar('겉 — 출석으로 든든한 아이',actR,'att','매주 잘 나오는 아이의 비율')+
-      bar('속 — 믿음이 자기 것이 된 아이',ownR,'own','전환기를 넘게 하는 진짜 힘(내면화)')+
-      '<div class="callout" style="margin-top:8px;font-size:14px">'+read+'</div>'+trans;
+      bar('속 — 믿음이 자기 것이 된 아이',ownR,'own','전환기를 넘게 하는 진짜 힘(내면화)')+sand+trans;
+    updateNorthStar(a);updateStageBox(a);
+  }
+  // 북극성: 이대로 가면 졸업하는 아이 중 신앙을 들고 나가는 비율. 모든 사역의 최종 목적지.
+  function updateNorthStar(a){
+    var el=document.getElementById('northstar-box');if(!el)return;
+    var live=(gradKeep+gradLapse)?Math.round(gradKeep/(gradKeep+gradLapse)*100):null;
+    var proj=(projData&&projData.length&&projData[projData.length-1].carry!=null)?Math.round(projData[projData.length-1].carry):null;
+    var v=live!=null?live:proj,lbl=live!=null?'지금까지 졸업한 아이 중 신앙을 들고 나간 비율':'이대로 가면 졸업하는 아이 중 신앙을 들고 나갈 비율(3년 전망)';
+    if(v==null){el.innerHTML='';return;}
+    el.innerHTML='<div class="northstar"><span class="ns-v">'+v+'%</span><span class="ns-l"><b>졸업 신앙 잔존</b> — '+lbl+'.<br>출석 수가 아니라, 이 아이들이 자기 믿음으로 세상에 나가는가가 최종 목적이다.</span></div>';
+  }
+  // 믿음 단계 분포: 부여된(빌려온) → 탐색(의심) → 내면화(자기 것). 오른쪽이 두꺼워지는 게 목표.
+  function updateStageBox(a){
+    var el=document.getElementById('stage-box');if(!el)return;var sd=stageDist(a),t=a.length||1;
+    function w(x){return Math.round(x/t*100);}
+    el.innerHTML='<div class="stagebar"><div class="s1" style="width:'+w(sd[0])+'%"></div><div class="s2" style="width:'+w(sd[1])+'%"></div><div class="s3" style="width:'+w(sd[2])+'%"></div></div>'+
+      '<div class="stage-leg"><span><i class="s1"></i>부여된 '+sd[0]+'명</span><span><i class="s2"></i>탐색 중 '+sd[1]+'명</span><span><i class="s3"></i>내면화 '+sd[2]+'명</span></div>';
   }
   // ── 평이한 문장 진단서 (목사용 기본 화면) ──
   function updateVerdict(){
@@ -722,7 +753,8 @@
     if(hist.length<2){sum.innerHTML='<span class="muted">아직 진행 전입니다. "다음 주 ▶"로 몇 주 흘려보면, 그동안 무엇이 바뀌고 무슨 일이 있었는지 여기 정리됩니다.</span>';if(lg)lg.innerHTML='';return;}
     var a=hist[0],b=hist[hist.length-1],sg=function(v){return v>0?'+'+v:''+v;};
     var oa=a.own!=null?a.own:0,ob=b.own!=null?b.own:0;
-    sum.innerHTML='지난 <b>'+week+'주</b> 동안 — 믿음 점수 '+a.idx+' → <b>'+b.idx+'</b>('+sg(b.idx-a.idx)+') · 내면화 '+oa+' → <b>'+ob+'</b>('+sg(ob-oa)+') · 흔들리는 아이 '+a.risk+' → <b>'+b.risk+'</b>('+sg(b.risk-a.risk)+') · 그동안 떠난 아이 누적 <b>'+dropouts+'</b>명, 지금 함께 <b>'+b.n+'</b>명.';
+    var cf=(gradKeep+gradLapse)?(' · 졸업 신앙 잔존 <b>'+Math.round(gradKeep/(gradKeep+gradLapse)*100)+'%</b>('+gradKeep+'/'+(gradKeep+gradLapse)+'명)'):'';
+    sum.innerHTML='지난 <b>'+week+'주</b> 동안 — 믿음 점수 '+a.idx+' → <b>'+b.idx+'</b>('+sg(b.idx-a.idx)+') · 내면화 '+oa+' → <b>'+ob+'</b>('+sg(ob-oa)+') · 흔들리는 아이 '+a.risk+' → <b>'+b.risk+'</b>('+sg(b.risk-a.risk)+')'+cf+' · 그동안 떠난 아이 누적 <b>'+dropouts+'</b>명, 지금 함께 <b>'+b.n+'</b>명.';
     if(lg){if(!eventLog.length)lg.innerHTML='<div class="hint" style="margin-top:8px">특별한 사건 없이 평상시로 흘렀습니다.</div>';
       else lg.innerHTML='<div class="mini-h" style="margin-top:10px">주요 사건</div>'+eventLog.slice().reverse().map(function(e){return '<div class="logrow"><span class="logwk">'+e.wk+'주</span><span'+(e.warn?' style="color:var(--bad)"':'')+'>'+e.t+'</span></div>';}).join('');}
   }
@@ -762,17 +794,18 @@
     var plan=captureConfig(),W=48,R=3;
     var P=simulate(plan,W,R);P=P[P.length-1];
     var B=simulate({dist:plan.dist,ops:plan.ops,schedule:[],church:plan.church},W,R);B=B[B.length-1];
-    var dIdx=P.idx-B.idx,dDrop=B.drop-P.drop;
-    var effect=dIdx>=2?'지금 계획은 아무것도 안 할 때보다 믿음 지수를 약 <b>'+Math.round(dIdx)+'</b> 더 올리고, 떠나는 아이를 약 <b>'+Math.round(dDrop)+'명</b> 줄입니다. 효과가 있습니다.':'지금 계획은 평소 운영과 큰 차이가 없습니다. 한 걸음 더 과감한 설교·프로그램이 필요할 수 있어요.';
+    var dIdx=P.idx-B.idx,dDrop=B.drop-P.drop,dCarry=(P.carry||0)-(B.carry||0);
+    var effect=dIdx>=2?'지금 계획은 아무것도 안 할 때보다 믿음 지수를 약 <b>'+Math.round(dIdx)+'</b> 더 올리고, 떠나는 아이를 약 <b>'+Math.round(dDrop)+'명</b> 줄이며, 졸업 신앙 잔존을 약 <b>'+(dCarry>=0?'+':'')+Math.round(dCarry)+'%p</b> 바꿉니다. 효과가 있습니다.':'지금 계획은 평소 운영과 큰 차이가 없습니다. 한 걸음 더 과감한 양육이 필요할 수 있어요.';
     var f=projData?projData[projData.length-1]:P;
-    var forecast='이대로 가면 3년 뒤 약 <b>'+Math.round(f.n)+'명</b>이 함께하고, 그동안 떠나는 아이는 약 <b>'+Math.round(f.drop)+'명</b>입니다. 중3에서 고1로 올라갈 때 가장 많이 빠집니다.';
+    var forecast='이대로 가면 3년 뒤 약 <b>'+Math.round(f.n)+'명</b>이 함께하고, 그동안 떠나는 아이는 약 <b>'+Math.round(f.drop)+'명</b>입니다. 무엇보다 <b>졸업하는 아이 중 신앙을 들고 나가는 비율은 약 '+(f.carry!=null?Math.round(f.carry):'—')+'%</b>입니다. 출석보다 이 숫자가 진짜 성적표입니다.';
     var cands=[];
     Object.keys(SERMON_FOCUS).forEach(function(fo){if(fo===DEC.focus)return;var c=cloneCfg(plan);c.schedule.forEach(function(e){if(e.type==='sermon')e.focus=fo;});cands.push({label:SERMON_FOCUS[fo].label+' 설교',sim:c});});
     if(!DEC.prog.sg){var c1=cloneCfg(plan);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'소그룹 집중',sim:c1});}
     if(!DEC.prog.mentor){var c2=cloneCfg(plan);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'멘토 강화',sim:c2});}
     var c3=cloneCfg(plan);c3.ops.daracbang=Math.min(1,(c3.ops.daracbang!=null?c3.ops.daracbang:0.5)+0.2);cands.push({label:'부모 다락방 강화',sim:c3});
-    var best=null;cands.forEach(function(cd){var h=simulate(cd.sim,W,R);var g=h[h.length-1].idx-P.idx;if(!best||g>best.g)best={label:cd.label,g:g};});
-    var action=best&&best.g>=1.5?'📣 명령: 지금 작전에 <b>'+best.label+'</b>을(를) 더하라. 전세 지수가 약 <b>+'+Math.round(best.g)+'</b> 오른다. 아래 칩을 그렇게 맞추고 "이 작전으로 보기".':'📣 명령: 지금 작전이 이미 괜찮다. 최전선의 흔들리는 아이를 꾸준히 붙드는 데 집중하라.';
+    // 후보는 출석이 아니라 북극성(내면화+졸업 신앙 잔존)으로 견준다. 출석만 올리는 한 수는 모래성일 수 있다.
+    var best=null;cands.forEach(function(cd){var h=simulate(cd.sim,W,R);var L=h[h.length-1];var g=(L.own-P.own)+0.5*((L.carry||0)-(P.carry||0));if(!best||g>best.g)best={label:cd.label,g:g};});
+    var action=best&&best.g>=1.2?'📣 가장 큰 한 수: <b>'+best.label+'</b>. 출석이 아니라 <b>내면화(자기 믿음)</b>를 가장 많이 끌어올린다. 아래 칩을 그렇게 맞추고 "이 계획으로 보기".':'📣 지금 계획이 이미 단단하다. 흔들리는 아이를 꾸준히 붙들고, 속(내면화)을 한 단계 더 깊이 세우는 데 집중하라.';
     recoState={effect:effect,forecast:forecast,action:action};updateReadouts();
   }
   function updateReadouts(){
