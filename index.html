@@ -50,6 +50,7 @@
   .grp{font-size:12px;font-weight:700;color:var(--mut);margin:16px 0 6px;text-transform:none}
   .slab{display:flex;align-items:center;gap:9px;margin:7px 0;font-size:12.5px}
   .slab span{min-width:96px;color:#4b5563}
+  .slab span small{display:block;font-weight:400;font-size:10.5px;color:var(--mut);line-height:1.3;margin-top:1px}
   .slab input[type=range]{flex:1;accent-color:var(--accent)}
   .slab b{min-width:42px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
   .hint{font-size:11.5px;color:var(--mut);line-height:1.6}
@@ -269,29 +270,35 @@
       <label class="btn sm" style="position:relative;overflow:hidden;cursor:pointer">CSV 불러오기<input type="file" id="csv-file" accept=".csv,text/csv" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>
     </div>
     <div id="roster-status" class="hint" style="margin-bottom:6px"></div>
+    <details style="margin-bottom:8px"><summary class="summary-h" style="font-size:12.5px">엑셀 칸에 뭘 적나 ▾</summary>
+      <div class="hint" style="line-height:1.7;margin-top:6px">
+      <b>학년</b> 중1~고3 · <b>부모신앙</b> 1 안 믿음·2 보통·3 신실/모태 · <b>형제신앙</b> 동일 1~3 · <b>교회친구수</b> 마음 나누는 또래 수 0~6 · <b>소그룹·멘토·봉사역할</b> 있으면 Y 없으면 N · <b>출석4주</b> 최근 4주 중 나온 횟수 0~4 · <b>QT</b> 혼자 말씀·기도 1 거의 안 함~5 매일 · <b>학업압박</b> 1 적음~5 심함 · <b>신앙주인의식</b> 1 부모 따라서~5 내 믿음 · <b>가정예배</b> 1 안 함~5 자주 · <b>챙기는어른</b> 이름 알고 챙기는 어른 수 0~5 · <b>소속감</b> 1 겉돎~5 깊이 속함 · <b>의심나눔</b> 1 못 함~5 편히 함 · <b>부모관계</b> 1 차가움~5 따뜻함.
+      <br>다 못 채워도 된다. 아는 칸만 적고 빈 칸은 보통(3)으로 둔다.
+      </div>
+    </details>
     <div class="grp">또는 분포로 (명단 없이)</div>
     <div class="preset">
       <button class="btn sm" id="pre-decline">쇠퇴 중</button>
       <button class="btn sm" id="pre-flat">정체</button>
       <button class="btn sm" id="pre-grow">성장 중</button>
     </div>
-    <div class="grp">우리 부 진단</div>
-    <label class="slab"><span>전체 인원</span><input type="range" id="p-n" min="60" max="220" step="1" value="150"><b id="v-p-n"></b></label>
-    <label class="slab"><span>활발 비율</span><input type="range" id="p-active" min="0" max="100" step="1" value="55"><b id="v-p-active"></b></label>
-    <label class="slab"><span>위기 비율</span><input type="range" id="p-risk" min="0" max="100" step="1" value="12"><b id="v-p-risk"></b></label>
-    <label class="slab"><span>중등 비중</span><input type="range" id="p-mid" min="0" max="100" step="1" value="52"><b id="v-p-mid"></b></label>
-    <label class="slab"><span>고등 비중</span><input type="range" id="p-high" min="0" max="100" step="1" value="48"><b id="v-p-high"></b></label>
-    <label class="slab"><span>모태신앙</span><input type="range" id="p-mota" min="0" max="100" step="1" value="40"><b id="v-p-mota"></b></label>
-    <label class="slab"><span>비신앙 가정</span><input type="range" id="p-none" min="0" max="100" step="1" value="15"><b id="v-p-none"></b></label>
-    <label class="slab"><span>코어(제자)</span><input type="range" id="p-core" min="0" max="100" step="1" value="30"><b id="v-p-core"></b></label>
-    <label class="slab"><span>외톨이</span><input type="range" id="p-loner" min="0" max="100" step="1" value="15"><b id="v-p-loner"></b></label>
-    <div class="grp">평소 사역</div>
-    <label class="slab"><span>소그룹 비중</span><input type="range" id="s-sg" min="0" max="100" step="1" value="55"><b id="v-s-sg"></b></label>
-    <label class="slab"><span>멘토링 비중</span><input type="range" id="s-mt" min="0" max="100" step="1" value="30"><b id="v-s-mt"></b></label>
-    <label class="slab"><span>교사 수</span><input type="range" id="s-tc" min="6" max="40" step="1" value="25"><b id="v-s-tc"></b></label>
-    <label class="slab"><span>신입생(연간)</span><input type="range" id="s-in" min="0" max="90" step="1" value="50"><b id="v-s-in"></b></label>
-    <label class="slab"><span>변화 속도</span><input type="range" id="s-speed" min="20" max="100" step="5" value="40"><b id="v-s-speed"></b></label>
-    <label class="slab"><span>부모 다락방</span><input type="range" id="s-daracbang" min="0" max="100" step="1" value="50"><b id="v-s-daracbang"></b></label>
+    <div class="grp">우리 부 진단 <small style="font-weight:400;color:var(--mut)">정확한 숫자 몰라도 된다. 대략 느낌으로 맞추라.</small></div>
+    <label class="slab"><span>전체 인원<small>지금 명단에 있는 아이</small></span><input type="range" id="p-n" min="60" max="220" step="1" value="150"><b id="v-p-n"></b></label>
+    <label class="slab"><span>활발한 아이<small>매주 잘 나오고 마음도 있는 아이</small></span><input type="range" id="p-active" min="0" max="100" step="1" value="55"><b id="v-p-active"></b></label>
+    <label class="slab"><span>흔들리는 아이<small>요즘 안 보이거나 마음이 떠난 아이</small></span><input type="range" id="p-risk" min="0" max="100" step="1" value="12"><b id="v-p-risk"></b></label>
+    <label class="slab"><span>중등 비중<small>중1~3 비율(나머지는 고등)</small></span><input type="range" id="p-mid" min="0" max="100" step="1" value="52"><b id="v-p-mid"></b></label>
+    <label class="slab"><span>고등 비중<small>고1~3 비율</small></span><input type="range" id="p-high" min="0" max="100" step="1" value="48"><b id="v-p-high"></b></label>
+    <label class="slab"><span>믿는 가정 아이<small>어릴 때부터 신앙 가정에서 자란 아이</small></span><input type="range" id="p-mota" min="0" max="100" step="1" value="40"><b id="v-p-mota"></b></label>
+    <label class="slab"><span>혼자 다니는 아이<small>집은 안 믿는데 저 혼자 나오는 아이</small></span><input type="range" id="p-none" min="0" max="100" step="1" value="15"><b id="v-p-none"></b></label>
+    <label class="slab"><span>헌신된 제자<small>예배·봉사에 진심인 핵심 아이(코어)</small></span><input type="range" id="p-core" min="0" max="100" step="1" value="30"><b id="v-p-core"></b></label>
+    <label class="slab"><span>외톨이<small>교회에 친한 친구가 거의 없는 아이</small></span><input type="range" id="p-loner" min="0" max="100" step="1" value="15"><b id="v-p-loner"></b></label>
+    <div class="grp">평소 사역 <small style="font-weight:400;color:var(--mut)">우리 부가 늘 하는 것</small></div>
+    <label class="slab"><span>소그룹 참여<small>소그룹(목장)에 든 아이 비율</small></span><input type="range" id="s-sg" min="0" max="100" step="1" value="55"><b id="v-s-sg"></b></label>
+    <label class="slab"><span>멘토 있는 아이<small>따로 챙겨 주는 멘토가 있는 비율</small></span><input type="range" id="s-mt" min="0" max="100" step="1" value="30"><b id="v-s-mt"></b></label>
+    <label class="slab"><span>교사 수<small>실제로 아이를 맡아 챙기는 교사</small></span><input type="range" id="s-tc" min="6" max="40" step="1" value="25"><b id="v-s-tc"></b></label>
+    <label class="slab"><span>한 해 새 아이<small>해마다 들어오는 새 학생(주로 중1)</small></span><input type="range" id="s-in" min="0" max="90" step="1" value="50"><b id="v-s-in"></b></label>
+    <label class="slab"><span>변화 속도<small>아이들이 얼마나 빨리 변하나(보통 천천히)</small></span><input type="range" id="s-speed" min="20" max="100" step="5" value="40"><b id="v-s-speed"></b></label>
+    <label class="slab"><span>부모 모임 참여<small>부모가 기도·양육 모임(다락방)에 나오는 정도</small></span><input type="range" id="s-daracbang" min="0" max="100" step="1" value="50"><b id="v-s-daracbang"></b></label>
     <button id="set-apply" class="btn primary" style="width:100%;margin-top:14px">이 설정으로 시작</button>
   </div>
 </div>
@@ -736,7 +743,7 @@
     function bar(label,v,cls,hint){return '<div class="gauge"><div class="gauge-top"><span>'+label+'</span><b>'+v+'%</b></div><div class="gauge-bar"><div class="gauge-fill '+cls+'" style="width:'+v+'%"></div></div><div class="hint">'+hint+'</div></div>';}
     var rem=week%WEEKS_PER_YEAR,toY=rem===0?WEEKS_PER_YEAR:WEEKS_PER_YEAR-rem;
     var g3=a.filter(function(s){return s.grade===3;}),g3risk=g3.filter(function(s){return cliffProb(s)>=0.35;}).length;
-    var sand=frag>=30?'<div class="callout" style="margin-top:8px;font-size:14px;background:#fef2f2;border-color:#fecaca"><b style="color:var(--bad)">모래성 경고.</b> 지금 출석의 약 <b>'+frag+'%</b>는 믿음이 아니라 외부(부모·또래·습관)가 떠받치는 몫입니다. 전환기에 그 받침이 사라지면 무너질 수 있습니다.</div>'
+    var sand=frag>=30?'<div class="callout" style="margin-top:8px;font-size:14px;background:#fef2f2;border-color:#fecaca"><b style="color:var(--bad)">모래 위에 지은 집(마 7:26).</b> 지금 출석의 약 <b>'+frag+'%</b>는 믿음이 아니라 외부(부모·또래·습관)가 떠받치는 몫입니다. 전환기에 비가 내리고 창수가 나면(진학·졸업) 그 받침이 사라져 무너질 수 있습니다.</div>'
       :gap>=12?'<div class="callout" style="margin-top:8px;font-size:14px">겉은 든든하나, 믿음이 아직 자기 것이 안 된 아이가 있습니다(출석의 '+frag+'%가 외부 의존). 한 걸음 더 깊이 세우세요.</div>'
       :'<div class="callout" style="margin-top:8px;font-size:14px">출석과 속이 함께 갑니다. 든든합니다.</div>';
     var ewc=ewi>=35?'background:#fef2f2;color:var(--bad)':ewi>=22?'background:#fffbeb;color:#b45309':'background:#f0fdf4;color:#15803d';
@@ -753,7 +760,7 @@
     var proj=(projData&&projData.length&&projData[projData.length-1].carry!=null)?Math.round(projData[projData.length-1].carry):null;
     var v=live!=null?live:proj,lbl=live!=null?'지금까지 졸업한 아이 중 신앙을 들고 나간 비율':'이대로 가면 졸업하는 아이 중 신앙을 들고 나갈 비율(3년 전망)';
     if(v==null){el.innerHTML='';return;}
-    el.innerHTML='<div class="northstar"><span class="ns-v">'+v+'%</span><span class="ns-l"><b>졸업 신앙 잔존</b> — '+lbl+'.<br>출석 수가 아니라, 이 아이들이 자기 믿음으로 세상에 나가는가가 최종 목적이다.</span></div>';
+    el.innerHTML='<div class="northstar"><span class="ns-v">'+v+'%</span><span class="ns-l"><b>졸업 후에도 신앙을 지킬 아이</b> — '+lbl+'.<br>이번 주 출석 수가 아니라, 이 아이들이 대학·사회에 나가서도 자기 믿음으로 서는가가 진짜 목표다.</span></div>';
   }
   // 믿음 단계 분포: 부여된(빌려온) → 탐색(의심) → 내면화(자기 것). 오른쪽이 두꺼워지는 게 목표.
   function updateStageBox(a){
@@ -1010,7 +1017,7 @@
   // ── 설정 서랍 ──
   var UNITS={'p-n':'명','p-active':'%','p-risk':'%','p-mid':'%','p-high':'%','p-mota':'%','p-none':'%','p-core':'%','p-loner':'%','s-sg':'%','s-mt':'%','s-tc':'명','s-in':'명','s-speed':'%','s-daracbang':'%'};
   Object.keys(UNITS).forEach(function(id){var el=document.getElementById(id),out=document.getElementById('v-'+id);
-    var sync=function(){out.textContent=el.value+UNITS[id];};el.addEventListener('input',sync);sync();});
+    var sync=function(){if(id==='s-speed'){var v=+el.value;out.textContent=v<=35?'천천히':v<=60?'보통':'빠르게';}else out.textContent=el.value+UNITS[id];};el.addEventListener('input',sync);sync();});
   function setSlider(id,v){var e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input'));}
   document.getElementById('pre-decline').addEventListener('click',function(){setSlider('p-active',35);setSlider('p-risk',30);setSlider('s-daracbang',30);});
   document.getElementById('pre-flat').addEventListener('click',function(){setSlider('p-active',50);setSlider('p-risk',18);setSlider('s-daracbang',50);});
