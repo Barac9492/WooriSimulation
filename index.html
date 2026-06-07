@@ -336,7 +336,10 @@
     var fr=s.friends.map(function(j){return ctx.arr[j];}).filter(function(x){return x&&!x.left;});
     var pull=fr.length?fr.reduce(function(x,y){return x+y.commit;},0)/fr.length:0.5;
     var care=(s.cared&&ctx.careForce)?ctx.careForce:0; // 지목된 학생에게만(확산 차단 실험)
-    var force=-0.045+0.11*(pull-0.5)+(s.sg?0.06:0)*ctx.tEff+(s.mentor?0.05:0)*ctx.tEff+care*ctx.tEff+0.05*(s.fam-0.5)+(ctx.churchClimate!=null?0.035*(ctx.churchClimate-0.5):0)+(Math.random()-0.5)*0.03;
+    // 수확 체감(포화): 이미 버팀목이 많은 아이는 하나 더 얹어도 덜 는다. 첫 버팀목은 온전히, 그 위로는 점점 덜.
+    var sup=(s.sg?1:0)+(s.mentor?1:0)+(pull>=0.55?1:0)+(s.fam>=0.65?1:0);
+    var sat=1-0.15*Math.max(0,sup-1);
+    var force=-0.045+0.11*(pull-0.5)+(s.sg?0.06:0)*ctx.tEff*sat+(s.mentor?0.05:0)*ctx.tEff*sat+care*ctx.tEff+0.05*(s.fam-0.5)+(ctx.churchClimate!=null?0.035*(ctx.churchClimate-0.5):0)+(Math.random()-0.5)*0.03;
     // 임계점(티핑): 친구 절반 넘게 흔들리면 함께 무너지고(캐스케이드), 대부분 든든하면 자생 회복으로 끌어올린다.
     if(fr.length){var low=0,hi=0;for(var fi=0;fi<fr.length;fi++){if(fr[fi].eng<0.3)low++;else if(fr[fi].eng>=0.55)hi++;}
       var lf=low/fr.length,hf=hi/fr.length;
@@ -370,7 +373,7 @@
     s.eng=clamp(s.commit+0.20*s.retreatGlow-s.examPress,0,1);
     s.absent=s.eng<0.12?s.absent+1:Math.max(0,s.absent-1);
     // 신앙(느리게)
-    var fd=(s.eng>0.35?0.014:-0.006)+(s.sg?0.012:0)*ctx.tEff+(s.mentor?0.015:0)*ctx.tEff+((s.cared&&ctx.careFaith)?ctx.careFaith:0)*ctx.tEff+0.020*(s.fam-0.5)+(ctx.churchClimate!=null?0.015*(ctx.churchClimate-0.5):0)+dFa*s.sermonAcc*root+(ctx.revival?0.02:0)+(ctx.allRetreat?0.03:0);
+    var fd=(s.eng>0.35?0.014:-0.006)+(s.sg?0.012:0)*ctx.tEff*sat+(s.mentor?0.015:0)*ctx.tEff*sat+((s.cared&&ctx.careFaith)?ctx.careFaith:0)*ctx.tEff+0.020*(s.fam-0.5)+(ctx.churchClimate!=null?0.015*(ctx.churchClimate-0.5):0)+dFa*s.sermonAcc*root+(ctx.revival?0.02:0)+(ctx.allRetreat?0.03:0);
     s.faith=clamp(s.faith+sp*fd,0,1);
     // 신앙의 갈래(말씀·거룩·소속): 신앙 쪽으로 천천히 모이되, 설교 결이 갈래마다 다르게 기울인다
     var frC=fr.length;
