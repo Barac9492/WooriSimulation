@@ -154,6 +154,8 @@
     <div id="visit-list"><p class="muted">한 주가 흐르면, 가장 먼저 만날 아이가 여기 모입니다.</p></div>
     <h2 class="plain-h" style="margin-top:16px">잘 나오지만 속이 빈 아이 — 출석표엔 안 보이는 위험</h2>
     <div id="hidden-list"><p class="muted">출석은 좋은데 믿음이 아직 자기 것이 안 된 아이를 찾아냅니다. 전환기에 무너질 아이들입니다.</p></div>
+    <p class="hint" style="margin-top:4px">이름(또는 줄)을 누르면 그 아이 한 명을 자세히 봅니다.</p>
+    <div id="stud-card"></div>
     <h2 class="plain-h" style="margin-top:16px">이번 주 할 일</h2>
     <div id="action-one"><p class="muted">계획을 정하면 할 일이 나옵니다.</p></div>
     <div id="step-list" style="margin-top:10px"></div>
@@ -723,7 +725,7 @@
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
-    updateVerdict();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateWhy();updateWar();updateReadouts();updateRecap();
+    updateVerdict();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateStudCard();updateWhy();updateWar();updateReadouts();updateRecap();
     updateDiag();updateProj();
   }
   // 출석은 좋지만(eng 높음) 속이 빈(취약도 높음) 아이 — 출석 기반 대시보드엔 안 보이는 위험. 전환기에 무너진다.
@@ -736,7 +738,7 @@
       if((s.doubt!=null?s.doubt:0)*(1-(s.doubtSpace!=null?s.doubtSpace:0.5))>=0.18)why.push('의심을 말할 곳이 없고');
       if(s.warmth!=null&&s.warmth<0.4)why.push('집과 관계가 차갑고');
       var what=(s.owned!=null?s.owned:0)<0.35?'멘토·소그룹으로 자기 신앙 세우기':'의심을 솔직히 나눌 자리 만들기';
-      return '<div class="visit"><span class="who">'+studName(s)+'</span><span>출석은 좋지만 '+(why.join(' ')||'속이 외부에 기대 있어')+' 전환기에 위험합니다 → <b>'+what+'</b></span></div>';
+      return '<div class="visit" data-si="'+students.indexOf(s)+'" style="cursor:pointer"><span class="who">'+studName(s)+'</span><span>출석은 좋지만 '+(why.join(' ')||'속이 외부에 기대 있어')+' 전환기에 위험합니다 → <b>'+what+'</b></span></div>';
     }).join('')+(pool.length>3?'<p class="hint" style="margin-top:6px">외 '+(pool.length-3)+'명 더 있습니다.</p>':'');
   }
   // 겉(출석)/속(내면화) 두 눈금 + 북극성(졸업 신앙 잔존) + 모래성 경고 + 믿음 단계 + 전환기 카운트다운.
@@ -810,6 +812,28 @@
   }
   // 명단(CSV)을 넣었으면 이름을, 아니면 '중3 한 명'을 보인다.
   function studName(s){return s.name?GRADE_LABELS[s.grade]+' '+s.name:GRADE_LABELS[s.grade]+' 한 명';}
+  // 한 아이 자세히: 겉(출석)·속(내면화 단계)·의심·부모 관계·친구를 사람 단위로 보고, 필요한 한 가지를 짚는다.
+  function updateStudCard(){
+    var el=document.getElementById('stud-card');if(!el)return;
+    var s=selStudent;if(!s||s.left){el.innerHTML='';return;}
+    var pct=function(v){return Math.round((v||0)*100);};
+    var stageL=['','부여된(빌려온) 믿음','탐색 중(의심하는 중)','내면화(자기 믿음)'][faithStage(s)];
+    var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
+    var warm=s.warmth!=null?pct(s.warmth):null,fest=(s.doubt||0)*(1-(s.doubtSpace!=null?s.doubtSpace:0.5));
+    var need;
+    if((s.owned||0)<0.35)need='자기 믿음이 아직 안 섰다. 멘토·소그룹으로 한 영혼을 붙들고, 말씀을 자기 말로 고백하게 돕기.';
+    else if(fest>=0.18)need='속에 묻어 둔 의심이 있다. 정죄 없이 질문을 꺼내 함께 씨름할 어른 한 명 붙여 주기.';
+    else if(warm!=null&&warm<40)need='집과의 관계가 차갑다. 부모를 먼저 세우고(다락방·상담), 곁의 어른으로 빈자리 채우기.';
+    else if(fr<=1)need='교회에 친한 친구가 없다. 또래·소그룹에 이어 주기.';
+    else if(s.eng<0.3)need='요즘 출석이 무너졌다. 이번 주 안부 한 번, 다음 주 직접 만나기.';
+    else need='비교적 든든하다. 한 걸음 더 깊은 섬김·리더 역할로 세우기.';
+    el.innerHTML='<div class="callout" style="margin-top:8px;background:#f8fafc;border-color:#e2e8f0">'+
+      '<div style="font-weight:800;font-size:15px;margin-bottom:6px">'+studName(s)+' <span class="hint" style="font-weight:600">· '+stageL+'</span></div>'+
+      '<div class="hint" style="line-height:1.8">겉(출석) <b>'+pct(s.eng)+'</b> · 속(내면화) <b>'+pct(s.owned)+'</b> · 취약도 <b>'+pct(fragility(s))+'</b>'+
+      '<br>의심을 말할 공간 <b>'+pct(s.doubtSpace)+'</b>'+(warm!=null?' · 부모 관계 온기 <b>'+warm+'</b>':'')+' · 교회 친구 <b>'+fr+'명</b>'+
+      (s.bg==='none'?' · 혼자 다니는 아이':s.bg==='mota'?' · 믿는 가정':'')+(s.core?' · 헌신된 제자':'')+'</div>'+
+      '<div style="margin-top:8px;font-size:14px">필요한 한 가지 → <b>'+need+'</b></div></div>';
+  }
   function updateVisitList(){
     var el=document.getElementById('visit-list');var shaken=students.filter(function(s){return !s.left&&s.eng<0.3;});
     if(!shaken.length){el.innerHTML='<p class="muted" style="color:var(--good)">지금 무너지는 아이가 없습니다. 든든한 아이들을 한 걸음 더 깊이 세우세요.</p>';return;}
@@ -820,7 +844,7 @@
       if(s.bg==='none')why.push('믿는 가정이 아니고');
       why.push('요즘 출석이 흔들립니다');
       if(!what)what='이번 주 안부 전화 한 번';
-      return '<div class="visit"><span class="who">'+studName(s)+'</span><span>'+why.join(' ')+' → <b>'+what+'</b></span></div>';
+      return '<div class="visit" data-si="'+students.indexOf(s)+'" style="cursor:pointer"><span class="who">'+studName(s)+'</span><span>'+why.join(' ')+' → <b>'+what+'</b></span></div>';
     }).join('')+(shaken.length>3?'<p class="hint" style="margin-top:6px">외 '+(shaken.length-3)+'명 더 있습니다(자세히에서 전체).</p>':'');
   }
   function updateWhy(){
@@ -1025,6 +1049,8 @@
   }
   document.getElementById('apply-plan').addEventListener('click',applyDecision);
   document.getElementById('reco-btn').addEventListener('click',recommend);
+  // 먼저 만날 아이·잘 나오지만 속이 빈 아이 줄을 누르면 그 아이 한 명을 자세히
+  document.getElementById('verdict-card').addEventListener('click',function(e){var row=e.target.closest('[data-si]');if(!row)return;var s=students[+row.dataset.si];if(s){selStudent=s;updateStudCard();var c=document.getElementById('stud-card');if(c)c.scrollIntoView({block:'nearest'});}});
   // ── 설정 서랍 ──
   var UNITS={'p-n':'명','p-active':'%','p-risk':'%','p-mid':'%','p-high':'%','p-mota':'%','p-none':'%','p-core':'%','p-loner':'%','s-sg':'%','s-mt':'%','s-tc':'명','s-in':'명','s-speed':'%','s-daracbang':'%'};
   Object.keys(UNITS).forEach(function(id){var el=document.getElementById(id),out=document.getElementById('v-'+id);
