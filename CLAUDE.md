@@ -54,7 +54,9 @@
 **UI(새 대시보드)**
 - `generate()` : 설정대로 생성 → `layoutNet()`(관계 지도 force 레이아웃) → `runProjection()` → `render()`.
 - `step()` : 라이브 1주. 주별 신규 흔들림(`weekInc`, Rₜ용) 집계, 매년 재레이아웃. 스페이스/→ 키·자동재생 루프가 공유.
-- `render()` : ① 지표 카드 + `updateDiag()` + `updateProj()`(매주).
+- `render()` : 매주 `updateVerdict`(출석+취약도·조기경보까지 보는 정직한 신호등)·`updateGauges`(겉/속 두 눈금+모래성+`updateNorthStar` 졸업 신앙 잔존+`updateStageBox` 믿음 단계)·`updateVisitList`·`updateHiddenRisk`(잘 나오지만 속이 빈 아이)·`updateStudCard`(한 영혼 드릴다운)·`updateWar`·`updateRecap`·`updateDiag`·`updateProj`.
+- `studName`/`updateStudCard` + `selStudent` + `netClick` : 명단/숨은위험/관계 지도 어디서 눌러도 한 아이의 겉·속·의심·부모 온기·친구·필요한 한 가지를 카드로. CSV 명단이면 이름 표시.
+- `buildReport()` + `#btn-report` : 당회·교사팀용 한 장 리포트(북극성·겉/속·모래성·단계·전망·명단·권하는 한 수) 새 창 인쇄/PDF.
 - `updateDiag()` + `rtCalc`/`drawCurve`/`drawNet` : ① 전염 지도(번짐세 Rₜ·번짐 곡선·관계 지도·먼저 붙들 아이).
 - `runProjection()`/`drawIdx()`/`updateRisk()`/`updateProj()` + `projData` : ② 믿음 지수 전망 차트(설교·수련회 이벤트 표시)·위험. 전망은 생성/결정 때만 재계산(헤드리스 72주×6회).
 - `attribution()`/`updateAttr()` + `lastCtx` : ② 요인 분해 막대(`tick` 항을 그대로 읽음).
@@ -185,7 +187,7 @@ commit += speed * force      // speed=변화 속도 슬라이더(0.2~1.0, 기본
 
 이로써 전체 교회·부모가 살아나면 중고등부가 눈에 띄게 따라 오르고, 청소년 사역만으로는 닿지 못하는 천장이 보인다. 수치는 전부 가정값 — 정밀 예측이 아니라 "무엇이 천장을 정하는가"의 방향으로 읽는다.
 
-교사효율 = min(1, (교사수 * 8) / 활동 학생 수). 학생이 많아질수록 개입 효과가 희석된다.
+**교사 소진·과부하** : `teacherEff(tc,n)=clamp(1-max(0,n/tc-6)*0.06,0.2,1)`. 1교사당 6명까지는 온전(1.0), 그 위로 한 명당 6%씩 떨어지고 바닥 0.2. 그래서 교사를 무한정 늘려도 1.0에서 멈추고(몰빵 한계), 너무 적으면 급격히 무너진다(검증: 교사 10명 이탈97 vs 18명 45 vs 30명 38 — 18→30은 거의 안 늚). 라이브·헤드리스 공유.
 
 표시 출석이 6주 연속 바닥(0.12 미만)이면 이탈 처리된다. 24주(1년)마다 학년이 오르고 3학년은 졸업해 빠지며, 신입생이 들어온다.
 
