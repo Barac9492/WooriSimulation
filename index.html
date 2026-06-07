@@ -256,7 +256,7 @@
     </div>
   </details>
 
-  <p class="hint" style="margin-top:14px">효과 수치는 그럴듯하게 넣어 본 값이지 확인된 사실이 아니다. 현실을 맞히는 도구가 아니라, 방향과 크기를 가늠하는 사유 도구다.</p>
+  <p class="hint" style="margin-top:14px">이 도구의 1년은 <b>24주</b>다(학기 흐름을 압축한 단위라 달력 52주와 다르다). "다음 주 ▶"는 그 한 칸을 넘긴다. 효과 수치는 그럴듯하게 넣어 본 값이지 확인된 사실이 아니다. 현실을 맞히는 도구가 아니라, 방향과 크기를 가늠하는 사유 도구다.</p>
 </div>
 
 <div id="settings" class="drawer" hidden>
@@ -985,7 +985,7 @@
     if(DEC.prog.outreach)sc.push({id:eid++,type:'outreach',start:16,repeat:8});
     if(DEC.prog.sg)sc.push({id:eid++,type:'smallgroup',start:6,repeat:6});
     sc.push(DEC.prog.retreat?{id:eid++,type:'retreat',start:12,nights:3,attendRate:0.82,intensity:0.78,repeat:24}:{id:eid++,type:'retreat',start:12,nights:2,attendRate:0.6,intensity:0.5,repeat:24});
-    sc.push({id:eid++,type:'exam',start:8,weeks:3,repeat:12});
+    sc.push({id:eid++,type:'exam',start:6,weeks:2,repeat:6});
     sc.push({id:eid++,type:'sooneung',start:18,weeks:6,repeat:24});
     return sc;
   }
