@@ -963,8 +963,11 @@
   }
 
   // ── ② 전망 (Stock 렌즈): 믿음 지수·요인 분해·위험 ──
-  var projData=null;
-  function runProjection(){var plan=captureConfig();projData=simulate(plan,3*WEEKS_PER_YEAR,6);drawIdx();updateRisk();}
+  var projData=null,projSamples=null;
+  function runProjection(){var plan=captureConfig();projData=simulate(plan,3*WEEKS_PER_YEAR,6);
+    // HOPs: 평균 한 줄 대신 개별 시나리오 몇 가닥도 함께 그려 불확실성을 정직하게 보인다.
+    projSamples=[];for(var s=0;s<4;s++)projSamples.push(simulateOnce(plan,3*WEEKS_PER_YEAR));
+    drawIdx();updateRisk();}
   function drawIdx(){
     var cv=document.getElementById('idxchart');if(!cv||!projData)return;var g=cv.getContext('2d'),W=600,H=150;g.clearRect(0,0,W,H);
     // 0~100 격자
@@ -972,13 +975,15 @@
     // 사역 이벤트 표시(설교·수련회 시작)
     var n=projData.length;
     schedule.forEach(function(ev){if(ev.start>n)return;var x=34+((ev.start-1)/(n-1))*(W-40);var col=ev.type==='sermon'?'#2563eb':ev.type==='retreat'?'#16a34a':null;if(!col)return;g.strokeStyle=col;g.globalAlpha=0.25;g.beginPath();g.moveTo(x,8);g.lineTo(x,H-8);g.stroke();g.globalAlpha=1;});
-    // 지수 선
+    // 개별 시나리오 몇 가닥(연한 파랑) — 이렇게 될 수도, 저렇게 될 수도
+    if(projSamples){g.strokeStyle='#93c5fd';g.lineWidth=1;g.globalAlpha=0.7;projSamples.forEach(function(h){g.beginPath();h.forEach(function(p,i){if(i>=n)return;var x=34+(i/(n-1))*(W-40),y=H-8-(p.idx/100)*(H-22);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();});g.globalAlpha=1;}
+    // 평균 지수 선(진한 파랑)
     g.strokeStyle='#2563eb';g.lineWidth=2.2;g.beginPath();projData.forEach(function(p,i){var x=34+(i/(n-1))*(W-40),y=H-8-(p.idx/100)*(H-22);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
     // 내면화 지수(자기 것이 된 믿음) — 보라 점선. 믿음 지수와의 간격이 '겉과 속의 차이'다.
     if(projData[0].own!=null){g.strokeStyle='#7c3aed';g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();projData.forEach(function(p,i){var x=34+(i/(n-1))*(W-40),y=H-8-(p.own/100)*(H-22);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();g.setLineDash([]);}
     var L=projData[n-1],rg=projData.range;
     var band=rg&&rg.idx?' (여러 번 돌리면 '+Math.round(rg.idx[0])+'~'+Math.round(rg.idx[1])+' 사이)':'';
-    document.getElementById('idx-now').textContent='3년 뒤 믿음 '+Math.round(L.idx)+band+' · 내면화 '+Math.round(L.own!=null?L.own:0)+' · 파란선=믿음 지수, 보라 점선=내면화';
+    document.getElementById('idx-now').textContent='3년 뒤 믿음 '+Math.round(L.idx)+band+' · 내면화 '+Math.round(L.own!=null?L.own:0)+' · 진한 파랑=평균, 연한 가닥=가능한 시나리오, 보라 점선=내면화';
   }
   function updateRisk(){
     var el=document.getElementById('risk-box');if(!el||!projData)return;
@@ -1056,7 +1061,9 @@
         return '<div class="logrow"><span class="logwk">'+(i+1)+'위</span><span><b>'+s.label+'</b> — 내면화 '+sg(s.own)+' · 졸업 잔존 '+sg(s.carry)+'%p · 출석 '+sg(s.act)+'명'+sandFlag+'</span></div>';}).join('');
       var top=scored[0];
       var head=(top&&top.score>=1)?'<div class="reco"><b>가장 큰 한 수: '+top.label+'</b> — 출석이 아니라 <b>내면화</b>를 가장 많이 끌어올린다.</div>':'<div class="reco">단일 변화로 북극성을 크게 올리는 한 수는 안 보인다. 여러 손길의 배합이 필요하다.</div>';
-      box.innerHTML=head+'<div class="mini-h" style="margin-top:10px">지렛대 순위 (북극성 기준)</div>'+rows+'<p class="hint" style="margin-top:6px">출석만 오르고 졸업 잔존은 그대로면 모래성이다. 그냥 넣어 본 값이라 방향으로만 읽으라.</p>';
+      var evid='<div class="mini-h" style="margin-top:12px">근거가 강한 레버 vs 약한 레버 (해외 연구)</div>'+
+        '<div class="hint" style="line-height:1.7">근거 <b>강함</b>: 부모 신앙×관계 온기(최강 예측), 세대 통합 어른, 의심을 말할 안전한 자리.<br>근거 <b>약함·저효율</b>: <b>단기선교·봉사여행</b>(친교·시민성엔 좋아도 신앙 잔존 증거는 약함), 고비용 이벤트·"은혜의 고조"(몇 주면 식음). 큰 예산을 여기 몰지 말 것.<br><span style="color:var(--mut)">근거: Smith NSYR, Bengtson, Fuller Youth Institute, Beyerlein 2011.</span></div>';
+      box.innerHTML=head+'<div class="mini-h" style="margin-top:10px">지렛대 순위 (북극성 기준, 이 모형)</div>'+rows+evid+'<p class="hint" style="margin-top:6px">출석만 오르고 졸업 잔존은 그대로면 모래성이다. 모형 수치는 가정값이라 방향으로만 읽으라.</p>';
     },30);
   }
   document.getElementById('apply-plan').addEventListener('click',applyDecision);
