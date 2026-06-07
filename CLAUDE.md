@@ -12,7 +12,7 @@
 
 - **전략 · 연간 전쟁** (`#war-aim`/`#war-index`) : 왜 싸우나·어디로 가나. 전세 지수(=믿음 지수) 지금→1년 뒤 전망(`projData[23]`).
 - **작전 · 이번 시즌** (`#op-series`/`#op-dday`/`#op-force`/`#op-front`) : 설교 시리즈 진행 X/Y주차(`sermonProg`), 다가오는 큰 작전 D-day(`nextBigOp`), 병력(교사), 전선 상황(`rtCalc` 번짐세).
-- **전술 · 이번 주 전투** (`#verdict`/`#visit-list`/`#action-one`/`#step-list` + 칩) : 신호등 전세 판정, 최전선 붙들 병사(만날 아이, `spreadScore` 상위), 이번 주 명령(추천)·STEP 1·2·3, 설교 결·프로그램 칩.
+- **전술 · 이번 주 전투** (`#verdict`/`#frontbar`/`#visit-list`/`#action-one`/`#step-list` + 칩) : 신호등 전세 판정, **전선 막대**(`updateFront` — 든든·느슨·흔들림을 색 띠 하나로, 전선이 어디서 뚫리는지 즉시), 최전선 붙들 병사(만날 아이, `spreadScore` 상위), 이번 주 명령(추천)·STEP 1·2·3, 설교 결·프로그램 칩. 전략·작전 카드는 `.ctx`로 눌러 두고 전술은 `.hero`로 주인공.
 - **더 보기/자세히**(접힘) : 왜 흔들리나·효과·앞날 문장, 그리고 전염 지도·믿음 지수 그래프(`updateDiag`/`updateProj`).
 
 `updateWar`가 세 층의 문장을 매주 채우고(가벼움), 무거운 추천·효과·앞날(`runReco`)은 생성/결정 때만 돈다. 두 축(전염=COVID·전세=Stock)은 같은 행위자 엔진을 **두 렌즈**로 본 것이다.

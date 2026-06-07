@@ -85,6 +85,14 @@
   .tier.s{background:#3a4a6b}.tier.o{background:#9a5b2b}.tier.t{background:#1d6b4f}
   .tier-sub{font-size:12px;color:var(--mut);margin:6px 0 12px}
   .tier-inline{font-size:11.5px;color:var(--mut);font-weight:600;margin-left:7px}
+  .card.ctx{padding:11px 15px;background:#f7f9fc}
+  .card.ctx .opline{font-size:13px;line-height:1.6}
+  .card.hero{border:1.5px solid #c9d4e6;box-shadow:0 2px 8px rgba(20,30,50,.07)}
+  .fbar{display:flex;height:20px;border-radius:6px;overflow:hidden;border:1px solid var(--line);margin-top:6px}
+  .fbar .seg.g{background:var(--good)}.fbar .seg.a{background:var(--warn)}.fbar .seg.r{background:var(--bad)}
+  .fbar-leg{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
+  .fbar-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:middle;margin-right:4px}
+  .fbar-leg i.g{background:var(--good)}.fbar-leg i.a{background:var(--warn)}.fbar-leg i.r{background:var(--bad)}
   .opline{font-size:14px;line-height:1.75;padding:2px 0}
   .stepn{display:flex;gap:10px;padding:9px 0;border-top:1px dashed var(--line);font-size:14px;line-height:1.55}
   .stepn:first-child{border-top:none}
@@ -107,22 +115,24 @@
   </header>
 
   <!-- 전략 · 연간 전쟁 -->
-  <section class="card">
+  <section class="card ctx">
     <span class="tier s">전략 · 연간 전쟁</span><span class="tier-inline">왜·어디로</span>
-    <div id="war-index" class="opline" style="margin-top:8px"></div>
+    <div id="war-index" class="opline" style="margin-top:7px"></div>
   </section>
 
   <!-- 작전 · 이번 시즌 -->
-  <section class="card">
+  <section class="card ctx">
     <span class="tier o">작전 · 이번 시즌</span><span class="tier-inline">무엇을·언제</span>
-    <div id="op-series" class="opline" style="margin-top:8px"></div>
+    <div id="op-series" class="opline" style="margin-top:7px"></div>
     <div id="op-force" class="opline"></div>
   </section>
 
-  <!-- 전술 · 이번 주 전투 -->
-  <section class="card" id="verdict-card">
+  <!-- 전술 · 이번 주 전투 (주인공) -->
+  <section class="card hero" id="verdict-card">
     <span class="tier t">전술 · 이번 주 전투</span><span class="tier-inline">누구를·어떻게</span>
     <div id="verdict" class="verdict" style="margin-top:10px"><div class="light">⏳</div><div><div class="vtext">한 주를 넘기면 전세가 나옵니다.</div><div class="vsub">위 "다음 주 ▶"를 눌러 보세요.</div></div></div>
+    <div class="mini-h" style="margin-top:14px">전선 — 우리 부 전체를 한 줄로</div>
+    <div id="frontbar"></div>
     <h2 class="plain-h" style="margin-top:16px">이번 주 붙들 병사 (최전선)</h2>
     <div id="visit-list"><p class="muted">한 주가 흐르면, 가장 먼저 붙들 아이가 여기 모입니다.</p></div>
     <h2 class="plain-h" style="margin-top:16px">이번 주 명령</h2>
@@ -584,7 +594,7 @@
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
-    updateVerdict();updateVisitList();updateWhy();updateWar();updateReadouts();
+    updateVerdict();updateFront();updateVisitList();updateWhy();updateWar();updateReadouts();
     updateDiag();updateProj();
   }
   // ── 평이한 문장 진단서 (목사용 기본 화면) ──
@@ -600,6 +610,13 @@
     var sub='지금 '+a.length+'명 중 <b>'+ri+'명</b>이 흔들리고 있습니다. '+dir+'.';
     document.getElementById('verdict').innerHTML='<div class="light">'+light+'</div><div><div class="vtext">'+txt+'</div><div class="vsub">'+sub+'</div></div>';
     document.getElementById('verdict-card').style.borderLeft='5px solid '+col;
+  }
+  function updateFront(){
+    var el=document.getElementById('frontbar');if(!el)return;var a=students.filter(function(s){return !s.left;});if(!a.length){el.innerHTML='';return;}
+    var ac=a.filter(function(s){return s.eng>=0.55;}).length,ri=a.filter(function(s){return s.eng<0.3;}).length,lo=a.length-ac-ri,n=a.length;
+    var w=function(x){return Math.round(x/n*100);};
+    el.innerHTML='<div class="fbar"><div class="seg g" style="width:'+w(ac)+'%"></div><div class="seg a" style="width:'+w(lo)+'%"></div><div class="seg r" style="width:'+w(ri)+'%"></div></div>'+
+      '<div class="fbar-leg"><span><i class="g"></i>든든 '+ac+'</span><span><i class="a"></i>느슨 '+lo+'</span><span><i class="r"></i>흔들림 '+ri+'</span></div>';
   }
   function updateVisitList(){
     var el=document.getElementById('visit-list');var shaken=students.filter(function(s){return !s.left&&s.eng<0.3;});
