@@ -241,6 +241,19 @@
     </div>
   </details>
 
+  <!-- 근거와 한계: 왜 믿을 만한가 / 무엇을 믿으면 안 되나 -->
+  <details class="card">
+    <summary class="summary-h">이 도구의 근거와 한계 — 왜 믿을 만한가 ▾</summary>
+    <div style="margin-top:14px">
+      <h3 class="plain-h">무엇에 기댔나</h3>
+      <div class="plain-p">출석과 별개로 <b>내면화(자기 것이 된 믿음)</b>를 따로 본 것은 청소년 신앙 잔존 연구의 핵심이다. 주요 근거: 부모가 최강 예측 변수이며 평소 신앙 대화·관계 온기가 곱으로 작동한다(Bengtson 2013; Smith & Adamczyk 2021; Stearns & McKinney 2020). 전환기에는 출석만 무너지고 신념은 남는다(Uecker 2007; Smith 2009). 의심은 막으면 갉고 말하면 깊어진다(Fuller Youth Institute). 습관은 맥락이 끊기면 무너진다(Wood & Neal 2007). 믿음은 빌려온 단계에서 자기 단계로 자란다(Fowler; Westerhoff). 한국 현실: 청소년 출석률 64%→20대 55%, 부모와 신앙 대화 "자주"는 12%(목회데이터연구소). 자세한 출처는 <b>CLAUDE.md·SURVEY.md</b>.</div>
+      <h3 class="plain-h" style="margin-top:16px">엔진이 만든, 뻔하지 않은 결과(검증됨)</h3>
+      <div class="plain-p">· 출석이 더 높아도 속이 비면 전환 절벽 이탈이 더 크다(출석0.8·내면0.2 → 절벽 0.38 vs 출석0.6·내면0.55 → 0.07).<br>· 같은 부모 신앙이라도 관계가 차가우면 전수가 약하다(의심 나눌 공간 37 vs 52).<br>· 한 레버 몰빵보다 버팀목 없는 아이에게 배합할 때 합이 크다. 흔들리는 군집이 절반을 넘으면 함께 무너진다(캐스케이드).</div>
+      <h3 class="plain-h" style="margin-top:16px">믿으면 안 되는 것</h3>
+      <div class="plain-p">모든 계수는 <b>그럴듯하게 넣어 본 가정값</b>이지 한국 데이터로 보정된 값이 아니다. 연구는 방향과 순위를 줄 뿐 한 주 단위 크기를 주지 않는다. 숫자 하나로 단정하지 말고 <b>방향과 크기 비교</b>로만 읽으라. 현실을 맞히는 도구가 아니라 생각을 다듬는 도구다.</div>
+    </div>
+  </details>
+
   <p class="hint" style="margin-top:14px">효과 수치는 그럴듯하게 넣어 본 값이지 확인된 사실이 아니다. 현실을 맞히는 도구가 아니라, 방향과 크기를 가늠하는 사유 도구다.</p>
 </div>
 
@@ -754,12 +767,15 @@
     var a=students.filter(function(s){return !s.left;});if(!a.length)return;
     var ri=a.filter(function(s){return s.eng<0.3;}).length,share=ri/a.length,trend=0;
     if(hist.length>=5){var p=hist[hist.length-5];trend=ri-(p.risk||0);}
+    var frag=fragIndex(a),ewi=earlyWarn(a);
     var light,txt,col;
-    if(share<0.10&&trend<=1){light='🟢';col='var(--good)';txt='지금은 든든합니다.';}
-    else if(share>=0.18||(share>=0.10&&trend>=3)){light='🔴';col='var(--bad)';txt='흔들리는 아이가 번지는 중입니다.';}
+    // 출석이 멀쩡해도 속(취약도·조기경보)이 비면 초록을 주지 않는다 — 모래성이 든든해 보이는 함정을 막는다.
+    if(share>=0.18||(share>=0.10&&trend>=3)){light='🔴';col='var(--bad)';txt='흔들리는 아이가 번지는 중입니다.';}
+    else if(share<0.10&&trend<=1&&frag<30&&ewi<25){light='🟢';col='var(--good)';txt='겉도 속도 든든합니다.';}
+    else if(share<0.10&&(frag>=30||ewi>=25)){light='🟡';col='var(--warn)';txt='출석은 멀쩡하나 속이 비어 갑니다(모래성). 전환기 전에 손써야 합니다.';}
     else{light='🟡';col='var(--warn)';txt='조금씩 흔들립니다. 지금 손써야 합니다.';}
     var dir=trend>=3?'지난달보다 늘었습니다':trend<=-3?'지난달보다 줄었습니다':'지난달과 비슷합니다';
-    var sub='지금 '+a.length+'명 중 <b>'+ri+'명</b>이 흔들리고 있습니다. '+dir+'.';
+    var sub='지금 '+a.length+'명 중 <b>'+ri+'명</b>이 흔들립니다('+dir+'). 출석 중 약 <b>'+frag+'%</b>는 외부가 떠받치는 모래성.';
     document.getElementById('verdict').innerHTML='<div class="light">'+light+'</div><div><div class="vtext">'+txt+'</div><div class="vsub">'+sub+'</div></div>';
     document.getElementById('verdict-card').style.borderLeft='5px solid '+col;
   }
