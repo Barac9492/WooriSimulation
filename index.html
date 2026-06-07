@@ -87,6 +87,13 @@
   .tier-inline{font-size:11.5px;color:var(--mut);font-weight:600;margin-left:7px}
   .howto{margin:0 0 12px;font-size:13px;color:#4b5563;background:#eef3fb;border:1px solid #d6e2f4;border-radius:10px;padding:9px 13px;line-height:1.6}
   .howto b{color:var(--stock)}
+  .gauge{margin:9px 0}
+  .gauge-top{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;margin-bottom:3px}
+  .gauge-top b{font-size:15px}
+  .gauge-bar{height:14px;border-radius:7px;background:#eef1f5;overflow:hidden;border:1px solid var(--line)}
+  .gauge-fill{height:100%;border-radius:7px}
+  .gauge-fill.att{background:var(--warn)}.gauge-fill.own{background:var(--stock)}
+  .gauge .hint{font-size:11.5px;margin-top:2px}
   .card.ctx{padding:11px 15px;background:#f7f9fc}
   .card.ctx .opline{font-size:13px;line-height:1.6}
   .card.hero{border:1.5px solid #c9d4e6;box-shadow:0 2px 8px rgba(20,30,50,.07)}
@@ -127,6 +134,8 @@
     <div id="verdict" class="verdict" style="margin-top:10px"><div class="light">⏳</div><div><div class="vtext">한 주를 넘기면 지금 상태가 나옵니다.</div><div class="vsub">위 "다음 주 ▶"를 눌러 보세요.</div></div></div>
     <div class="mini-h" style="margin-top:14px">지금 우리 부 — 한 줄로</div>
     <div id="frontbar"></div>
+    <div class="mini-h" style="margin-top:16px">겉(출석)과 속(믿음) — 둘은 다르다</div>
+    <div id="gauges"></div>
     <h2 class="plain-h" style="margin-top:16px">이번 주 먼저 만날 아이</h2>
     <div id="visit-list"><p class="muted">한 주가 흐르면, 가장 먼저 만날 아이가 여기 모입니다.</p></div>
     <h2 class="plain-h" style="margin-top:16px">이번 주 할 일</h2>
@@ -643,8 +652,25 @@
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
-    updateVerdict();updateFront();updateVisitList();updateWhy();updateWar();updateReadouts();updateRecap();
+    updateVerdict();updateFront();updateGauges();updateVisitList();updateWhy();updateWar();updateReadouts();updateRecap();
     updateDiag();updateProj();
+  }
+  // 겉(출석)과 속(내면화)을 두 눈금으로 나란히. 둘의 차이가 핵심 메시지다. + 전환기 카운트다운.
+  function updateGauges(){
+    var el=document.getElementById('gauges');if(!el)return;
+    var a=students.filter(function(s){return !s.left;});if(!a.length){el.innerHTML='';return;}
+    var actR=Math.round(a.filter(function(s){return s.eng>=0.55;}).length/a.length*100);
+    var ownR=ownRate(a),gap=actR-ownR;
+    var read=gap>=20?'<b style="color:var(--bad)">출석은 받쳐 주지만 속이 비어 갑니다.</b> 습관으로 나오는 아이가 많습니다. 믿음이 자기 것이 되게 하는 양육(부모·멘토·의심을 나눌 자리)이 필요합니다.'
+      :gap>=10?'겉은 든든하나, 믿음이 아직 자기 것이 안 된 아이가 있습니다. 한 걸음 더 깊이 세우세요.'
+      :'출석과 속이 함께 갑니다. 든든합니다.';
+    function bar(label,v,cls,hint){return '<div class="gauge"><div class="gauge-top"><span>'+label+'</span><b>'+v+'%</b></div><div class="gauge-bar"><div class="gauge-fill '+cls+'" style="width:'+v+'%"></div></div><div class="hint">'+hint+'</div></div>';}
+    var rem=week%WEEKS_PER_YEAR,toY=rem===0?WEEKS_PER_YEAR:WEEKS_PER_YEAR-rem;
+    var g3=a.filter(function(s){return s.grade===3;}),g3risk=g3.filter(function(s){return cliffProb(s)>=0.35;}).length;
+    var trans='<div class="hint" style="margin-top:8px">⏳ 다음 진급(중3→고1 전환·고3 졸업)까지 약 <b>'+toY+'주</b>. 지금이면 중3 '+g3.length+'명 중 <b>'+g3risk+'명</b>이 전환에서 흔들릴 수 있습니다(헌신·내면화 약함).</div>';
+    el.innerHTML=bar('겉 — 출석으로 든든한 아이',actR,'att','매주 잘 나오는 아이의 비율')+
+      bar('속 — 믿음이 자기 것이 된 아이',ownR,'own','전환기를 넘게 하는 진짜 힘(내면화)')+
+      '<div class="callout" style="margin-top:8px;font-size:14px">'+read+'</div>'+trans;
   }
   // ── 평이한 문장 진단서 (목사용 기본 화면) ──
   function updateVerdict(){
@@ -664,7 +690,8 @@
     var sum=document.getElementById('recap-sum'),lg=document.getElementById('recap-log');if(!sum)return;
     if(hist.length<2){sum.innerHTML='<span class="muted">아직 진행 전입니다. "다음 주 ▶"로 몇 주 흘려보면, 그동안 무엇이 바뀌고 무슨 일이 있었는지 여기 정리됩니다.</span>';if(lg)lg.innerHTML='';return;}
     var a=hist[0],b=hist[hist.length-1],sg=function(v){return v>0?'+'+v:''+v;};
-    sum.innerHTML='지난 <b>'+week+'주</b> 동안 — 믿음 점수 '+a.idx+' → <b>'+b.idx+'</b>('+sg(b.idx-a.idx)+') · 흔들리는 아이 '+a.risk+' → <b>'+b.risk+'</b>('+sg(b.risk-a.risk)+') · 그동안 떠난 아이 누적 <b>'+dropouts+'</b>명, 지금 함께 <b>'+b.n+'</b>명.';
+    var oa=a.own!=null?a.own:0,ob=b.own!=null?b.own:0;
+    sum.innerHTML='지난 <b>'+week+'주</b> 동안 — 믿음 점수 '+a.idx+' → <b>'+b.idx+'</b>('+sg(b.idx-a.idx)+') · 내면화 '+oa+' → <b>'+ob+'</b>('+sg(ob-oa)+') · 흔들리는 아이 '+a.risk+' → <b>'+b.risk+'</b>('+sg(b.risk-a.risk)+') · 그동안 떠난 아이 누적 <b>'+dropouts+'</b>명, 지금 함께 <b>'+b.n+'</b>명.';
     if(lg){if(!eventLog.length)lg.innerHTML='<div class="hint" style="margin-top:8px">특별한 사건 없이 평상시로 흘렀습니다.</div>';
       else lg.innerHTML='<div class="mini-h" style="margin-top:10px">주요 사건</div>'+eventLog.slice().reverse().map(function(e){return '<div class="logrow"><span class="logwk">'+e.wk+'주</span><span'+(e.warn?' style="color:var(--bad)"':'')+'>'+e.t+'</span></div>';}).join('');}
   }
@@ -712,6 +739,7 @@
     Object.keys(SERMON_FOCUS).forEach(function(fo){if(fo===DEC.focus)return;var c=cloneCfg(plan);c.schedule.forEach(function(e){if(e.type==='sermon')e.focus=fo;});cands.push({label:SERMON_FOCUS[fo].label+' 설교',sim:c});});
     if(!DEC.prog.sg){var c1=cloneCfg(plan);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'소그룹 집중',sim:c1});}
     if(!DEC.prog.mentor){var c2=cloneCfg(plan);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'멘토 강화',sim:c2});}
+    var c3=cloneCfg(plan);c3.ops.daracbang=Math.min(1,(c3.ops.daracbang!=null?c3.ops.daracbang:0.5)+0.2);cands.push({label:'부모 다락방 강화',sim:c3});
     var best=null;cands.forEach(function(cd){var h=simulate(cd.sim,W,R);var g=h[h.length-1].idx-P.idx;if(!best||g>best.g)best={label:cd.label,g:g};});
     var action=best&&best.g>=1.5?'📣 명령: 지금 작전에 <b>'+best.label+'</b>을(를) 더하라. 전세 지수가 약 <b>+'+Math.round(best.g)+'</b> 오른다. 아래 칩을 그렇게 맞추고 "이 작전으로 보기".':'📣 명령: 지금 작전이 이미 괜찮다. 최전선의 흔들리는 아이를 꾸준히 붙드는 데 집중하라.';
     recoState={effect:effect,forecast:forecast,action:action};updateReadouts();
@@ -801,7 +829,9 @@
     schedule.forEach(function(ev){if(ev.start>n)return;var x=34+((ev.start-1)/(n-1))*(W-40);var col=ev.type==='sermon'?'#2563eb':ev.type==='retreat'?'#16a34a':null;if(!col)return;g.strokeStyle=col;g.globalAlpha=0.25;g.beginPath();g.moveTo(x,8);g.lineTo(x,H-8);g.stroke();g.globalAlpha=1;});
     // 지수 선
     g.strokeStyle='#2563eb';g.lineWidth=2.2;g.beginPath();projData.forEach(function(p,i){var x=34+(i/(n-1))*(W-40),y=H-8-(p.idx/100)*(H-22);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
-    var L=projData[n-1];document.getElementById('idx-now').textContent='3년 뒤 '+Math.round(L.idx)+' (지금 '+(hist.length?Math.round(hist[hist.length-1].idx):'—')+') · 파란선=설교, 초록선=수련회';
+    // 내면화 지수(자기 것이 된 믿음) — 보라 점선. 믿음 지수와의 간격이 '겉과 속의 차이'다.
+    if(projData[0].own!=null){g.strokeStyle='#7c3aed';g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();projData.forEach(function(p,i){var x=34+(i/(n-1))*(W-40),y=H-8-(p.own/100)*(H-22);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();g.setLineDash([]);}
+    var L=projData[n-1];document.getElementById('idx-now').textContent='3년 뒤 믿음 '+Math.round(L.idx)+' · 내면화 '+Math.round(L.own!=null?L.own:0)+' (지금 믿음 '+(hist.length?Math.round(hist[hist.length-1].idx):'—')+') · 파란선=믿음 지수, 보라 점선=내면화';
   }
   function updateRisk(){
     var el=document.getElementById('risk-box');if(!el||!projData)return;
