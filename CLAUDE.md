@@ -132,7 +132,15 @@
 
 학생 속성: `grade`, `bg`(mota/normal/none), `core`, `loner`, `commit`, `eng`, `faith`(0~1), `word`·`holy`·`belong`(신앙의 갈래 말씀·거룩·소속 0~1), `owned`·`doubtSpace`(내면화 축 0~1), `adults`(곁의 어른 수), `fam`(가정 신앙 0~1), `sg`, `mentor`, `sermonAcc`(설교 누적), `retreatGlow`(수련회 여운), `examPress`(시험 일시 압박), `friends`, `left`, `dropped`(출석 바닥으로 이탈했는지 — 졸업과 구분해 취약 분석 이탈률에 쓴다).
 
-**내면화 축(owned) — 출석이 가리는 진짜 지표** : `eng`(출석 습관)과 별개로 `owned`(자기 것이 된 믿음 0~1)를 둔다. 출석은 좋아도 `owned`가 낮으면 전환기에 무너진다(NSYR의 "도덕적·치료적 이신론" 위험군). `owned`는 매주 목표값으로 아주 느리게(`sp*(ownT-owned)*0.06`) 이동하며, 목표는 `0.18+0.34*faith+0.10*(word+holy)/2+0.04*min(adults+mentor,3)+0.10*(fam-0.5)+0.08*(doubtSpace-0.5)-결석페널티`. `doubtSpace`(의심을 말할 공간)는 곁의 어른·멘토·소그룹이 천천히 연다(`dsT=0.40+0.06*min(adN,3)+(sg?0.06:0)`). **`cliffProb`에 `owned` 보호항**(`-0.18*clamp(owned-0.4,0,0.6)`)을 더해, 내면화된 아이는 중3→고1 절벽을 잘 넘는다(검증: 같은 commit 0.45에서 owned 0.2 vs 0.8이면 절벽 확률 0.100→0.028). 내면화 지수 `ownIndex`(평균×100)·`ownRate`(owned≥0.5 비율)로 화면에 띄운다. 근거·설문 문항은 `SURVEY.md` 참조.
+**내면화 축(owned) — 출석이 가리는 진짜 지표** : `eng`(출석 습관)과 별개로 `owned`(자기 것이 된 믿음, 내재적 신앙 0~1)를 둔다. 출석은 좋아도 `owned`가 낮으면 전환기에 무너진다(NSYR의 "도덕적·치료적 이신론" 위험군). `owned`는 매주 목표값으로 아주 느리게(`sp*(ownT-owned)*0.06`) 이동하며, 목표는 `0.13+0.16*faith+0.24*(word+holy)/2+0.04*min(adults+mentor,3)+0.16*famT2+0.18*processed-0.22*festering-결석페널티`(내재 채널 word·holy를 generic faith보다 무겁게 둔다). 내면화 지수 `ownIndex`(평균×100)·`ownRate`(owned≥0.5 비율). 근거·설문 문항은 `SURVEY.md`.
+
+**모래성(취약도)과 창발하는 전환 절벽** : `fragility(s)=clamp(eng-owned-0.10)`는 지금 출석 중 '신념이 아니라 외부(부모·또래·습관)가 떠받치는 몫'이다(Uecker: 전환기엔 출석만 무너지고 신념은 남는다; Wood 습관은 맥락이 끊기면 무너진다). **`cliffProb`를 손값에서 창발로 바꿨다** — `0.07+0.62*fragility+외톨이·비신앙±코어`. 출석이 높아도 그 출석이 모래성이면(취약도 큼) 크게 빠지고, 내면화된 아이는 출석이 잠시 낮아도 넘어간다(검증: 출석0.8/내면0.2 → 절벽 0.38 vs 출석0.6/내면0.55 → 0.07, 직관 반대). 평균 취약도 `fragIndex`.
+
+**졸업 신앙 잔존(북극성)** : 졸업(고3→나감)은 외부 버팀목이 한꺼번에 사라지는 지점이다. 내면화된 아이만 신앙을 들고 나간다 — `Math.random()<clamp(0.10+0.95*owned,0.03,0.95)`로 `gradKeep`/`gradLapse`를 가른다. `carry=gradKeep/(gradKeep+gradLapse)`가 모든 사역의 최종 성적표다. hist·simulate가 추적, 화면 맨 위 북극성 카드.
+
+**온기×신앙(곱)·의심 U자** : 부모 전수는 가산이 아니라 곱이다(Bengtson; Stearns & McKinney 조절효과). `warmth`(부모 관계 온기 0~1)로 `famT2=(fam-0.5)*(0.4+1.2*warmth)`를 만들어 force·faith·owned에 흘린다 — 차가운 신실함은 잘 전해지지 않는다. `warmth`는 `doubtSpace` 목표도 크게 연다(`dsT=0.18+...+0.30*warmth`). `doubt`(의심)는 사춘기에 자란다(FYI U자): 말할 공간이 있으면 `processed=doubt*doubtSpace`로 내면화 재료가 되고, 막히면 `festering=doubt*(1-doubtSpace)`로 갉는다. 다뤄진 의심은 해소된다.
+
+**믿음 단계·조기경보** : `faithStage(s)`는 owned로 1 부여된(빌려온)·2 탐색·3 내면화(Fowler/Westerhoff 단순화)를 가른다. `earlyWarn(a)`는 아직 출석은 멀쩡한(eng≥0.3) 아이들 속에서 자라는 숨은 위험(취약도·곪는 의심·낮은 owned·외톨이)의 평균으로, 출석 지표보다 먼저 움직이는 선행 신호다. 화면의 "잘 나오지만 속이 빈 아이" 명단(`updateHiddenRisk`)이 이를 사람 단위로 짚는다.
 
 **신앙의 갈래(다면 효과)** : `faith`(종합)와 별개로 `word`(말씀)·`holy`(거룩)·`belong`(소속) 세 갈래가 있다. 매주 각 갈래는 `faith` 쪽으로 천천히 모이되(`0.05*(faith-갈래)`), 설교 결이 갈래마다 다르게 기울인다. **`SERMON_FX`** 표가 결마다 `{eng, faith, word, holy, belong}` 효과를 정의한다 — 여기에 트레이드오프가 산다. `faith`와 생태계 계수는 건드리지 않고(안전), 갈래는 그 위에 얹힌 탐색 렌즈다. 관찰의 "신앙의 결" 줄과 "이번 주 효과"의 `결` 줄에 평균·델타가 뜬다.
 

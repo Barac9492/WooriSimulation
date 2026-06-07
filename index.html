@@ -151,6 +151,8 @@
     <div id="stage-box"></div>
     <h2 class="plain-h" style="margin-top:16px">이번 주 먼저 만날 아이</h2>
     <div id="visit-list"><p class="muted">한 주가 흐르면, 가장 먼저 만날 아이가 여기 모입니다.</p></div>
+    <h2 class="plain-h" style="margin-top:16px">잘 나오지만 속이 빈 아이 — 출석표엔 안 보이는 위험</h2>
+    <div id="hidden-list"><p class="muted">출석은 좋은데 믿음이 아직 자기 것이 안 된 아이를 찾아냅니다. 전환기에 무너질 아이들입니다.</p></div>
     <h2 class="plain-h" style="margin-top:16px">이번 주 할 일</h2>
     <div id="action-one"><p class="muted">계획을 정하면 할 일이 나옵니다.</p></div>
     <div id="step-list" style="margin-top:10px"></div>
@@ -540,7 +542,7 @@
     for(var d2 in segAcc)for(var g2 in segAcc[d2])for(var k2 in segAcc[d2][g2])segAcc[d2][g2][k2]/=runs;
     acc.seg=segAcc;
     var rng=function(key){var mn=1e9,mx=-1e9;fin.forEach(function(p){if(p[key]<mn)mn=p[key];if(p[key]>mx)mx=p[key];});return [mn,mx];};
-    acc.range={n:rng('n'),active:rng('active'),risk:rng('risk'),drop:rng('drop'),f:rng('f')};
+    acc.range={n:rng('n'),active:rng('active'),risk:rng('risk'),drop:rng('drop'),f:rng('f'),idx:rng('idx'),own:rng('own'),carry:rng('carry')};
     return acc;
   }
   function copyEv(e){var o={};for(var k in e)o[k]=e[k];return o;}
@@ -696,8 +698,21 @@
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
-    updateVerdict();updateFront();updateGauges();updateVisitList();updateWhy();updateWar();updateReadouts();updateRecap();
+    updateVerdict();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateWhy();updateWar();updateReadouts();updateRecap();
     updateDiag();updateProj();
+  }
+  // 출석은 좋지만(eng 높음) 속이 빈(취약도 높음) 아이 — 출석 기반 대시보드엔 안 보이는 위험. 전환기에 무너진다.
+  function updateHiddenRisk(){
+    var el=document.getElementById('hidden-list');if(!el)return;
+    var pool=students.filter(function(s){return !s.left&&s.eng>=0.55;}).map(function(s){return {s:s,fr:fragility(s)};}).filter(function(o){return o.fr>=0.32;}).sort(function(a,b){return b.fr-a.fr;});
+    if(!pool.length){el.innerHTML='<p class="muted" style="color:var(--good)">잘 나오는 아이들의 속도 비교적 단단합니다. 좋은 신호입니다.</p>';return;}
+    el.innerHTML=pool.slice(0,3).map(function(o){var s=o.s,why=[];
+      if((s.owned!=null?s.owned:0)<0.35)why.push('믿음이 아직 자기 것이 아니고');
+      if((s.doubt!=null?s.doubt:0)*(1-(s.doubtSpace!=null?s.doubtSpace:0.5))>=0.18)why.push('의심을 말할 곳이 없고');
+      if(s.warmth!=null&&s.warmth<0.4)why.push('집과 관계가 차갑고');
+      var what=(s.owned!=null?s.owned:0)<0.35?'멘토·소그룹으로 자기 신앙 세우기':'의심을 솔직히 나눌 자리 만들기';
+      return '<div class="visit"><span class="who">'+GRADE_LABELS[s.grade]+' 한 명</span><span>출석은 좋지만 '+(why.join(' ')||'속이 외부에 기대 있어')+' 전환기에 위험합니다 → <b>'+what+'</b></span></div>';
+    }).join('')+(pool.length>3?'<p class="hint" style="margin-top:6px">외 '+(pool.length-3)+'명 더 있습니다.</p>':'');
   }
   // 겉(출석)/속(내면화) 두 눈금 + 북극성(졸업 신앙 잔존) + 모래성 경고 + 믿음 단계 + 전환기 카운트다운.
   function updateGauges(){
@@ -895,7 +910,9 @@
     g.strokeStyle='#2563eb';g.lineWidth=2.2;g.beginPath();projData.forEach(function(p,i){var x=34+(i/(n-1))*(W-40),y=H-8-(p.idx/100)*(H-22);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
     // 내면화 지수(자기 것이 된 믿음) — 보라 점선. 믿음 지수와의 간격이 '겉과 속의 차이'다.
     if(projData[0].own!=null){g.strokeStyle='#7c3aed';g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();projData.forEach(function(p,i){var x=34+(i/(n-1))*(W-40),y=H-8-(p.own/100)*(H-22);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();g.setLineDash([]);}
-    var L=projData[n-1];document.getElementById('idx-now').textContent='3년 뒤 믿음 '+Math.round(L.idx)+' · 내면화 '+Math.round(L.own!=null?L.own:0)+' (지금 믿음 '+(hist.length?Math.round(hist[hist.length-1].idx):'—')+') · 파란선=믿음 지수, 보라 점선=내면화';
+    var L=projData[n-1],rg=projData.range;
+    var band=rg&&rg.idx?' (여러 번 돌리면 '+Math.round(rg.idx[0])+'~'+Math.round(rg.idx[1])+' 사이)':'';
+    document.getElementById('idx-now').textContent='3년 뒤 믿음 '+Math.round(L.idx)+band+' · 내면화 '+Math.round(L.own!=null?L.own:0)+' · 파란선=믿음 지수, 보라 점선=내면화';
   }
   function updateRisk(){
     var el=document.getElementById('risk-box');if(!el||!projData)return;
@@ -952,19 +969,24 @@
     generate();
   }
   function recommend(){
-    var box=document.getElementById('reco');box.innerHTML='<span class="hint">분석 중... 어떤 결정이 믿음을 가장 끌어올리는지 견준다.</span>';
+    var box=document.getElementById('reco');box.innerHTML='<span class="hint">지렛대 분석 중... 어느 한 수가 북극성(졸업 신앙 잔존)을 가장 끌어올리는지 견준다.</span>';
     setTimeout(function(){
-      var base=captureConfig(),W=48,R=3;var b=simulate(base,W,R),bIdx=b[b.length-1].idx;
+      var base=captureConfig(),W=72,R=4;var b=simulate(base,W,R),P=b[b.length-1];
       var cands=[];
-      Object.keys(SERMON_FOCUS).forEach(function(f){if(f===DEC.focus)return;var c=cloneCfg(base);c.schedule.forEach(function(e){if(e.type==='sermon')e.focus=f;});cands.push({label:SERMON_FOCUS[f].label+' 설교로',sim:c});});
-      if(!DEC.prog.sg){var c1=cloneCfg(base);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'소그룹 집중 더하기',sim:c1});}
-      if(!DEC.prog.mentor){var c2=cloneCfg(base);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'멘토 강화 더하기',sim:c2});}
-      if(!DEC.prog.retreat){var c3=cloneCfg(base);var r=c3.schedule.filter(function(e){return e.type==='retreat';});if(r.length)r.forEach(function(e){e.nights=3;e.attendRate=0.82;e.intensity=0.78;});cands.push({label:'수련회 강화 더하기',sim:c3});}
-      var scored=cands.map(function(cd){var h=simulate(cd.sim,W,R);return {label:cd.label,gain:h[h.length-1].idx-bIdx,drop:h[h.length-1].drop};});
-      scored.sort(function(a,b){return b.gain-a.gain;});
+      Object.keys(SERMON_FOCUS).forEach(function(f){if(f===DEC.focus)return;var c=cloneCfg(base);c.schedule.forEach(function(e){if(e.type==='sermon')e.focus=f;});cands.push({label:SERMON_FOCUS[f].label+' 설교',sim:c});});
+      if(!DEC.prog.sg){var c1=cloneCfg(base);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'소그룹 집중',sim:c1});}
+      if(!DEC.prog.mentor){var c2=cloneCfg(base);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'멘토 강화',sim:c2});}
+      if(!DEC.prog.retreat){var c3=cloneCfg(base);var r=c3.schedule.filter(function(e){return e.type==='retreat';});if(r.length)r.forEach(function(e){e.nights=3;e.attendRate=0.82;e.intensity=0.78;});cands.push({label:'수련회 강화',sim:c3});}
+      var c4=cloneCfg(base);c4.ops.daracbang=Math.min(1,(c4.ops.daracbang!=null?c4.ops.daracbang:0.5)+0.2);cands.push({label:'부모 다락방 강화',sim:c4});
+      // 북극성(내면화+졸업 신앙 잔존)으로 견주고, 출석 변화도 나란히 보여 '출석만 올리는 모래성'을 가른다.
+      var scored=cands.map(function(cd){var h=simulate(cd.sim,W,R),L=h[h.length-1];return {label:cd.label,own:L.own-P.own,carry:(L.carry||0)-(P.carry||0),act:L.active-P.active,score:(L.own-P.own)+0.5*((L.carry||0)-(P.carry||0))};});
+      scored.sort(function(a,b){return b.score-a.score;});
+      var rows=scored.slice(0,5).map(function(s,i){var sg=function(v){return (v>=0?'+':'')+Math.round(v);};
+        var sandFlag=(s.act>=2&&s.carry<1)?' <span class="hint" style="color:var(--bad)">(출석만↑·모래성)</span>':'';
+        return '<div class="logrow"><span class="logwk">'+(i+1)+'위</span><span><b>'+s.label+'</b> — 내면화 '+sg(s.own)+' · 졸업 잔존 '+sg(s.carry)+'%p · 출석 '+sg(s.act)+'명'+sandFlag+'</span></div>';}).join('');
       var top=scored[0];
-      if(top&&top.gain>=1)box.innerHTML='<div class="reco"><b>추천</b> — 지금 계획에 <b>'+top.label+'</b> 바꾸면 믿음 지수가 약 <b>+'+Math.round(top.gain)+'</b> 더 오른다.<br><span class="hint">이대로 보고 싶으면 위 칩을 그렇게 맞추고 "이 결정으로 보기"를 누르라. 그냥 넣어 본 값이라 방향으로만 읽으라.</span></div>';
-      else box.innerHTML='<div class="reco">지금 결정이 이미 괜찮다. 크게 더 끌어올리는 단일 변화는 안 보인다.<br><span class="hint">설교 결과 프로그램을 바꿔 가며 ①②가 어떻게 움직이는지 살펴보라.</span></div>';
+      var head=(top&&top.score>=1)?'<div class="reco"><b>가장 큰 한 수: '+top.label+'</b> — 출석이 아니라 <b>내면화</b>를 가장 많이 끌어올린다.</div>':'<div class="reco">단일 변화로 북극성을 크게 올리는 한 수는 안 보인다. 여러 손길의 배합이 필요하다.</div>';
+      box.innerHTML=head+'<div class="mini-h" style="margin-top:10px">지렛대 순위 (북극성 기준)</div>'+rows+'<p class="hint" style="margin-top:6px">출석만 오르고 졸업 잔존은 그대로면 모래성이다. 그냥 넣어 본 값이라 방향으로만 읽으라.</p>';
     },30);
   }
   document.getElementById('apply-plan').addEventListener('click',applyDecision);
