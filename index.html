@@ -935,7 +935,14 @@
     a.forEach(function(s){if(s.eng>=0.3)return;friendObjs(s,students).forEach(function(q){if(q.mx==null||q.eng<0.3)return;g.beginPath();g.moveTo(s.mx*W,s.my*H);g.lineTo(q.mx*W,q.my*H);g.stroke();});});
     a.forEach(function(s){g.fillStyle=s.eng>=0.55?'#16a34a':s.eng>=0.3?'#d08a1a':'#dc2626';g.beginPath();g.arc(s.mx*W,s.my*H,3.2,0,6.2832);g.fill();});
     if(c){g.lineWidth=2;c.spread.forEach(function(x){if(x.s.mx==null)return;g.strokeStyle='#991b1b';g.beginPath();g.arc(x.s.mx*W,x.s.my*H,6,0,6.2832);g.stroke();});
-      c.anchor.forEach(function(x){if(x.s.mx==null)return;g.strokeStyle='#15803d';g.beginPath();g.arc(x.s.mx*W,x.s.my*H,6,0,6.2832);g.stroke();});}}
+      c.anchor.forEach(function(x){if(x.s.mx==null)return;g.strokeStyle='#15803d';g.beginPath();g.arc(x.s.mx*W,x.s.my*H,6,0,6.2832);g.stroke();});}
+    if(selStudent&&!selStudent.left&&selStudent.mx!=null){g.strokeStyle='#1d4ed8';g.lineWidth=2.5;g.beginPath();g.arc(selStudent.mx*W,selStudent.my*H,8,0,6.2832);g.stroke();}}
+  // 관계 지도에서 점(아이)을 누르면 그 아이를 자세히
+  function netClick(e){var cv=document.getElementById('net');if(!cv)return;var r=cv.getBoundingClientRect();
+    var x=(e.clientX-r.left)/r.width*600,y=(e.clientY-r.top)/r.height*300;
+    var a=students.filter(function(s){return !s.left&&s.mx!=null;}),best=null,bd=400;
+    a.forEach(function(s){var dx=s.mx*600-x,dy=s.my*300-y,d=dx*dx+dy*dy;if(d<bd&&(!best||d<best.d))best={s:s,d:d};});
+    if(best){selStudent=best.s;updateStudCard();updateDiag();var c=document.getElementById('stud-card');if(c)c.scrollIntoView({block:'nearest'});}}
   function updateDiag(){
     var c=contagion();
     var rt=rtCalc(),rv=document.getElementById('rt-val'),rn=document.getElementById('rt-note');
@@ -1097,6 +1104,7 @@
     var w=window.open('','_blank');if(!w){alert('팝업이 막혀 있습니다. 팝업을 허용해 주세요.');return;}
     w.document.write(html);w.document.close();w.focus();setTimeout(function(){w.print();},300);
   }
+  var netEl=document.getElementById('net');if(netEl){netEl.style.cursor='pointer';netEl.addEventListener('click',netClick);}
   document.getElementById('btn-report').addEventListener('click',buildReport);
   document.getElementById('set-close').addEventListener('click',function(){drawer.hidden=true;});
   drawer.addEventListener('click',function(e){if(e.target===drawer)drawer.hidden=true;});
