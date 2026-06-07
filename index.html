@@ -872,13 +872,13 @@
     if(os)os.innerHTML='📖 '+seriesT+' · ⏰ '+ddayT;
     var tc=val('s-tc'),ri=a.filter(function(s){return s.eng<0.3;}).length,rt=rtCalc(),of=document.getElementById('op-force');
     var frontT=(rt!=null&&rt>=1.15)?'<b style="color:var(--bad)">번지는 중</b>':(ri/n>=0.15?'<b style="color:var(--warn)">흔들림</b>':'<b style="color:var(--good)">잠잠</b>');
-    if(of)of.innerHTML='🛡 병력 교사 <b>'+tc+'명</b>(1인당 학생 '+Math.round(n/Math.max(1,tc))+'명) · 📡 전선 '+frontT;
+    if(of)of.innerHTML='🛡 교사 <b>'+tc+'명</b>(교사 1명당 '+Math.round(n/Math.max(1,tc))+'명) · 📡 번짐세 '+frontT;
     var sl=document.getElementById('step-list');
     if(sl){var prog=sp?(SERMON_FOCUS[sp.focus].label+' 설교'):'이번 주 설교';
-      var s3=op?(op.label+'('+(op.d===0?'이번 주':op.d+'주 뒤')+') 준비 시작 — 참가 독려·교사 배치'):'다음 수련회·전도 작전을 달력에 잡기';
-      sl.innerHTML=stepRow(1,'사수','흔들리는 아이 '+ri+'명 중 위 "최전선" 아이부터 이번 주 붙들기(안부·또래 연결).')+
-        stepRow(2,'화력','이번 주 '+prog+'로 전체를 끌어올리기.')+
-        stepRow(3,'다음 작전',s3);}
+      var s3=op?(op.label+'('+(op.d===0?'이번 주':op.d+'주 뒤')+') 준비 시작 — 참가 독려·교사 배치'):'다음 수련회·전도를 달력에 잡기';
+      sl.innerHTML=stepRow(1,'먼저 만날 아이','흔들리는 '+ri+'명 중 위 "먼저 만날 아이"부터 이번 주 붙들기(안부 전화·또래 연결).')+
+        stepRow(2,'함께 세우기','이번 주 '+prog+'로 전체를 한 걸음 끌어올리기.')+
+        stepRow(3,'다음 준비',s3);}
   }
 
   // ── ① 전염 지도 (COVID 렌즈) ──
