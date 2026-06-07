@@ -162,6 +162,7 @@
       <div style="margin-top:12px">
         <div class="mini-h">설교 결 (하나)</div>
         <div id="sermon-pick" class="chips"></div>
+        <div id="sermon-desc" class="hint" style="margin-top:5px"></div>
         <div class="mini-h" style="margin-top:10px">프로그램 (여럿 가능)</div>
         <div id="prog-pick" class="chips"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
@@ -967,10 +968,12 @@
   function updateProj(){drawIdx();updateAttr();}
 
   // ── ③ 결정 + 추천 ──
-  var DEC={focus:'nurture',prog:{retreat:true,sg:false,outreach:false,mentor:false}};
-  var PROGS=[{k:'retreat',n:'수련회 강화'},{k:'sg',n:'소그룹 집중'},{k:'mentor',n:'멘토 강화'},{k:'outreach',n:'전도 주간'}];
+  var DEC={focus:'nurture',prog:{parent:false,retreat:true,sg:false,outreach:false,mentor:false}};
+  var PROGS=[{k:'parent',n:'부모 세우기'},{k:'retreat',n:'수련회 강화'},{k:'sg',n:'소그룹 집중'},{k:'mentor',n:'멘토 강화'},{k:'outreach',n:'전도 주간'}];
+  var SERMON_DESC={nurture:'믿음과 출석을 고루 키운다. 무난한 기본.',evangel:'안 믿는 친구·약한 아이에게 가닿는다.',recovery:'지치고 상한 아이를 돌이킨다.',word:'말씀이 깊어진다. 대신 출석은 살짝 눌릴 수 있다.',holiness:'거룩을 강하게 세운다. 대신 출석·소속은 눌릴 수 있다.',grace:'소속감·출석을 올린다. 대신 거룩은 더디다.'};
   function renderDecide(){
     document.getElementById('sermon-pick').innerHTML=Object.keys(SERMON_FOCUS).map(function(f){return '<button class="chip'+(DEC.focus===f?' on':'')+'" data-f="'+f+'">'+SERMON_FOCUS[f].label+'</button>';}).join('');
+    var sd=document.getElementById('sermon-desc');if(sd)sd.innerHTML='→ <b>'+SERMON_FOCUS[DEC.focus].label+'</b>: '+(SERMON_DESC[DEC.focus]||'');
     document.getElementById('prog-pick').innerHTML=PROGS.map(function(p){return '<button class="chip'+(DEC.prog[p.k]?' on':'')+'" data-p="'+p.k+'">'+p.n+'</button>';}).join('');
     Array.prototype.forEach.call(document.querySelectorAll('#sermon-pick .chip'),function(b){b.addEventListener('click',function(){DEC.focus=this.dataset.f;renderDecide();});});
     Array.prototype.forEach.call(document.querySelectorAll('#prog-pick .chip'),function(b){b.addEventListener('click',function(){DEC.prog[this.dataset.p]=!DEC.prog[this.dataset.p];renderDecide();});});
@@ -990,6 +993,8 @@
     schedule=decToSchedule();
     setSlider('s-mt',DEC.prog.mentor?45:30);
     setSlider('s-sg',DEC.prog.sg?70:55);
+    // 부모 세우기: 부모 모임(다락방) 참여를 끌어올린다. 40년 현장이 첫 지렛대로 꼽는 것.
+    if(DEC.prog.parent)setSlider('s-daracbang',Math.min(100,(+document.getElementById('s-daracbang').value)+25));
     generate();
   }
   function recommend(){
