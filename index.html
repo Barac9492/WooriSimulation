@@ -93,6 +93,8 @@
   .fbar-leg{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
   .fbar-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:middle;margin-right:4px}
   .fbar-leg i.g{background:var(--good)}.fbar-leg i.a{background:var(--warn)}.fbar-leg i.r{background:var(--bad)}
+  .logrow{display:flex;gap:8px;font-size:13px;padding:5px 0;border-top:1px solid var(--line);line-height:1.5}
+  .logwk{flex:none;min-width:42px;color:var(--mut);font-weight:700}
   .opline{font-size:14px;line-height:1.75;padding:2px 0}
   .stepn{display:flex;gap:10px;padding:9px 0;border-top:1px dashed var(--line);font-size:14px;line-height:1.55}
   .stepn:first-child{border-top:none}
@@ -164,6 +166,15 @@
       <div id="effect" class="plain-p"></div>
       <h3 class="plain-h" style="margin-top:16px">이대로면 앞날은</h3>
       <div id="forecast" class="plain-p"></div>
+    </div>
+  </details>
+
+  <!-- 전투 일지: 그동안 무슨 일이 있었나 -->
+  <details class="card">
+    <summary class="summary-h">전투 일지 — 그동안 무슨 일이 있었나 ▾</summary>
+    <div style="margin-top:12px">
+      <div id="recap-sum" class="plain-p"></div>
+      <div id="recap-log"></div>
     </div>
   </details>
 
@@ -491,7 +502,7 @@
   // ── 라이브 1주 + 생성 + 렌더(새 대시보드용) ──
   function startSim(){weekInc=0;layoutNet();runProjection();runReco();render();}
   function generate(){
-    seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];churchClimate=0.5;parentVitality=0.5;
+    seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];eventLog=[];churchClimate=0.5;parentVitality=0.5;
     var N=val('p-n');for(var i=0;i<N;i++)students.push(makeOne(pickGrade()));
     students.forEach(function(s){s.loner?link(s,students,0,1):link(s,students,3,5);});
     startSim();
@@ -539,7 +550,7 @@
   function buildFromRoster(){
     if(!roster||!roster.length)return;
     syncSlidersFromRoster(roster); // 전망·추천이 실제 명단을 닮도록 슬라이더 보정
-    seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];churchClimate=0.5;parentVitality=0.5;
+    seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];eventLog=[];churchClimate=0.5;parentVitality=0.5;
     roster.forEach(function(r){students.push(makeFromRow(r));});
     students.forEach(function(s){var t=s._friendN||0;if(t>0)linkIn(s,students,students,Math.max(0,t-1),t);});
     document.getElementById('roster-status').innerHTML='✅ 명단 <b>'+roster.length+'명</b>으로 진단 중.';
@@ -562,13 +573,25 @@
   document.getElementById('csv-template').addEventListener('click',downloadCSV);
   document.getElementById('csv-sample').addEventListener('click',function(){roster=placeholderRoster();document.getElementById('settings').hidden=true;buildFromRoster();});
   document.getElementById('csv-file').addEventListener('change',function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var r=parseCSV(rd.result);if(!r.length){document.getElementById('roster-status').textContent='빈 명단이거나 형식이 맞지 않습니다.';return;}roster=r;document.getElementById('settings').hidden=true;buildFromRoster();}catch(err){document.getElementById('roster-status').textContent='읽기 실패: '+err.message;}};rd.readAsText(f,'utf-8');});
+  var eventLog=[];
+  function logEv(t,warn){eventLog.push({wk:week,t:t,warn:!!warn});if(eventLog.length>80)eventLog.shift();}
   function step(){
     week++;
+    var prevDrop=dropouts;
     var active=students.filter(function(s){return !s.left;});
     active.forEach(function(s){s._wasW=(s.eng<0.3);});
     var sg=val('s-sg')/100,mt=val('s-mt')/100,tc=val('s-tc'),intake=val('s-in'),sp=val('s-speed')/100;
     var tEff=Math.min(1,(tc*8)/Math.max(1,active.length));
     var we=weekEffects(schedule,week);
+    schedule.forEach(function(ev){if(!fires(ev,week))return;
+      if(ev.type==='retreat')logEv('수련회'+(['','(1박2일)','(2박3일)','(3박4일)'][ev.nights]||''));
+      else if(ev.type==='sermon')logEv(SERMON_FOCUS[ev.focus].label+' 설교 시작');
+      else if(ev.type==='exam')logEv('시험기간 시작',true);
+      else if(ev.type==='sooneung')logEv('수능 시즌 시작(고3)',true);
+      else if(ev.type==='outreach')logEv('전도 주간');
+      else if(ev.type==='smallgroup')logEv('소그룹 집중주간');});
+    churchSchedule.forEach(function(ev){if(!fires(ev,week))return;
+      if(ev.type==='allretreat')logEv('전교인 수련회');else if(ev.type==='revival')logEv('부흥회');else if(ev.type==='senior')logEv('담임 말씀 시리즈 시작');});
     var cu=advanceChurch(churchClimate,parentVitality,churchSchedule,week,sp,val('s-daracbang')/100);
     churchClimate=cu.cc;parentVitality=cu.pv;
     var ctx={arr:students,sgFrac:sg,mtFrac:mt,tEff:tEff,speed:sp,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:parentVitality,churchClimate:churchClimate,allRetreat:cu.allRetreat,revival:cu.revival};lastCtx=ctx;
@@ -576,11 +599,12 @@
     if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var i=0;i<4;i++){var ns=makeOne(Math.random()<0.6?1:2,rnd(0.62,0.85));if(inv.length){ns.friends.push(students.indexOf(inv[Math.floor(Math.random()*inv.length)]));}ns.mx=Math.random();ns.my=Math.random();students.push(ns);}}
     students.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}});
     weekInc=students.filter(function(s){return !s.left&&s.eng<0.3&&!s._wasW;}).length;
-    if(week%WEEKS_PER_YEAR===0){students.forEach(function(s){if(!s.left){var was=s.grade;s.grade++;
-        if(s.grade>MAX_GRADE){s.left=true;if(s.seat>=0)seats[s.seat].taken=false;}
-        else if(was===3&&Math.random()<cliffProb(s)){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}}});
+    if(week%WEEKS_PER_YEAR===0){var grad=0,cliff=0;students.forEach(function(s){if(!s.left){var was=s.grade;s.grade++;
+        if(s.grade>MAX_GRADE){s.left=true;grad++;if(s.seat>=0)seats[s.seat].taken=false;}
+        else if(was===3&&Math.random()<cliffProb(s)){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;cliff++;if(s.seat>=0)seats[s.seat].taken=false;}}});
       for(var j=0;j<intake;j++){var n2=makeOne(1);var p=students.filter(function(o){return !o.left&&o.grade<=2;});n2.loner?link(n2,p,0,1):link(n2,p,3,5);n2.mx=Math.random();n2.my=Math.random();students.push(n2);}
-      layoutNet();}
+      layoutNet();logEv('새 학년 — 졸업 '+grad+'명 · 전환에서 '+cliff+'명 이탈 · 신입 '+intake+'명',true);}
+    else{var wd=dropouts-prevDrop;if(wd>=2)logEv(wd+'명이 이탈했습니다',true);}
     render();
   }
   function beliefIndex(a){return a.length?Math.round(a.reduce(function(x,s){return x+(s.commit+s.faith)/2;},0)/a.length*100):0;}
@@ -594,7 +618,7 @@
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
-    updateVerdict();updateFront();updateVisitList();updateWhy();updateWar();updateReadouts();
+    updateVerdict();updateFront();updateVisitList();updateWhy();updateWar();updateReadouts();updateRecap();
     updateDiag();updateProj();
   }
   // ── 평이한 문장 진단서 (목사용 기본 화면) ──
@@ -610,6 +634,14 @@
     var sub='지금 '+a.length+'명 중 <b>'+ri+'명</b>이 흔들리고 있습니다. '+dir+'.';
     document.getElementById('verdict').innerHTML='<div class="light">'+light+'</div><div><div class="vtext">'+txt+'</div><div class="vsub">'+sub+'</div></div>';
     document.getElementById('verdict-card').style.borderLeft='5px solid '+col;
+  }
+  function updateRecap(){
+    var sum=document.getElementById('recap-sum'),lg=document.getElementById('recap-log');if(!sum)return;
+    if(hist.length<2){sum.innerHTML='<span class="muted">아직 진행 전입니다. "다음 주 ▶"로 몇 주 흘려보면, 그동안 무엇이 바뀌고 무슨 일이 있었는지 여기 정리됩니다.</span>';if(lg)lg.innerHTML='';return;}
+    var a=hist[0],b=hist[hist.length-1],sg=function(v){return v>0?'+'+v:''+v;};
+    sum.innerHTML='지난 <b>'+week+'주</b> 동안 — 전세 지수 '+a.idx+' → <b>'+b.idx+'</b>('+sg(b.idx-a.idx)+') · 흔들리는 아이 '+a.risk+' → <b>'+b.risk+'</b>('+sg(b.risk-a.risk)+') · 그동안 떠난 아이 누적 <b>'+dropouts+'</b>명, 지금 함께 <b>'+b.n+'</b>명.';
+    if(lg){if(!eventLog.length)lg.innerHTML='<div class="hint" style="margin-top:8px">특별한 사건 없이 평상시로 흘렀습니다.</div>';
+      else lg.innerHTML='<div class="mini-h" style="margin-top:10px">주요 사건</div>'+eventLog.slice().reverse().map(function(e){return '<div class="logrow"><span class="logwk">'+e.wk+'주</span><span'+(e.warn?' style="color:var(--bad)"':'')+'>'+e.t+'</span></div>';}).join('');}
   }
   function updateFront(){
     var el=document.getElementById('frontbar');if(!el)return;var a=students.filter(function(s){return !s.left;});if(!a.length){el.innerHTML='';return;}
