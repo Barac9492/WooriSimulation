@@ -131,7 +131,9 @@
 - `commit`(느린 헌신 0~1) : 사역이 천천히 쌓아 올리는 바탕. 친구 효과도 이 값 기준.
 - `eng`(표시 출석) = `clamp(commit + 0.20*retreatGlow - examPress)`. 화면 지표·이탈 판정은 이 값으로 한다.
 
-학생 속성: `grade`, `bg`(mota/normal/none), `core`, `loner`, `commit`, `eng`, `faith`(0~1), `word`·`holy`·`belong`(신앙의 갈래 말씀·거룩·소속 0~1), `fam`(가정 신앙 0~1), `sg`, `mentor`, `sermonAcc`(설교 누적), `retreatGlow`(수련회 여운), `examPress`(시험 일시 압박), `friends`, `left`, `dropped`(출석 바닥으로 이탈했는지 — 졸업과 구분해 취약 분석 이탈률에 쓴다).
+학생 속성: `grade`, `bg`(mota/normal/none), `core`, `loner`, `commit`, `eng`, `faith`(0~1), `word`·`holy`·`belong`(신앙의 갈래 말씀·거룩·소속 0~1), `owned`·`doubtSpace`(내면화 축 0~1), `adults`(곁의 어른 수), `fam`(가정 신앙 0~1), `sg`, `mentor`, `sermonAcc`(설교 누적), `retreatGlow`(수련회 여운), `examPress`(시험 일시 압박), `friends`, `left`, `dropped`(출석 바닥으로 이탈했는지 — 졸업과 구분해 취약 분석 이탈률에 쓴다).
+
+**내면화 축(owned) — 출석이 가리는 진짜 지표** : `eng`(출석 습관)과 별개로 `owned`(자기 것이 된 믿음 0~1)를 둔다. 출석은 좋아도 `owned`가 낮으면 전환기에 무너진다(NSYR의 "도덕적·치료적 이신론" 위험군). `owned`는 매주 목표값으로 아주 느리게(`sp*(ownT-owned)*0.06`) 이동하며, 목표는 `0.18+0.34*faith+0.10*(word+holy)/2+0.04*min(adults+mentor,3)+0.10*(fam-0.5)+0.08*(doubtSpace-0.5)-결석페널티`. `doubtSpace`(의심을 말할 공간)는 곁의 어른·멘토·소그룹이 천천히 연다(`dsT=0.40+0.06*min(adN,3)+(sg?0.06:0)`). **`cliffProb`에 `owned` 보호항**(`-0.18*clamp(owned-0.4,0,0.6)`)을 더해, 내면화된 아이는 중3→고1 절벽을 잘 넘는다(검증: 같은 commit 0.45에서 owned 0.2 vs 0.8이면 절벽 확률 0.100→0.028). 내면화 지수 `ownIndex`(평균×100)·`ownRate`(owned≥0.5 비율)로 화면에 띄운다. 근거·설문 문항은 `SURVEY.md` 참조.
 
 **신앙의 갈래(다면 효과)** : `faith`(종합)와 별개로 `word`(말씀)·`holy`(거룩)·`belong`(소속) 세 갈래가 있다. 매주 각 갈래는 `faith` 쪽으로 천천히 모이되(`0.05*(faith-갈래)`), 설교 결이 갈래마다 다르게 기울인다. **`SERMON_FX`** 표가 결마다 `{eng, faith, word, holy, belong}` 효과를 정의한다 — 여기에 트레이드오프가 산다. `faith`와 생태계 계수는 건드리지 않고(안전), 갈래는 그 위에 얹힌 탐색 렌즈다. 관찰의 "신앙의 결" 줄과 "이번 주 효과"의 `결` 줄에 평균·델타가 뜬다.
 
