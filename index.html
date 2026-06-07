@@ -283,7 +283,7 @@
       <button class="btn sm" id="pre-grow">성장 중</button>
     </div>
     <div class="grp">우리 부 진단 <small style="font-weight:400;color:var(--mut)">정확한 숫자 몰라도 된다. 대략 느낌으로 맞추라.</small></div>
-    <label class="slab"><span>전체 인원<small>지금 명단에 있는 아이</small></span><input type="range" id="p-n" min="60" max="220" step="1" value="150"><b id="v-p-n"></b></label>
+    <label class="slab"><span>전체 인원<small>지금 명단에 있는 아이(1·2부 합쳐도)</small></span><input type="range" id="p-n" min="40" max="320" step="1" value="150"><b id="v-p-n"></b></label>
     <label class="slab"><span>활발한 아이<small>매주 잘 나오고 마음도 있는 아이</small></span><input type="range" id="p-active" min="0" max="100" step="1" value="55"><b id="v-p-active"></b></label>
     <label class="slab"><span>흔들리는 아이<small>요즘 안 보이거나 마음이 떠난 아이</small></span><input type="range" id="p-risk" min="0" max="100" step="1" value="12"><b id="v-p-risk"></b></label>
     <label class="slab"><span>중등 비중<small>중1~3 비율(나머지는 고등)</small></span><input type="range" id="p-mid" min="0" max="100" step="1" value="52"><b id="v-p-mid"></b></label>
@@ -292,10 +292,11 @@
     <label class="slab"><span>혼자 다니는 아이<small>집은 안 믿는데 저 혼자 나오는 아이</small></span><input type="range" id="p-none" min="0" max="100" step="1" value="15"><b id="v-p-none"></b></label>
     <label class="slab"><span>헌신된 제자<small>예배·봉사에 진심인 핵심 아이(코어)</small></span><input type="range" id="p-core" min="0" max="100" step="1" value="30"><b id="v-p-core"></b></label>
     <label class="slab"><span>외톨이<small>교회에 친한 친구가 거의 없는 아이</small></span><input type="range" id="p-loner" min="0" max="100" step="1" value="15"><b id="v-p-loner"></b></label>
+    <div id="seg-hint" class="hint" style="margin:2px 0 0"></div>
     <div class="grp">평소 사역 <small style="font-weight:400;color:var(--mut)">우리 부가 늘 하는 것</small></div>
     <label class="slab"><span>소그룹 참여<small>소그룹(목장)에 든 아이 비율</small></span><input type="range" id="s-sg" min="0" max="100" step="1" value="55"><b id="v-s-sg"></b></label>
     <label class="slab"><span>멘토 있는 아이<small>따로 챙겨 주는 멘토가 있는 비율</small></span><input type="range" id="s-mt" min="0" max="100" step="1" value="30"><b id="v-s-mt"></b></label>
-    <label class="slab"><span>교사 수<small>실제로 아이를 맡아 챙기는 교사</small></span><input type="range" id="s-tc" min="6" max="40" step="1" value="25"><b id="v-s-tc"></b></label>
+    <label class="slab"><span>교사 수<small>실제로 아이를 맡아 챙기는 교사(이름만 말고)</small></span><input type="range" id="s-tc" min="4" max="70" step="1" value="25"><b id="v-s-tc"></b></label>
     <label class="slab"><span>한 해 새 아이<small>해마다 들어오는 새 학생(주로 중1)</small></span><input type="range" id="s-in" min="0" max="90" step="1" value="50"><b id="v-s-in"></b></label>
     <label class="slab"><span>변화 속도<small>아이들이 얼마나 빨리 변하나(보통 천천히)</small></span><input type="range" id="s-speed" min="20" max="100" step="5" value="40"><b id="v-s-speed"></b></label>
     <label class="slab"><span>부모 모임 참여<small>부모가 기도·양육 모임(다락방)에 나오는 정도</small></span><input type="range" id="s-daracbang" min="0" max="100" step="1" value="50"><b id="v-s-daracbang"></b></label>
@@ -1017,7 +1018,10 @@
   // ── 설정 서랍 ──
   var UNITS={'p-n':'명','p-active':'%','p-risk':'%','p-mid':'%','p-high':'%','p-mota':'%','p-none':'%','p-core':'%','p-loner':'%','s-sg':'%','s-mt':'%','s-tc':'명','s-in':'명','s-speed':'%','s-daracbang':'%'};
   Object.keys(UNITS).forEach(function(id){var el=document.getElementById(id),out=document.getElementById('v-'+id);
-    var sync=function(){if(id==='s-speed'){var v=+el.value;out.textContent=v<=35?'천천히':v<=60?'보통':'빠르게';}else out.textContent=el.value+UNITS[id];};el.addEventListener('input',sync);sync();});
+    var sync=function(){if(id==='s-speed'){var v=+el.value;out.textContent=v<=35?'천천히':v<=60?'보통':'빠르게';}else out.textContent=el.value+UNITS[id];if(id==='p-active'||id==='p-risk')segHint();};el.addEventListener('input',sync);sync();});
+  function segHint(){var h=document.getElementById('seg-hint');if(!h)return;var a=+document.getElementById('p-active').value,r=+document.getElementById('p-risk').value,mid=Math.max(0,100-a-r);
+    h.textContent='→ 나머지 '+mid+'%는 그저 그런(느슨한) 아이. 활발+흔들림+느슨 = 100%.'+(a+r>100?' ※ 활발+흔들림이 100%를 넘습니다. 줄이세요.':'');}
+  segHint();
   function setSlider(id,v){var e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input'));}
   document.getElementById('pre-decline').addEventListener('click',function(){setSlider('p-active',35);setSlider('p-risk',30);setSlider('s-daracbang',30);});
   document.getElementById('pre-flat').addEventListener('click',function(){setSlider('p-active',50);setSlider('p-risk',18);setSlider('s-daracbang',50);});
