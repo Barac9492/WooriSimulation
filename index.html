@@ -199,6 +199,15 @@
   <div class="drawer-inner">
     <div class="drawer-h"><h3>우리 부 설정</h3><button id="set-close" class="btn ghost sm">닫기</button></div>
     <p class="hint">지금 우리 부의 실제 모습을 넣는다. 추세 버튼으로 빠르게 잡은 뒤 손볼 수 있다.</p>
+    <div class="grp">명단 (엑셀·CSV)</div>
+    <p class="hint">아이별 데이터를 채운 CSV를 불러오면 그 실제 명단으로 진단한다. 아직 없으면 예시 명단으로 둘러보라.</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+      <button class="btn sm" id="csv-template">양식 받기</button>
+      <button class="btn sm" id="csv-sample">예시 명단 불러오기</button>
+      <label class="btn sm" style="position:relative;overflow:hidden;cursor:pointer">CSV 불러오기<input type="file" id="csv-file" accept=".csv,text/csv" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>
+    </div>
+    <div id="roster-status" class="hint" style="margin-bottom:6px"></div>
+    <div class="grp">또는 분포로 (명단 없이)</div>
     <div class="preset">
       <button class="btn sm" id="pre-decline">쇠퇴 중</button>
       <button class="btn sm" id="pre-flat">정체</button>
@@ -460,12 +469,79 @@
   churchSchedule.push({id:ceid++,type:'allretreat',start:14,repeat:24});
 
   // ── 라이브 1주 + 생성 + 렌더(새 대시보드용) ──
+  function startSim(){weekInc=0;layoutNet();runProjection();runReco();render();}
   function generate(){
     seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];churchClimate=0.5;parentVitality=0.5;
     var N=val('p-n');for(var i=0;i<N;i++)students.push(makeOne(pickGrade()));
     students.forEach(function(s){s.loner?link(s,students,0,1):link(s,students,3,5);});
-    weekInc=0;layoutNet();runProjection();runReco();render();
+    startSim();
   }
+  // ── 명단(CSV) 가져오기 ── 아이별 데이터로 진단. 지금은 예시 명단(placeholder).
+  var roster=null;
+  var CSV_COLS=['이름','학년','부모신앙','형제신앙','교회친구수','소그룹','멘토','봉사역할','출석4주','QT','학업압박','신앙주인의식'];
+  var GMAP={'중1':1,'중2':2,'중3':3,'고1':4,'고2':5,'고3':6};
+  function yn(v){v=(v||'').toString().trim().toLowerCase();return v==='y'||v==='예'||v==='o'||v==='1'||v==='true';}
+  function num(v,d){var n=parseFloat(v);return isNaN(n)?d:n;}
+  function clampn(v,a,b){return v<a?a:v>b?b:v;}
+  function parseCSV(text){
+    var lines=text.replace(/\r/g,'').split('\n').filter(function(l){return l.trim().length;});
+    if(!lines.length)return [];
+    var head=lines[0].split(',').map(function(h){return h.trim();});
+    var idx={};head.forEach(function(h,i){CSV_COLS.forEach(function(c){if(h.indexOf(c)>=0)idx[c]=i;});});
+    var rows=[];
+    for(var li=1;li<lines.length;li++){var c=lines[li].split(',');var g=function(k){return idx[k]!=null?(c[idx[k]]||'').trim():'';};
+      var gr=g('학년');var grade=GMAP[gr]||num(gr,1);
+      rows.push({name:g('이름')||('학생'+li),grade:clampn(Math.round(grade),1,6),parentFaith:clampn(num(g('부모신앙'),2),1,3),
+        sibFaith:clampn(num(g('형제신앙'),2),1,3),friendN:clampn(num(g('교회친구수'),2),0,6),sg:yn(g('소그룹')),mentor:yn(g('멘토')),
+        serve:yn(g('봉사역할')),att4:clampn(num(g('출석4주'),3),0,4),qt:clampn(num(g('QT'),3),1,5),acad:clampn(num(g('학업압박'),3),1,5),own:clampn(num(g('신앙주인의식'),3),1,5)});}
+    return rows;
+  }
+  function makeFromRow(r){
+    var pf=r.parentFaith,bg=pf>=3?'mota':pf<=1?'none':'normal';
+    var fam=clampn(0.15+(pf-1)*0.35+(r.sibFaith-2)*0.05,0,1);
+    var att=r.att4/4,commit=clampn(0.20+0.50*att+0.06*(r.own-3)+0.03*(r.qt-3)-0.03*(r.acad-3),0.02,0.98);
+    var faith=clampn(0.20+0.40*att+0.12*(r.qt-3)+0.10*(r.own-3)+0.10*(pf-2),0.02,0.98);
+    var loner=r.friendN<=1;
+    return {grade:r.grade,bg:bg,core:!!r.serve||r.own>=5,loner:loner,commit:commit,eng:commit,faith:faith,fam:fam,
+      word:clampn(faith+(r.qt-3)*0.05,0,1),holy:clampn(faith,0,1),belong:clampn(loner?faith-0.15:faith+0.05,0,1),
+      rSg:r.sg?0:1,rMt:r.mentor?0:1,sermonAcc:0,retreatGlow:0,examPress:0,absent:0,left:false,dropped:false,
+      sg:!!r.sg,mentor:!!r.mentor,friends:[],phase:Math.random()*6.28,seat:freeSeat(),mx:Math.random(),my:Math.random(),_friendN:r.friendN,name:r.name};
+  }
+  function syncSlidersFromRoster(rows){
+    var n=rows.length||1,a=0,rk=0,mid=0,mota=0,none=0,core=0,lon=0;
+    var built=rows.map(makeFromRow);
+    built.forEach(function(s){if(s.eng>=0.55)a++;else if(s.eng<0.3)rk++;if(s.grade<=3)mid++;if(s.bg==='mota')mota++;if(s.bg==='none')none++;if(s.core)core++;if(s.loner)lon++;});
+    setSlider('p-n',clampn(n,60,220));setSlider('p-active',Math.round(a/n*100));setSlider('p-risk',Math.round(rk/n*100));
+    setSlider('p-mid',Math.round(mid/n*100));setSlider('p-high',100-Math.round(mid/n*100));
+    setSlider('p-mota',Math.round(mota/n*100));setSlider('p-none',Math.round(none/n*100));
+    setSlider('p-core',Math.round(core/n*100));setSlider('p-loner',Math.round(lon/n*100));
+  }
+  function buildFromRoster(){
+    if(!roster||!roster.length)return;
+    syncSlidersFromRoster(roster); // 전망·추천이 실제 명단을 닮도록 슬라이더 보정
+    seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;hist=[];churchClimate=0.5;parentVitality=0.5;
+    roster.forEach(function(r){students.push(makeFromRow(r));});
+    students.forEach(function(s){var t=s._friendN||0;if(t>0)linkIn(s,students,students,Math.max(0,t-1),t);});
+    document.getElementById('roster-status').innerHTML='✅ 명단 <b>'+roster.length+'명</b>으로 진단 중.';
+    startSim();
+  }
+  function placeholderRoster(){
+    var rows=[],G=['중1','중2','중3','고1','고2','고3'];
+    for(var i=0;i<28;i++){var pf=1+Math.floor(Math.random()*3),att=Math.floor(Math.random()*5),fn=Math.floor(Math.random()*5);
+      rows.push({name:'학생'+(i+1),grade:1+Math.floor(Math.random()*6),parentFaith:pf,sibFaith:pf,friendN:fn,
+        sg:Math.random()<0.5,mentor:Math.random()<0.35,serve:Math.random()<0.25,att4:att,qt:1+Math.floor(Math.random()*5),
+        acad:1+Math.floor(Math.random()*5),own:1+Math.floor(Math.random()*5)});}
+    return rows;
+  }
+  function downloadCSV(){
+    var head=CSV_COLS.join(',');
+    var ex=['김민수,중3,3,3,4,Y,Y,N,4,4,5','이서연,고1,1,1,1,N,N,N,1,2,2','박지훈,고2,2,2,3,Y,N,Y,3,3,3'];
+    var blob=new Blob(['﻿'+head+'\n'+ex.join('\n')+'\n'],{type:'text/csv;charset=utf-8'});
+    var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='우리부_명단_양식.csv';a.click();URL.revokeObjectURL(url);
+  }
+  document.getElementById('csv-template').addEventListener('click',downloadCSV);
+  document.getElementById('csv-sample').addEventListener('click',function(){roster=placeholderRoster();document.getElementById('settings').hidden=true;buildFromRoster();});
+  document.getElementById('csv-file').addEventListener('change',function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var r=parseCSV(rd.result);if(!r.length){document.getElementById('roster-status').textContent='빈 명단이거나 형식이 맞지 않습니다.';return;}roster=r;document.getElementById('settings').hidden=true;buildFromRoster();}catch(err){document.getElementById('roster-status').textContent='읽기 실패: '+err.message;}};rd.readAsText(f,'utf-8');});
   function step(){
     week++;
     var active=students.filter(function(s){return !s.left;});
@@ -727,7 +803,7 @@
   document.getElementById('btn-settings').addEventListener('click',function(){drawer.hidden=false;});
   document.getElementById('set-close').addEventListener('click',function(){drawer.hidden=true;});
   drawer.addEventListener('click',function(e){if(e.target===drawer)drawer.hidden=true;});
-  document.getElementById('set-apply').addEventListener('click',function(){drawer.hidden=true;generate();});
+  document.getElementById('set-apply').addEventListener('click',function(){drawer.hidden=true;roster=null;document.getElementById('roster-status').textContent='';generate();});
 
   // ── 주 진행 컨트롤 ──
   var playing2=false,last=0;
