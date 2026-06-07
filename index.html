@@ -733,7 +733,7 @@
       if((s.doubt!=null?s.doubt:0)*(1-(s.doubtSpace!=null?s.doubtSpace:0.5))>=0.18)why.push('의심을 말할 곳이 없고');
       if(s.warmth!=null&&s.warmth<0.4)why.push('집과 관계가 차갑고');
       var what=(s.owned!=null?s.owned:0)<0.35?'멘토·소그룹으로 자기 신앙 세우기':'의심을 솔직히 나눌 자리 만들기';
-      return '<div class="visit"><span class="who">'+GRADE_LABELS[s.grade]+' 한 명</span><span>출석은 좋지만 '+(why.join(' ')||'속이 외부에 기대 있어')+' 전환기에 위험합니다 → <b>'+what+'</b></span></div>';
+      return '<div class="visit"><span class="who">'+studName(s)+'</span><span>출석은 좋지만 '+(why.join(' ')||'속이 외부에 기대 있어')+' 전환기에 위험합니다 → <b>'+what+'</b></span></div>';
     }).join('')+(pool.length>3?'<p class="hint" style="margin-top:6px">외 '+(pool.length-3)+'명 더 있습니다.</p>':'');
   }
   // 겉(출석)/속(내면화) 두 눈금 + 북극성(졸업 신앙 잔존) + 모래성 경고 + 믿음 단계 + 전환기 카운트다운.
@@ -805,6 +805,8 @@
     el.innerHTML='<div class="fbar"><div class="seg g" style="width:'+w(ac)+'%"></div><div class="seg a" style="width:'+w(lo)+'%"></div><div class="seg r" style="width:'+w(ri)+'%"></div></div>'+
       '<div class="fbar-leg"><span><i class="g"></i>든든 '+ac+'</span><span><i class="a"></i>느슨 '+lo+'</span><span><i class="r"></i>흔들림 '+ri+'</span></div>';
   }
+  // 명단(CSV)을 넣었으면 이름을, 아니면 '중3 한 명'을 보인다.
+  function studName(s){return s.name?GRADE_LABELS[s.grade]+' '+s.name:GRADE_LABELS[s.grade]+' 한 명';}
   function updateVisitList(){
     var el=document.getElementById('visit-list');var shaken=students.filter(function(s){return !s.left&&s.eng<0.3;});
     if(!shaken.length){el.innerHTML='<p class="muted" style="color:var(--good)">지금 무너지는 아이가 없습니다. 든든한 아이들을 한 걸음 더 깊이 세우세요.</p>';return;}
@@ -815,7 +817,7 @@
       if(s.bg==='none')why.push('믿는 가정이 아니고');
       why.push('요즘 출석이 흔들립니다');
       if(!what)what='이번 주 안부 전화 한 번';
-      return '<div class="visit"><span class="who">'+GRADE_LABELS[s.grade]+' 한 명</span><span>'+why.join(' ')+' → <b>'+what+'</b></span></div>';
+      return '<div class="visit"><span class="who">'+studName(s)+'</span><span>'+why.join(' ')+' → <b>'+what+'</b></span></div>';
     }).join('')+(shaken.length>3?'<p class="hint" style="margin-top:6px">외 '+(shaken.length-3)+'명 더 있습니다(자세히에서 전체).</p>':'');
   }
   function updateWhy(){
