@@ -314,8 +314,11 @@ function simulateOnce(cfg,weeks){
 function simulate(cfg,weeks,runs){
   var acc=null,segAcc=null;
   for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks);
-    if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,wd:p.wd,hl:p.hl,bl:p.bl,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop,own:p.own,gKeep:p.gKeep,gLapse:p.gLapse};});segAcc=h.seg;}
-    else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].wd+=p.wd;acc[i].hl+=p.hl;acc[i].bl+=p.bl;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;acc[i].own+=p.own;acc[i].gKeep+=p.gKeep;acc[i].gLapse+=p.gLapse;});
+    if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,wd:p.wd,hl:p.hl,bl:p.bl,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop,own:p.own,gKeep:p.gKeep,gLapse:p.gLapse,aLo:p.active,aHi:p.active,rLo:p.risk,rHi:p.risk,fLo:p.f,fHi:p.f};});segAcc=h.seg;}
+    else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].wd+=p.wd;acc[i].hl+=p.hl;acc[i].bl+=p.bl;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;acc[i].own+=p.own;acc[i].gKeep+=p.gKeep;acc[i].gLapse+=p.gLapse;
+      if(p.active<acc[i].aLo)acc[i].aLo=p.active;if(p.active>acc[i].aHi)acc[i].aHi=p.active;
+      if(p.risk<acc[i].rLo)acc[i].rLo=p.risk;if(p.risk>acc[i].rHi)acc[i].rHi=p.risk;
+      if(p.f<acc[i].fLo)acc[i].fLo=p.f;if(p.f>acc[i].fHi)acc[i].fHi=p.f;});
       for(var d in h.seg)for(var g in h.seg[d])for(var k in h.seg[d][g])segAcc[d][g][k]+=h.seg[d][g][k];}}
   acc.forEach(function(p){p.n/=runs;p.f/=runs;p.wd/=runs;p.hl/=runs;p.bl/=runs;p.active/=runs;p.loose/=runs;p.risk/=runs;p.drop/=runs;p.own/=runs;p.gKeep/=runs;p.gLapse/=runs;p.carry=(p.gKeep+p.gLapse)?Math.round(p.gKeep/(p.gKeep+p.gLapse)*100):null;});
   for(var d2 in segAcc)for(var g2 in segAcc[d2])for(var k2 in segAcc[d2][g2])segAcc[d2][g2][k2]/=runs;
@@ -440,7 +443,7 @@ function eventsForWeek(d,w){
 function buildScenario(key){
   var d=SC_DEFS[key],W=WEEKS_PER_YEAR;
   var planAcc=simulate(cfgOf(d),W,6),baseAcc=simulate(baseCfg(d),W,6);
-  function toHist(acc){return acc.map(function(p,i){return {w:i+1,n:Math.round(p.n),active:Math.round(p.active),loose:Math.round(p.loose),risk:Math.round(p.risk),drop:Math.round(p.drop),f:p.f,word:p.wd,holy:p.hl,belong:p.bl,own:Math.round(p.own),carry:p.carry};});}
+  function toHist(acc){return acc.map(function(p,i){return {w:i+1,n:Math.round(p.n),active:Math.round(p.active),loose:Math.round(p.loose),risk:Math.round(p.risk),drop:Math.round(p.drop),f:p.f,word:p.wd,holy:p.hl,belong:p.bl,own:Math.round(p.own),carry:p.carry,aLo:Math.round(p.aLo),aHi:Math.round(p.aHi),rLo:Math.round(p.rLo),rHi:Math.round(p.rHi),fLo:p.fLo,fHi:p.fHi};});}
   var seg=planAcc.seg;
   function pc(b,den){return den?Math.round(b/den*100):0;}
   var vuln={loner_y:pc(seg.lon.y.dropped,seg.lon.y.tot),loner_n:pc(seg.lon.n.dropped,seg.lon.n.tot),
@@ -511,9 +514,15 @@ function weeklyOpts(extra){
   o.plugins=o.plugins||{};
   o.plugins.crosshairEnabled=true;
   o.plugins.eventBandsOn=true;
-  o.plugins.tooltip=Object.assign({},o.plugins.tooltip,{mode:'index',intersect:false,callbacks:{afterBody:function(items){return (items&&items.length)?weekStory(items[0].dataIndex):'';}}});
+  o.plugins.legend=Object.assign({},o.plugins.legend,{labels:Object.assign({usePointStyle:true,padding:14,font:{size:11}},{filter:function(it,ch){return !ch.data.datasets[it.datasetIndex].band;}})});
+  o.plugins.tooltip=Object.assign({},o.plugins.tooltip,{mode:'index',intersect:false,filter:function(it){return !it.dataset.band;},callbacks:{afterBody:function(items){return (items&&items.length)?weekStory(items[0].dataIndex):'';}}});
   return o;
 }
+// 6회 시뮬레이션의 최소~최대 띠(불확실성). 평균선 뒤에 옅게 깔아 과신을 막는다.
+function bandDS(hi,lo,color){return [
+  {label:'범위',band:true,data:hi,borderColor:'rgba(0,0,0,0)',backgroundColor:color,pointRadius:0,fill:'+1',tension:0.3,order:20},
+  {label:'범위',band:true,data:lo,borderColor:'rgba(0,0,0,0)',backgroundColor:color,pointRadius:0,fill:false,tension:0.3,order:20}
+];}
 // 연간 일정을 차트에 직접 그린다(파이낸스의 침체 음영처럼). 외부 환경=붉은 음영,
 // 설교 진행=아래 파란 띠, 수련회=초록 ▽. x축(주차)에 맞춰 자동 정렬된다.
 var eventBandsPlugin={id:'eventBands',beforeDatasetsDraw:function(c){
@@ -575,10 +584,10 @@ function renderTrend(){
     {label:'느슨',data:h.map(function(x){return x.loose;}),borderColor:PALETTE.loose,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4},
     {label:'위기',data:h.map(function(x){return x.risk;}),borderColor:PALETTE.risk,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4},
     {label:'신앙(%)',data:h.map(function(x){return Math.round(x.f*100);}),borderColor:PALETTE.faith,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4,borderDash:[4,3]}
-  ]},weeklyOpts(),WK_PLUGINS);
+  ].concat(bandDS(h.map(function(x){return x.aHi;}),h.map(function(x){return x.aLo;}),PALETTE.active+'1f'))},weeklyOpts(),WK_PLUGINS);
   var L=last(),F=first();
   var cl=document.getElementById('cal-legend');if(cl)cl.innerHTML=calendarSummary(SC_DEFS[curScenario]||{});
-  document.getElementById('trend-note').textContent='시작 '+F.n+'명 → 현재 '+Math.round(L.n)+'명. 활발 '+F.active+'명 → '+L.active+'명 · 위기 '+F.risk+'명 → '+L.risk+'명 · 평균 신앙 '+Math.round(F.f*100)+'% → '+Math.round(L.f*100)+'%.';
+  document.getElementById('trend-note').textContent='시작 '+F.n+'명 → 현재 '+Math.round(L.n)+'명. 활발 '+F.active+'명 → '+L.active+'명(6회 '+L.aLo+'~'+L.aHi+'명) · 위기 '+F.risk+'명 → '+L.risk+'명 · 평균 신앙 '+Math.round(F.f*100)+'% → '+Math.round(L.f*100)+'%. 옅은 띠는 6회 변동 폭이다.';
 }
 function renderVerdict(){
   var L=last(),ar=L.active/L.n,rr=L.risk/L.n,v;
@@ -595,7 +604,7 @@ function comparePair(id,noteId){
   mkChart(id,'line',{labels:ls,datasets:[
     {label:'계획 · 활발',data:hp.map(function(x){return x.active;}),borderColor:PALETTE.plan,borderWidth:2.5,fill:false,tension:0.3,pointRadius:0},
     {label:'기본 운영 · 활발',data:hb.map(function(x){return x.active;}),borderColor:PALETTE.base,borderWidth:1.6,fill:false,tension:0.3,pointRadius:0,borderDash:[5,3]}
-  ]},weeklyOpts(),WK_PLUGINS);
+  ].concat(bandDS(hp.map(function(x){return x.aHi;}),hp.map(function(x){return x.aLo;}),PALETTE.plan+'1f'))},weeklyOpts(),WK_PLUGINS);
   if(noteId){var Lp=hp[hp.length-1],Lb=hb[hb.length-1],diff=Lp.active-Lb.active,ddrop=Lp.drop-Lb.drop,df=(Lp.f-Lb.f)*100;
     document.getElementById(noteId).textContent='1년 뒤 계획 활발 '+Lp.active+'명 vs 기본 운영 '+Lb.active+'명. 차이: 활발 '+(diff>=0?'+':'')+diff+'명 · 이탈 '+(ddrop>0?'+':'')+ddrop+'명 · 신앙 '+(df>=0?'+':'')+Math.round(df)+'%p. 가정값이므로 방향으로만 읽으십시오.';}
 }
@@ -617,7 +626,8 @@ function renderCrisis(){
 }
 function renderFaith(){
   var h=sc().hist,ls=lbls();
-  mkChart('c-faith','line',{labels:ls,datasets:[{label:'평균 신앙',data:h.map(function(x){return Math.round(x.f*100);}),borderColor:PALETTE.faith,backgroundColor:PALETTE.faith+'22',borderWidth:2,fill:true,tension:0.3,pointRadius:0}]},
+  mkChart('c-faith','line',{labels:ls,datasets:[{label:'평균 신앙',data:h.map(function(x){return Math.round(x.f*100);}),borderColor:PALETTE.faith,backgroundColor:PALETTE.faith+'22',borderWidth:2,fill:true,tension:0.3,pointRadius:0}].concat(
+    bandDS(h.map(function(x){return Math.round(x.fHi*100);}),h.map(function(x){return Math.round(x.fLo*100);}),PALETTE.faith+'1f'))},
     weeklyOpts({scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:8,maxRotation:0}},y:{min:30,max:80,ticks:{font:{size:10},callback:function(v){return v+'%';}}}}}),WK_PLUGINS);
 }
 function renderBranches(){
