@@ -6,108 +6,109 @@
 <title>믿음 대시보드 — 중고등부</title>
 <style>
   :root{
-    --bg:#eef1f5; --card:#ffffff; --ink:#1f2937; --mut:#6b7280; --line:#e5e8ee;
-    --good:#16a34a; --warn:#d08a1a; --bad:#dc2626; --covid:#e0584a; --stock:#2563eb; --act:#7c5cd0;
-    --accent:#2563eb;
+    --bg:#0a0f1c; --card:#121b2e; --panel:#1a2540; --ink:#e9eff8; --mut:#9aa8c2; --line:#27344f;
+    --good:#22c55e; --warn:#fbbf24; --bad:#f87171; --covid:#fb7185; --stock:#60a5fa; --act:#a78bfa;
+    --accent:#3b82f6;
   }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:14px;line-height:1.5}
-  .wrap{max-width:860px;margin:0 auto;padding:16px 16px 60px}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#16213a 0%,var(--bg) 60%);color:var(--ink);font-family:'Pretendard',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+  .wrap{max-width:880px;margin:0 auto;padding:16px 16px 60px}
   .muted{color:var(--mut);font-size:13px;margin:2px 0 12px}
   /* 상단바 */
-  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(20,30,50,.04)}
-  .brand h1{font-size:18px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(180deg,#16223b,#111a2c);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:14px;box-shadow:0 6px 22px rgba(0,0,0,.35)}
+  .brand h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.02em;color:#fff}
   .brand .lead{margin:2px 0 0;font-size:12.5px;color:var(--mut)}
   .controls{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .wk{font-size:13px;color:var(--mut);margin-right:2px}
   .wk b{color:var(--ink)}
-  .btn{border:1px solid var(--line);background:#f3f5f9;color:var(--ink);border-radius:9px;padding:8px 13px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600}
-  .btn:hover{background:#e9edf3}
-  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-  .btn.primary:hover{filter:brightness(1.05)}
+  select.btn,select.btn:focus{appearance:none;-webkit-appearance:none}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;padding:8px 13px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600}
+  .btn:hover{background:#23314f;border-color:#34507e}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 1px rgba(59,130,246,.3),0 6px 16px rgba(59,130,246,.25)}
+  .btn.primary:hover{filter:brightness(1.08)}
   .btn.ghost{background:transparent}
-  .btn.on{background:var(--good);border-color:var(--good);color:#fff}
+  .btn.on{background:var(--good);border-color:var(--good);color:#04210f}
   .btn.sm{padding:5px 9px;font-size:12px}
   /* 카드/섹션 */
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 2px rgba(20,30,50,.04)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;box-shadow:0 6px 22px rgba(0,0,0,.30)}
   .sec-h{display:flex;align-items:center;gap:9px;margin-bottom:2px}
   .sec-h h2{font-size:15.5px;margin:0;font-weight:700}
   .dot{width:10px;height:10px;border-radius:50%;flex:none}
   .dot.covid{background:var(--covid)} .dot.stock{background:var(--stock)} .dot.act{background:var(--act)}
-  /* 지표 카드 */
+  /* 지표 카드(KPI 타일) */
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin:6px 0}
-  .stat{background:#f7f9fc;border:1px solid var(--line);border-radius:11px;padding:11px 8px;text-align:center}
-  .stat .sv{font-size:23px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
-  .stat .sl{font-size:11.5px;color:var(--mut);margin-top:3px}
+  .stat{background:linear-gradient(180deg,#1c2842,#16203600);background-color:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 8px;text-align:center}
+  .stat .sv{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.05;color:#fff;letter-spacing:.01em}
+  .stat .sl{font-size:11.5px;color:var(--mut);margin-top:4px}
   .stat.good .sv{color:var(--good)} .stat.warn .sv{color:var(--warn)} .stat.bad .sv{color:var(--bad)} .stat.idx .sv{color:var(--stock)}
-  .placeholder{border:1.5px dashed #cfd6e0;border-radius:11px;padding:22px;text-align:center;color:#9aa3b2;font-size:13px;background:#fafbfd}
+  .placeholder{border:1.5px dashed #3a4a66;border-radius:11px;padding:22px;text-align:center;color:var(--mut);font-size:13px;background:var(--panel)}
   /* 설정 서랍 */
   .drawer{position:fixed;inset:0;background:rgba(20,30,50,.35);z-index:40;display:flex;justify-content:flex-end}
-  .drawer-inner{width:340px;max-width:90vw;height:100%;overflow-y:auto;background:var(--card);padding:18px;box-shadow:-4px 0 16px rgba(20,30,50,.12)}
+  .drawer-inner{width:340px;max-width:90vw;height:100%;overflow-y:auto;background:var(--card);padding:18px;box-shadow:-4px 0 16px rgba(0,0,0,.5)}
   .drawer-h{display:flex;align-items:center;margin-bottom:6px}
   .drawer-h h3{font-size:15px;margin:0;flex:1}
   .grp{font-size:12px;font-weight:700;color:var(--mut);margin:16px 0 6px;text-transform:none}
   .slab{display:flex;align-items:center;gap:9px;margin:7px 0;font-size:12.5px}
-  .slab span{min-width:96px;color:#4b5563}
+  .slab span{min-width:96px;color:var(--ink)}
   .slab span small{display:block;font-weight:400;font-size:10.5px;color:var(--mut);line-height:1.3;margin-top:1px}
   .slab input[type=range]{flex:1;accent-color:var(--accent)}
   .slab b{min-width:42px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
   .hint{font-size:11.5px;color:var(--mut);line-height:1.6}
   .preset{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
   .diag-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px}
-  .mini{background:#f7f9fc;border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+  .mini{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
   .mini-h{font-size:12px;color:var(--mut);margin-bottom:4px;font-weight:600}
   .rt{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
   canvas#curve{width:100%;height:auto}
   .map-h{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:600;margin:4px 0 5px;gap:8px;flex-wrap:wrap}
-  .netcanvas{width:100%;height:auto;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;display:block}
+  .netcanvas{width:100%;height:auto;background:#0b1424;border:1px solid var(--line);border-radius:11px;display:block}
   .hold{font-size:12.5px;padding:5px 0;border-top:1px solid var(--line)}
   @media(max-width:560px){.diag-grid{grid-template-columns:1fr}}
   .chips{display:flex;gap:6px;flex-wrap:wrap}
-  .chip{border:1px solid var(--line);background:#f3f5f9;color:#4b5563;border-radius:999px;padding:6px 13px;font-size:12.5px;font-family:inherit;cursor:pointer;font-weight:600}
-  .chip:hover{background:#e9edf3}
-  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
-  .reco{background:#f0f6ff;border:1px solid #cfe0ff;border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.6}
-  .plain-h{font-size:15px;font-weight:700;margin:0 0 7px}
-  .plain-p{font-size:14.5px;line-height:1.8;color:#2a2f3a}
+  .chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 13px;font-size:12.5px;font-family:inherit;cursor:pointer;font-weight:600}
+  .chip:hover{background:#23314f}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 10px rgba(59,130,246,.4)}
+  .reco{background:#10233f;border:1px solid #2a456e;border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.6}
+  .plain-h{font-size:15px;font-weight:700;margin:0 0 7px;color:#fff}
+  .plain-p{font-size:14.5px;line-height:1.8;color:#c9d4e6}
   .verdict{display:flex;gap:14px;align-items:flex-start}
-  .light{font-size:34px;line-height:1;flex:none}
-  .vtext{font-size:18px;font-weight:800;line-height:1.45}
+  .light{font-size:38px;line-height:1;flex:none;filter:drop-shadow(0 0 8px rgba(255,255,255,.15))}
+  .vtext{font-size:19px;font-weight:800;line-height:1.45;color:#fff}
   .vsub{font-size:14px;color:var(--mut);font-weight:500;margin-top:5px;line-height:1.6}
   .visit{display:flex;gap:10px;padding:11px 0;border-top:1px solid var(--line);font-size:14.5px;line-height:1.6}
   .visit:first-child{border-top:none}
-  .visit .who{font-weight:800;flex:none;min-width:66px}
-  .callout{background:#f0f6ff;border:1px solid #cfe0ff;border-radius:12px;padding:14px 16px;font-size:15.5px;line-height:1.7}
+  .visit .who{font-weight:800;flex:none;min-width:66px;color:#fff}
+  .callout{background:#10233f;border:1px solid #2a456e;border-radius:12px;padding:14px 16px;font-size:15.5px;line-height:1.7}
   .callout b{color:var(--stock)}
-  .summary-h{font-size:14px;font-weight:700;color:#4b5563;cursor:pointer;list-style:none}
+  .summary-h{font-size:14px;font-weight:700;color:var(--mut);cursor:pointer;list-style:none}
   details>summary::-webkit-details-marker{display:none}
   .tier{font-size:11px;font-weight:800;color:#fff;padding:3px 10px;border-radius:999px;display:inline-block}
   .tier.s{background:#3a4a6b}.tier.o{background:#9a5b2b}.tier.t{background:#1d6b4f}
   .tier-sub{font-size:12px;color:var(--mut);margin:6px 0 12px}
   .tier-inline{font-size:11.5px;color:var(--mut);font-weight:600;margin-left:7px}
-  .howto{margin:0 0 12px;font-size:13px;color:#4b5563;background:#eef3fb;border:1px solid #d6e2f4;border-radius:10px;padding:9px 13px;line-height:1.6}
-  .howto b{color:var(--stock)}
+  .howto{margin:0 0 12px;font-size:13px;color:#c9d4e6;background:#10233f;border:1px solid #2a456e;border-radius:10px;padding:9px 13px;line-height:1.6}
+  .howto b{color:#7fb2ff}
   .gauge{margin:9px 0}
   .gauge-top{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;margin-bottom:3px}
-  .gauge-top b{font-size:15px}
-  .gauge-bar{height:14px;border-radius:7px;background:#eef1f5;overflow:hidden;border:1px solid var(--line)}
+  .gauge-top b{font-size:15px;color:#fff}
+  .gauge-bar{height:14px;border-radius:7px;background:#0e1830;overflow:hidden;border:1px solid var(--line)}
   .gauge-fill{height:100%;border-radius:7px}
   .gauge-fill.att{background:var(--warn)}.gauge-fill.own{background:var(--stock)}
   .gauge .hint{font-size:11.5px;margin-top:2px}
-  .northstar{display:flex;align-items:baseline;gap:10px;background:#0f172a;color:#fff;border-radius:12px;padding:13px 16px;margin:4px 0 10px}
-  .northstar .ns-v{font-size:30px;font-weight:800;line-height:1}
+  .northstar{display:flex;align-items:baseline;gap:10px;background:linear-gradient(135deg,#0b2c22,#0f172a);color:#fff;border:1px solid #1f6b4f;border-radius:12px;padding:13px 16px;margin:4px 0 10px;box-shadow:0 0 18px rgba(34,197,94,.15)}
+  .northstar .ns-v{font-size:32px;font-weight:800;line-height:1;color:var(--good)}
   .northstar .ns-l{font-size:13px;color:#cbd5e1;line-height:1.4}
   .northstar .ns-l b{color:#fff}
   .stagebar{display:flex;height:16px;border-radius:7px;overflow:hidden;border:1px solid var(--line);margin-top:4px}
-  .stagebar .s1{background:#cbd5e1}.stagebar .s2{background:var(--warn)}.stagebar .s3{background:var(--good)}
+  .stagebar .s1{background:#475569}.stagebar .s2{background:var(--warn)}.stagebar .s3{background:var(--good)}
   .stage-leg{display:flex;gap:13px;font-size:11.5px;color:var(--mut);margin-top:5px;flex-wrap:wrap}
   .stage-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:middle;margin-right:4px}
-  .stage-leg i.s1{background:#cbd5e1}.stage-leg i.s2{background:var(--warn)}.stage-leg i.s3{background:var(--good)}
+  .stage-leg i.s1{background:#475569}.stage-leg i.s2{background:var(--warn)}.stage-leg i.s3{background:var(--good)}
   .ewi-chip{display:inline-block;font-size:12.5px;font-weight:600;padding:4px 11px;border-radius:999px;margin-top:8px}
-  .card.ctx{padding:11px 15px;background:#f7f9fc}
+  .card.ctx{padding:11px 15px;background:var(--panel)}
   .card.ctx .opline{font-size:13px;line-height:1.6}
-  .card.hero{border:1.5px solid #c9d4e6;box-shadow:0 2px 8px rgba(20,30,50,.07)}
+  .card.hero{border:1px solid #335086;box-shadow:0 0 0 1px rgba(59,130,246,.12),0 10px 30px rgba(0,0,0,.4)}
   .fbar{display:flex;height:20px;border-radius:6px;overflow:hidden;border:1px solid var(--line);margin-top:6px}
   .fbar .seg.g{background:var(--good)}.fbar .seg.a{background:var(--warn)}.fbar .seg.r{background:var(--bad)}
   .fbar-leg{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
@@ -144,6 +145,7 @@
   <!-- 이번 주 (주인공) — 목사용 세 가지만: 지금 어떤가 / 누구를 / 무엇을. 나머지 숫자는 접음 -->
   <section class="card hero" id="verdict-card">
     <div id="verdict" class="verdict"><div class="light">⏳</div><div><div class="vtext">한 주를 넘기면 지금 상태가 나옵니다.</div><div class="vsub">위 "다음 주 ▶"를 눌러 보세요.</div></div></div>
+    <div id="kpi" class="stats" style="margin-top:14px"></div>
     <div class="mini-h" style="margin-top:16px">우리 부 한눈에 — 점 하나가 아이 하나, 색이 지금 상태 (눌러 보세요)</div>
     <div id="room-ctrl" class="chips" style="margin:6px 0"></div>
     <canvas id="room" width="600" height="180" class="netcanvas" style="cursor:pointer"></canvas>
@@ -374,7 +376,7 @@
   // 역할 뷰(권한): 같은 온톨로지를 다른 범위로 본다. 민감 속성(내면화·의심·부모 온기)은 담임만.
   var ROLES={pastor:{label:'담임',sensitive:true},teacher:{label:'교사',sensitive:false},parent:{label:'부모',sensitive:false}};
   var role='pastor';try{role=localStorage.getItem('woori_role')||'pastor';}catch(e){}
-  function setRole(r){role=ROLES[r]?r:'pastor';try{localStorage.setItem('woori_role',role);}catch(e){}updateStudCard();updateHiddenRisk();var rb=document.getElementById('role-badge');if(rb)rb.textContent=ROLES[role].label;}
+  function setRole(r){role=ROLES[r]?r:'pastor';try{localStorage.setItem('woori_role',role);}catch(e){}if(typeof updateKpi==='function')updateKpi();updateStudCard();updateHiddenRisk();var rb=document.getElementById('role-badge');if(rb)rb.textContent=ROLES[role].label;}
   var careLog=[];
   try{careLog=JSON.parse(localStorage.getItem('woori_care_v1')||'[]');}catch(e){careLog=[];}
   function saveCare(){try{localStorage.setItem('woori_care_v1',JSON.stringify(careLog));}catch(e){}}
@@ -764,7 +766,7 @@
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
-    updateVerdict();drawRoom();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateStudCard();updateWhy();updateWar();updateReadouts();updateRecap();renderCareLog();
+    updateVerdict();updateKpi();drawRoom();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateStudCard();updateWhy();updateWar();updateReadouts();updateRecap();renderCareLog();
     updateDiag();updateProj();
   }
   // 출석은 좋지만(eng 높음) 속이 빈(취약도 높음) 아이 — 출석 기반 대시보드엔 안 보이는 위험. 전환기에 무너진다.
@@ -790,10 +792,10 @@
     function bar(label,v,cls,hint){return '<div class="gauge"><div class="gauge-top"><span>'+label+'</span><b>'+v+'%</b></div><div class="gauge-bar"><div class="gauge-fill '+cls+'" style="width:'+v+'%"></div></div><div class="hint">'+hint+'</div></div>';}
     var rem=week%WEEKS_PER_YEAR,toY=rem===0?WEEKS_PER_YEAR:WEEKS_PER_YEAR-rem;
     var g3=a.filter(function(s){return s.grade===3;}),g3risk=g3.filter(function(s){return cliffProb(s)>=0.35;}).length;
-    var sand=frag>=30?'<div class="callout" style="margin-top:8px;font-size:14px;background:#fef2f2;border-color:#fecaca"><b style="color:var(--bad)">모래 위에 지은 집(마 7:26).</b> 지금 출석의 약 <b>'+frag+'%</b>는 믿음이 아니라 외부(부모·또래·습관)가 떠받치는 몫입니다. 전환기에 비가 내리고 창수가 나면(진학·졸업) 그 받침이 사라져 무너질 수 있습니다.</div>'
+    var sand=frag>=30?'<div class="callout" style="margin-top:8px;font-size:14px;background:#2a1620;border-color:#7f3a47"><b style="color:var(--bad)">모래 위에 지은 집(마 7:26).</b> 지금 출석의 약 <b>'+frag+'%</b>는 믿음이 아니라 외부(부모·또래·습관)가 떠받치는 몫입니다. 전환기에 비가 내리고 창수가 나면(진학·졸업) 그 받침이 사라져 무너질 수 있습니다.</div>'
       :gap>=12?'<div class="callout" style="margin-top:8px;font-size:14px">겉은 든든하나, 믿음이 아직 자기 것이 안 된 아이가 있습니다(출석의 '+frag+'%가 외부 의존). 한 걸음 더 깊이 세우세요.</div>'
       :'<div class="callout" style="margin-top:8px;font-size:14px">출석과 속이 함께 갑니다. 든든합니다.</div>';
-    var ewc=ewi>=35?'background:#fef2f2;color:var(--bad)':ewi>=22?'background:#fffbeb;color:#b45309':'background:#f0fdf4;color:#15803d';
+    var ewc=ewi>=35?'background:#2a1620;color:var(--bad)':ewi>=22?'background:#2a2410;color:var(--warn)':'background:#0e2a1c;color:var(--good)';
     var trans='<div class="hint" style="margin-top:8px">⏳ 다음 진급(중3→고1 전환·고3 졸업)까지 약 <b>'+toY+'주</b>. 지금이면 중3 '+g3.length+'명 중 <b>'+g3risk+'명</b>이 전환에서 흔들릴 수 있습니다.</div>'+
       '<span class="ewi-chip" style="'+ewc+'">조기경보 '+ewi+' — 출석이 무너지기 전, 속에서 자라는 위험</span>';
     el.innerHTML=bar('겉 — 출석으로 든든한 아이',actR,'att','매주 잘 나오는 아이의 비율')+
@@ -815,6 +817,16 @@
     function w(x){return Math.round(x/t*100);}
     el.innerHTML='<div class="stagebar"><div class="s1" style="width:'+w(sd[0])+'%"></div><div class="s2" style="width:'+w(sd[1])+'%"></div><div class="s3" style="width:'+w(sd[2])+'%"></div></div>'+
       '<div class="stage-leg"><span><i class="s1"></i>부여된 '+sd[0]+'명</span><span><i class="s2"></i>탐색 중 '+sd[1]+'명</span><span><i class="s3"></i>내면화 '+sd[2]+'명</span></div>';
+  }
+  // KPI 타일(지휘소 큰 숫자): 함께·잘 나옴·흔들림, 담임은 믿음 점수·졸업 잔존까지.
+  function updateKpi(){
+    var el=document.getElementById('kpi');if(!el)return;var a=students.filter(function(s){return !s.left;});if(!a.length){el.innerHTML='';return;}
+    var ac=a.filter(function(s){return s.eng>=0.55;}).length,ri=a.filter(function(s){return s.eng<0.3;}).length;
+    var h=card('함께',a.length)+card('잘 나옴',ac,'good')+card('흔들림',ri,'bad');
+    if(ROLES[role].sensitive){h+=card('믿음 점수',beliefIndex(a),'idx');
+      var carry=(gradKeep+gradLapse)?Math.round(gradKeep/(gradKeep+gradLapse)*100):(projData&&projData.length&&projData[projData.length-1].carry!=null?Math.round(projData[projData.length-1].carry):null);
+      if(carry!=null)h+=card('졸업 잔존',carry+'%','good');}
+    el.innerHTML=h;
   }
   // ── 평이한 문장 진단서 (목사용 기본 화면) ──
   function updateVerdict(){
@@ -863,7 +875,7 @@
       [['plan','그대로'],['retreat','수련회'],['mentor','멘토'],['parent','부모 세우기']].forEach(function(l){b+='<button class="chip'+((roomLever||'plan')===l[0]?' on':'')+'" data-lever="'+l[0]+'">'+l[1]+'</button>';});}
     el.innerHTML=b;
   }
-  function colByEng(e){return e>=0.55?'#16a34a':e>=0.3?'#d08a1a':'#dc2626';}
+  function colByEng(e){return e>=0.55?'#22c55e':e>=0.3?'#fbbf24':'#f87171';}
   function cloneStudents(){return students.map(function(s){var o={};for(var k in s)o[k]=s[k];o.friends=(s.friends||[]).slice();return o;});}
   function leverOpts(l){
     if(l==='mentor')return {mt:Math.min(1,val('s-mt')/100+0.2)};
@@ -904,7 +916,7 @@
       list=a.filter(function(s){return s.grade===roomZoom;});
       var perRow=8,rowH=30,top=24;RAD=7;
       var rows=Math.max(1,Math.ceil(list.length/perRow));H=top+rows*rowH+14;cv.width=W;cv.height=H;
-      g.clearRect(0,0,W,H);g.fillStyle='#475569';g.font='bold 12px sans-serif';g.textAlign='left';g.fillText(GRADE_LABELS[roomZoom]+' '+list.length+'명',8,15);
+      g.clearRect(0,0,W,H);g.fillStyle='#cbd5e1';g.font='bold 12px sans-serif';g.textAlign='left';g.fillText(GRADE_LABELS[roomZoom]+' '+list.length+'명',8,15);
       list.forEach(function(s,i){var r=Math.floor(i/perRow),c=i%perRow;var x=24+c*((W-48)/(perRow-1)),y=top+r*rowH;pos[s.id]={x:x,y:y};roomDots.push({s:s,x:x,y:y});});
     }else{
       var colW=W/6,perRow2=4,rowH2=15,top2=24;
@@ -912,21 +924,21 @@
       var maxRows=1;byG.forEach(function(l){maxRows=Math.max(maxRows,Math.ceil(l.length/perRow2));});
       H=top2+maxRows*rowH2+10;RAD=4.3;cv.width=W;cv.height=H;g.clearRect(0,0,W,H);
       for(var gi=0;gi<6;gi++){var x0=gi*colW;g.fillStyle='#9aa3b2';g.font='11px sans-serif';g.textAlign='center';g.fillText(GRADE_LABELS[gi+1]+' '+byG[gi].length,x0+colW/2,14);
-        if(gi>0){g.strokeStyle='#eef1f5';g.beginPath();g.moveTo(x0,18);g.lineTo(x0,H-4);g.stroke();}
+        if(gi>0){g.strokeStyle='rgba(255,255,255,.07)';g.beginPath();g.moveTo(x0,18);g.lineTo(x0,H-4);g.stroke();}
         byG[gi].forEach(function(s,i){var r=Math.floor(i/perRow2),c=i%perRow2;var x=x0+14+c*((colW-26)/Math.max(1,perRow2-1)),y=top2+r*rowH2;pos[s.id]={x:x,y:y};roomDots.push({s:s,x:x,y:y});});}
     }
     function line(ax,ay,bx,by,col,w){g.strokeStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(ax,ay);g.lineTo(bx,by);g.stroke();}
-    if(roomZoom&&list){list.forEach(function(s){(s.friends||[]).forEach(function(j){var o=students[j];if(o&&pos[o.id]&&s.id<o.id)line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'#e5e9f0',1);});});}
-    if(roomSpread){a.forEach(function(s){if(s.eng>=0.3)return;(s.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&o.eng>=0.55&&pos[s.id]&&pos[o.id])line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'#fca5a5',1.2);});});}
+    if(roomZoom&&list){list.forEach(function(s){(s.friends||[]).forEach(function(j){var o=students[j];if(o&&pos[o.id]&&s.id<o.id)line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'rgba(255,255,255,.13)',1);});});}
+    if(roomSpread){a.forEach(function(s){if(s.eng>=0.3)return;(s.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&o.eng>=0.55&&pos[s.id]&&pos[o.id])line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'#f87171',1.3);});});}
     var ripple=0;
-    if(selStudent&&pos[selStudent.id]){(selStudent.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&pos[o.id]){ripple++;line(pos[selStudent.id].x,pos[selStudent.id].y,pos[o.id].x,pos[o.id].y,'#1d4ed8',1.3);}});}
+    if(selStudent&&pos[selStudent.id]){(selStudent.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&pos[o.id]){ripple++;line(pos[selStudent.id].x,pos[selStudent.id].y,pos[o.id].x,pos[o.id].y,'#60a5fa',1.4);}});}
     roomDots.forEach(function(d){var s=d.s,m=fc?fc[s.id]:null;
       if(m&&m.lostP>=0.5){ // 미래에 이탈 가능성 높은 아이: 회색 ×
-        g.fillStyle='#cbd5e1';g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();g.strokeStyle='#94a3b8';g.lineWidth=1;g.beginPath();g.moveTo(d.x-RAD,d.y-RAD);g.lineTo(d.x+RAD,d.y+RAD);g.stroke();return;}
-      if(m&&m.gradP>=0.5){g.strokeStyle='#cbd5e1';g.lineWidth=1.4;g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.stroke();return;}
-      g.fillStyle=colByEng(m?m.eng:s.eng);g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();
-      if(first[s.id]){g.strokeStyle='#111827';g.lineWidth=1.8;g.beginPath();g.arc(d.x,d.y,RAD+2.3,0,6.2832);g.stroke();}
-      if(selStudent&&selStudent.id===s.id){g.strokeStyle='#1d4ed8';g.lineWidth=2.4;g.beginPath();g.arc(d.x,d.y,RAD+3.6,0,6.2832);g.stroke();}});
+        g.fillStyle='#3a4a63';g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();g.strokeStyle='#7787a3';g.lineWidth=1.2;g.beginPath();g.moveTo(d.x-RAD,d.y-RAD);g.lineTo(d.x+RAD,d.y+RAD);g.stroke();return;}
+      if(m&&m.gradP>=0.5){g.strokeStyle='#3a4a63';g.lineWidth=1.4;g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.stroke();return;}
+      var dc=colByEng(m?m.eng:s.eng);g.fillStyle=dc;g.shadowColor=dc;g.shadowBlur=8;g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();g.shadowBlur=0;
+      if(first[s.id]){g.strokeStyle='#ffffff';g.lineWidth=1.8;g.beginPath();g.arc(d.x,d.y,RAD+2.3,0,6.2832);g.stroke();}
+      if(selStudent&&selStudent.id===s.id){g.strokeStyle='#60a5fa';g.lineWidth=2.6;g.beginPath();g.arc(d.x,d.y,RAD+3.6,0,6.2832);g.stroke();}});
     if(roomZoom&&list){g.fillStyle='#64748b';g.font='9px sans-serif';g.textAlign='center';list.forEach(function(s){if(s.name)g.fillText(s.name.slice(0,4),pos[s.id].x,pos[s.id].y+RAD+9);});}
     g.textAlign='left';
     var leg=document.getElementById('room-leg');
@@ -978,7 +990,7 @@
     actBtns+='<button class="btn sm" data-action="visit" data-sid="'+s.id+'" style="margin-top:10px">📞 심방 기록</button> '+
              '<button class="btn sm" data-action="talk" data-sid="'+s.id+'" style="margin-top:10px">💬 대화 기록</button>';
     if(role==='parent')actBtns=''; // 부모 화면은 읽기 전용
-    el.innerHTML='<div class="callout" style="margin-top:8px;background:#f8fafc;border-color:#e2e8f0">'+
+    el.innerHTML='<div class="callout" style="margin-top:8px;background:#0e1830;border-color:#2a3a5a">'+
       '<div style="font-weight:800;font-size:15px;margin-bottom:6px">'+studName(s)+stageL+'</div>'+
       '<div class="hint" style="line-height:1.8">'+line+(s.bg==='none'?' · 혼자 다니는 아이':s.bg==='mota'?' · 믿는 가정':'')+(s.core?' · 헌신된 제자':'')+'</div>'+
       '<div style="margin-top:8px;font-size:14px">필요한 한 가지 → <b>'+need+'</b></div>'+
