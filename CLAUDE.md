@@ -37,7 +37,11 @@
 
 - `index.html` : 전체 시뮬레이션. HTML + CSS + 바닐라 JavaScript가 한 파일에 들어 있다. 외부 라이브러리 의존성 없음.
 - `README.md` : 비개발자용 사용 안내.
+- `SURVEY.md` : 진단 설문 설계(교사 관찰 1차, 검증 척도 RCI-A·FMS-12 출처).
+- `ONTOLOGY.md` : 교회 온톨로지(Palantir식) 설계도 — 객체·링크·행동·함수·권한.
 - `CLAUDE.md` : 이 파일.
+
+**행동(Action) 레이어** : 추천을 추적되는 돌봄으로 닫는다(온톨로지의 행동). `careLog`(localStorage `woori_care_v1`)에 배정 시점 겉/속 스냅샷을 저장하고, `assignCare`(영혼 카드의 "돌봄 맡기기")·`renderCareLog`(행동 일지 카드, 완료·효과 추적)·`findSoul`(id 또는 이름으로 매칭). 영혼마다 `s.id`. 진단·예측은 읽기, 행동은 쓰기 — 플래그를 책임자·완료·효과에 연결한다.
 
 ## 코드 구조 (index.html 안의 `<script>`)
 
