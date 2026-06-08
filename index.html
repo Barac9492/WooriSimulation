@@ -514,7 +514,7 @@ function weeklyOpts(extra){
   o.plugins=o.plugins||{};
   o.plugins.crosshairEnabled=true;
   o.plugins.eventBandsOn=true;
-  o.plugins.legend=Object.assign({},o.plugins.legend,{labels:Object.assign({usePointStyle:true,padding:14,font:{size:11}},{filter:function(it,ch){return !ch.data.datasets[it.datasetIndex].band;}})});
+  o.plugins.legend=Object.assign({},o.plugins.legend,{labels:Object.assign({usePointStyle:true,padding:14,font:{size:11}},{filter:function(it,ch){var ds=(ch&&ch.datasets)||(ch&&ch.data&&ch.data.datasets)||[];return !((ds[it.datasetIndex]||{}).band);}})});
   o.plugins.tooltip=Object.assign({},o.plugins.tooltip,{mode:'index',intersect:false,filter:function(it){return !it.dataset.band;},callbacks:{afterBody:function(items){return (items&&items.length)?weekStory(items[0].dataIndex):'';}}});
   return o;
 }
