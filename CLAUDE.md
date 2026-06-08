@@ -41,7 +41,9 @@
 - `ONTOLOGY.md` : 교회 온톨로지(Palantir식) 설계도 — 객체·링크·행동·함수·권한.
 - `CLAUDE.md` : 이 파일.
 
-**행동(Action) 레이어** : 추천을 추적되는 돌봄으로 닫는다(온톨로지의 행동). `careLog`(localStorage `woori_care_v1`)에 배정 시점 겉/속 스냅샷을 저장하고, `assignCare`(영혼 카드의 "돌봄 맡기기")·`renderCareLog`(행동 일지 카드, 완료·효과 추적)·`findSoul`(id 또는 이름으로 매칭). 영혼마다 `s.id`. 진단·예측은 읽기, 행동은 쓰기 — 플래그를 책임자·완료·효과에 연결한다.
+**행동(Action) 레이어** : 추천을 추적되는 돌봄으로 닫는다(온톨로지의 행동). `ACTIONS` 레지스트리(타입별 라벨·검증·기록; `care`=완료 추적형, `visit`/`talk`=즉시 기록형)와 `runAction(key,s)`(검증 → `careLog` 기록 → 저장 → 렌더). `careLog`(localStorage `woori_care_v1`)에 배정 시점 겉/속 스냅샷을 저장하고, `renderCareLog`(행동 일지 카드, 완료·효과 추적)·`findSoul`(id 또는 이름으로 매칭). 영혼마다 `s.id`. 진단·예측은 읽기, 행동은 쓰기 — 플래그를 책임자·완료·효과에 연결한다.
+
+**역할 뷰(권한)** : `ROLES`(담임·교사·부모)와 `role`(localStorage `woori_role`)·`setRole`. 민감 속성(내면화·취약도·의심·부모 온기·믿음 단계)은 담임만 본다(`ROLES[role].sensitive`) — `updateStudCard`가 속성을, `updateHiddenRisk`가 "속이 빈 아이" 명단을 권한으로 가린다. 부모 화면은 읽기 전용. 점수로 사람을 평가·서열화하지 않는다(목양이지 사찰 아님). 설계·윤리는 `ONTOLOGY.md`.
 
 ## 코드 구조 (index.html 안의 `<script>`)
 

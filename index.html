@@ -132,6 +132,7 @@
       <span class="wk"><b id="wk">0</b>주차 · <b id="yr">1</b>년차</span>
       <button id="btn-step" class="btn primary">다음 주 ▶</button>
       <button id="btn-play" class="btn">자동재생</button>
+      <select id="role-sel" class="btn ghost" title="역할에 따라 보이는 정보가 다릅니다(민감 정보는 담임만)"><option value="pastor">담임 화면</option><option value="teacher">교사 화면</option><option value="parent">부모 화면</option></select>
       <button id="btn-report" class="btn ghost">보고서</button>
       <button id="btn-settings" class="btn ghost">우리 부 설정</button>
     </div>
@@ -358,6 +359,16 @@
   var students=[],week=0,dropouts=0,gradKeep=0,gradLapse=0,playing=false,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null,contagionDeps={};
   var sid=0; // 영혼 고유 id(행동 일지가 사람을 묶는 키)
   // ── 행동(Action) 레이어: 추천을 '추적되는 돌봄'으로 닫는다(Palantir식 온톨로지의 행동) ──
+  // 행동 타입 레지스트리: 각 행동은 라벨·검증·기록을 정의한다. task=true는 완료까지 추적(효과), false는 즉시 기록.
+  var ACTIONS={
+    care:{label:'돌봄 맡기기',icon:'📋',task:true,what:function(s){return studNeed(s);}},
+    visit:{label:'심방·연락 기록',icon:'📞',task:false,what:function(){return '안부 연락/심방';}},
+    talk:{label:'신앙 대화 기록',icon:'💬',task:false,what:function(){return '신앙 대화 한 번';}}
+  };
+  // 역할 뷰(권한): 같은 온톨로지를 다른 범위로 본다. 민감 속성(내면화·의심·부모 온기)은 담임만.
+  var ROLES={pastor:{label:'담임',sensitive:true},teacher:{label:'교사',sensitive:false},parent:{label:'부모',sensitive:false}};
+  var role='pastor';try{role=localStorage.getItem('woori_role')||'pastor';}catch(e){}
+  function setRole(r){role=ROLES[r]?r:'pastor';try{localStorage.setItem('woori_role',role);}catch(e){}updateStudCard();updateHiddenRisk();var rb=document.getElementById('role-badge');if(rb)rb.textContent=ROLES[role].label;}
   var careLog=[];
   try{careLog=JSON.parse(localStorage.getItem('woori_care_v1')||'[]');}catch(e){careLog=[];}
   function saveCare(){try{localStorage.setItem('woori_care_v1',JSON.stringify(careLog));}catch(e){}}
@@ -753,6 +764,7 @@
   // 출석은 좋지만(eng 높음) 속이 빈(취약도 높음) 아이 — 출석 기반 대시보드엔 안 보이는 위험. 전환기에 무너진다.
   function updateHiddenRisk(){
     var el=document.getElementById('hidden-list');if(!el)return;
+    if(!ROLES[role].sensitive){el.innerHTML='<p class="hint">속이 빈 아이 명단은 <b>담임</b>만 봅니다. 점수로 사람을 분류하는 명단이라, 권한을 좁혀 둡니다.</p>';return;}
     var pool=students.filter(function(s){return !s.left&&s.eng>=0.55;}).map(function(s){return {s:s,fr:fragility(s)};}).filter(function(o){return o.fr>=0.32;}).sort(function(a,b){return b.fr-a.fr;});
     if(!pool.length){el.innerHTML='<p class="muted" style="color:var(--good)">잘 나오는 아이들의 속도 비교적 단단합니다. 좋은 신호입니다.</p>';return;}
     el.innerHTML=pool.slice(0,3).map(function(o){var s=o.s,why=[];
@@ -849,41 +861,49 @@
     var el=document.getElementById('stud-card');if(!el)return;
     var s=selStudent;if(!s||s.left){el.innerHTML='';return;}
     var pct=function(v){return Math.round((v||0)*100);};
-    var stageL=['','부여된(빌려온) 믿음','탐색 중(의심하는 중)','내면화(자기 믿음)'][faithStage(s)];
     var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
-    var warm=s.warmth!=null?pct(s.warmth):null,need=studNeed(s);
-    var assigned=careLog.some(function(c){return c.sid===s.id&&!c.done;});
+    var warm=s.warmth!=null?pct(s.warmth):null,need=studNeed(s),see=ROLES[role].sensitive;
+    var assigned=careLog.some(function(c){return c.type==='care'&&c.sid===s.id&&!c.done;});
+    // 민감 속성(속·취약도·의심·부모 온기·믿음 단계)은 담임만. 교사·부모는 출석·친구·필요한 한 가지만.
+    var line=see
+      ? '겉(출석) <b>'+pct(s.eng)+'</b> · 속(내면화) <b>'+pct(s.owned)+'</b> · 취약도 <b>'+pct(fragility(s))+'</b><br>의심을 말할 공간 <b>'+pct(s.doubtSpace)+'</b>'+(warm!=null?' · 부모 관계 온기 <b>'+warm+'</b>':'')+' · 교회 친구 <b>'+fr+'명</b>'
+      : '출석 <b>'+pct(s.eng)+'</b> · 교회 친구 <b>'+fr+'명</b>'+(s.eng<0.3?' · 요즘 발걸음이 뜸함':'');
+    var stageL=see?' <span class="hint" style="font-weight:600">· '+['','부여된(빌려온) 믿음','탐색 중(의심하는 중)','내면화(자기 믿음)'][faithStage(s)]+'</span>':'';
+    var actBtns=assigned
+      ? '<button class="btn sm" disabled style="margin-top:10px;opacity:.6">✓ 돌봄 맡김</button> '
+      : '<button class="btn sm primary" data-action="care" data-sid="'+s.id+'" style="margin-top:10px">📋 돌봄 맡기기</button> ';
+    actBtns+='<button class="btn sm" data-action="visit" data-sid="'+s.id+'" style="margin-top:10px">📞 심방 기록</button> '+
+             '<button class="btn sm" data-action="talk" data-sid="'+s.id+'" style="margin-top:10px">💬 대화 기록</button>';
+    if(role==='parent')actBtns=''; // 부모 화면은 읽기 전용
     el.innerHTML='<div class="callout" style="margin-top:8px;background:#f8fafc;border-color:#e2e8f0">'+
-      '<div style="font-weight:800;font-size:15px;margin-bottom:6px">'+studName(s)+' <span class="hint" style="font-weight:600">· '+stageL+'</span></div>'+
-      '<div class="hint" style="line-height:1.8">겉(출석) <b>'+pct(s.eng)+'</b> · 속(내면화) <b>'+pct(s.owned)+'</b> · 취약도 <b>'+pct(fragility(s))+'</b>'+
-      '<br>의심을 말할 공간 <b>'+pct(s.doubtSpace)+'</b>'+(warm!=null?' · 부모 관계 온기 <b>'+warm+'</b>':'')+' · 교회 친구 <b>'+fr+'명</b>'+
-      (s.bg==='none'?' · 혼자 다니는 아이':s.bg==='mota'?' · 믿는 가정':'')+(s.core?' · 헌신된 제자':'')+'</div>'+
+      '<div style="font-weight:800;font-size:15px;margin-bottom:6px">'+studName(s)+stageL+'</div>'+
+      '<div class="hint" style="line-height:1.8">'+line+(s.bg==='none'?' · 혼자 다니는 아이':s.bg==='mota'?' · 믿는 가정':'')+(s.core?' · 헌신된 제자':'')+'</div>'+
       '<div style="margin-top:8px;font-size:14px">필요한 한 가지 → <b>'+need+'</b></div>'+
-      (assigned?'<div class="hint" style="margin-top:8px;color:var(--good)">✓ 이미 돌봄을 맡긴 아이입니다(행동 일지에 있음).</div>'
-        :'<button class="btn sm primary" data-care-assign="'+s.id+'" style="margin-top:10px">📋 이 아이 돌봄 맡기기</button>')+
+      actBtns+
+      (see?'':'<div class="hint" style="margin-top:8px">한 영혼의 속(내면화·의심)은 담임만 봅니다 — 사찰이 아니라 목양이기 위함.</div>')+
       '</div>';
   }
-  // 행동: 한 영혼에 돌봄을 맡긴다(배정 시점 겉/속 스냅샷 저장 → 나중에 효과 추적).
-  function assignCare(s){
-    if(careLog.some(function(c){return c.sid===s.id&&!c.done;}))return;
-    careLog.push({sid:s.id,name:studName(s),what:studNeed(s),wk:week,own0:Math.round((s.owned||0)*100),eng0:Math.round((s.eng||0)*100),done:false,doneWk:null});
+  // 행동 실행: 타입 검증 → 기록(배정 시점 겉/속 스냅샷) → 저장 → 렌더. task형은 완료까지 추적.
+  function runAction(key,s){var A=ACTIONS[key];if(!A||!s)return;
+    if(A.task&&careLog.some(function(c){return c.type===key&&c.sid===s.id&&!c.done;}))return; // 검증: 같은 열린 행동 중복 금지
+    careLog.push({type:key,sid:s.id,name:studName(s),what:A.what(s),wk:week,own0:Math.round((s.owned||0)*100),eng0:Math.round((s.eng||0)*100),done:!A.task,doneWk:A.task?null:week});
     saveCare();renderCareLog();updateStudCard();
   }
   function findSoul(c){return students.filter(function(x){return !x.left;}).filter(function(x){return x.id===c.sid||(c.name&&x.name&&studName(x)===c.name);})[0];}
   function renderCareLog(){
     var el=document.getElementById('care-log'),sum=document.getElementById('care-sum');if(!el)return;
     var open=careLog.filter(function(c){return !c.done;}),done=careLog.filter(function(c){return c.done;});
-    if(sum)sum.textContent='맡은 돌봄 — 진행 '+open.length+'건 · 완료 '+done.length+'건';
-    if(!careLog.length){el.innerHTML='<p class="hint">아직 맡긴 돌봄이 없습니다. 위 "숫자로 더 보기"에서 아이를 눌러 "돌봄 맡기기"를 누르면, 누구에게 무엇을 했고 그 뒤 속(내면화)이 올랐는지 여기서 추적합니다.</p>';return;}
-    function row(c,i){var s=findSoul(c),eff='';
-      if(s){var nowOwn=Math.round((s.owned||0)*100),d=nowOwn-c.own0;eff=' · 속 '+c.own0+'→'+nowOwn+'('+(d>=0?'+':'')+d+')';}
-      else eff=' · <span class="hint">(지금 명단에 없음)</span>';
+    if(sum)sum.textContent='행동 일지 — 진행 '+open.length+'건 · 완료 '+done.length+'건';
+    if(!careLog.length){el.innerHTML='<p class="hint">아직 기록한 행동이 없습니다. 위 "숫자로 더 보기"에서 아이를 눌러 "돌봄 맡기기 · 심방 · 대화"를 기록하면, 누구에게 무엇을 했고 그 뒤 속(내면화)이 올랐는지 여기서 추적합니다.</p>';return;}
+    function row(c,i){var A=ACTIONS[c.type]||{icon:'•',task:false},s=findSoul(c),eff='';
+      if(A.task){if(s){var nowOwn=Math.round((s.owned||0)*100),d=nowOwn-c.own0;eff=' · 속 '+c.own0+'→'+nowOwn+'('+(d>=0?'+':'')+d+')';}else eff=' · <span class="hint">(지금 명단에 없음)</span>';}
       var wks=week-c.wk;
-      return '<div class="logrow"><span class="logwk">'+(c.done?'완료':wks+'주째')+'</span><span><b>'+c.name+'</b> — '+c.what+eff+
+      return '<div class="logrow"><span class="logwk">'+(c.done?(A.task?'완료':wks+'주전'):wks+'주째')+'</span><span>'+A.icon+' <b>'+c.name+'</b> — '+c.what+eff+
         (c.done?'':' <button class="btn sm" data-care-done="'+i+'" style="padding:1px 8px;font-size:11px">완료</button>')+'</span></div>';}
     el.innerHTML=open.map(function(c){return row(c,careLog.indexOf(c));}).join('')+
-      (done.length?'<div class="mini-h" style="margin-top:8px">완료</div>'+done.slice(-6).map(function(c){return row(c,careLog.indexOf(c));}).join(''):'')+
-      '<button class="btn sm ghost" id="care-clear" style="margin-top:8px;font-size:11px">일지 비우기</button>';
+      (done.length?'<div class="mini-h" style="margin-top:8px">지난 기록</div>'+done.slice(-8).map(function(c){return row(c,careLog.indexOf(c));}).join(''):'')+
+      '<p class="hint" style="margin-top:8px">행동만 기록한다(누구에게·무엇을·그 뒤 효과). 점수로 사람을 평가·서열화하지 않는다.</p>'+
+      '<button class="btn sm ghost" id="care-clear" style="margin-top:4px;font-size:11px">일지 비우기</button>';
   }
   function updateVisitList(){
     var el=document.getElementById('visit-list');var shaken=students.filter(function(s){return !s.left&&s.eng<0.3;});
@@ -1116,8 +1136,9 @@
   document.getElementById('reco-btn').addEventListener('click',recommend);
   // 먼저 만날 아이·잘 나오지만 속이 빈 아이 줄을 누르면 그 아이 한 명을 자세히
   document.getElementById('verdict-card').addEventListener('click',function(e){
-    var asg=e.target.closest('[data-care-assign]');if(asg){var sa=students.filter(function(x){return x.id===+asg.dataset.careAssign;})[0];if(sa)assignCare(sa);return;}
+    var act=e.target.closest('[data-action]');if(act){var sa=students.filter(function(x){return x.id===+act.dataset.sid;})[0];if(sa)runAction(act.dataset.action,sa);return;}
     var row=e.target.closest('[data-si]');if(!row)return;var s=students[+row.dataset.si];if(s){selStudent=s;updateStudCard();var c=document.getElementById('stud-card');if(c)c.scrollIntoView({block:'nearest'});}});
+  var roleSel=document.getElementById('role-sel');if(roleSel){roleSel.value=role;roleSel.addEventListener('change',function(){setRole(this.value);});}
   document.getElementById('care-log').addEventListener('click',function(e){
     var d=e.target.closest('[data-care-done]');if(d){var i=+d.dataset.careDone;if(careLog[i]){careLog[i].done=true;careLog[i].doneWk=week;saveCare();renderCareLog();}return;}
     if(e.target.id==='care-clear'){if(confirm('행동 일지를 모두 비울까요?')){careLog=[];saveCare();renderCareLog();updateStudCard();}}});
