@@ -43,6 +43,8 @@
 
 **행동(Action) 레이어** : 추천을 추적되는 돌봄으로 닫는다(온톨로지의 행동). `ACTIONS` 레지스트리(타입별 라벨·검증·기록; `care`=완료 추적형, `visit`/`talk`=즉시 기록형)와 `runAction(key,s)`(검증 → `careLog` 기록 → 저장 → 렌더). `careLog`(localStorage `woori_care_v1`)에 배정 시점 겉/속 스냅샷을 저장하고, `renderCareLog`(행동 일지 카드, 완료·효과 추적)·`findSoul`(id 또는 이름으로 매칭). 영혼마다 `s.id`. 진단·예측은 읽기, 행동은 쓰기 — 플래그를 책임자·완료·효과에 연결한다.
 
+**한눈 그림(Maven식 상황판)** : `drawRoom`/`roomClick` + `#room`. 점=아이, 색=상태(초록 잘나옴/노랑 뜸함/빨강 흔들림), 학년 6열. 줌(`roomZoom` 전체↔학년↔영혼), 사건 효과(선택 아이의 친구선 리플, `roomSpread` 전염 길), **시간 미리보기**(`roomWhen` 지금/1년/3년 + `roomLever` 그대로/수련회/멘토/부모 → `forecastRoom`이 현재 명단을 복제해 헤드리스로 굴린 아이별 미래 상태로 점을 다시 칠함; 이탈=회색, 졸업=옅은 테). 라이브 원본 불변. `cloneStudents`/`leverOpts`.
+
 **역할 뷰(권한)** : `ROLES`(담임·교사·부모)와 `role`(localStorage `woori_role`)·`setRole`. 민감 속성(내면화·취약도·의심·부모 온기·믿음 단계)은 담임만 본다(`ROLES[role].sensitive`) — `updateStudCard`가 속성을, `updateHiddenRisk`가 "속이 빈 아이" 명단을 권한으로 가린다. 부모 화면은 읽기 전용. 점수로 사람을 평가·서열화하지 않는다(목양이지 사찰 아님). 설계·윤리는 `ONTOLOGY.md`.
 
 ## 코드 구조 (index.html 안의 `<script>`)

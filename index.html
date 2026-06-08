@@ -850,29 +850,56 @@
     el.innerHTML='<div class="fbar"><div class="seg g" style="width:'+w(ac)+'%"></div><div class="seg a" style="width:'+w(lo)+'%"></div><div class="seg r" style="width:'+w(ri)+'%"></div></div>'+
       '<div class="fbar-leg"><span><i class="g"></i>든든 '+ac+'</span><span><i class="a"></i>느슨 '+lo+'</span><span><i class="r"></i>흔들림 '+ri+'</span></div>';
   }
-  // ── 우리 부 한눈에(Maven식 상황 그림): 점=아이, 색=상태. 줌(전체↔학년↔한 영혼) + 사건 효과(전염 길) 상호작용. ──
-  var roomDots=[],roomZoom=null,roomSpread=false;
+  // ── 우리 부 한눈에(Maven식 상황판): 점=아이, 색=상태. 줌(전체↔학년↔영혼) + 사건 효과(전염 길) + 시간 미리보기(이대로/만약 ~하면 N년 뒤). ──
+  var roomDots=[],roomZoom=null,roomSpread=false,roomWhen=0,roomLever=null;
   function renderRoomCtrl(){
     var el=document.getElementById('room-ctrl');if(!el)return;
     var b='<button class="chip'+(roomZoom==null?' on':'')+'" data-zoom="all">전체</button>';
     for(var gi=1;gi<=6;gi++)b+='<button class="chip'+(roomZoom===gi?' on':'')+'" data-zoom="'+gi+'">'+GRADE_LABELS[gi]+'</button>';
     b+=' <button class="chip'+(roomSpread?' on':'')+'" data-spread="1">'+(roomSpread?'전염 길 끄기':'전염 길 보기')+'</button>';
+    b+='<br><span class="hint" style="margin-right:4px">보기:</span>';
+    [[0,'지금'],[52,'1년 뒤'],[156,'3년 뒤']].forEach(function(t){b+='<button class="chip'+(roomWhen===t[0]?' on':'')+'" data-when="'+t[0]+'">'+t[1]+'</button>';});
+    if(roomWhen>0){b+=' <span class="hint" style="margin:0 4px">만약:</span>';
+      [['plan','그대로'],['retreat','수련회'],['mentor','멘토'],['parent','부모 세우기']].forEach(function(l){b+='<button class="chip'+((roomLever||'plan')===l[0]?' on':'')+'" data-lever="'+l[0]+'">'+l[1]+'</button>';});}
     el.innerHTML=b;
   }
-  function colOf(s){return s.eng>=0.55?'#16a34a':s.eng>=0.3?'#d08a1a':'#dc2626';}
+  function colByEng(e){return e>=0.55?'#16a34a':e>=0.3?'#d08a1a':'#dc2626';}
+  function cloneStudents(){return students.map(function(s){var o={};for(var k in s)o[k]=s[k];o.friends=(s.friends||[]).slice();return o;});}
+  function leverOpts(l){
+    if(l==='mentor')return {mt:Math.min(1,val('s-mt')/100+0.2)};
+    if(l==='parent')return {dara:Math.min(1,val('s-daracbang')/100+0.25)};
+    if(l==='retreat')return {schedule:schedule.concat([{type:'retreat',start:((week)%WEEKS_PER_YEAR)+6,nights:3,attendRate:0.85,intensity:0.8,repeat:WEEKS_PER_YEAR}])};
+    return {};
+  }
+  // 지금 명단을 그대로 복제해 weeks주 앞으로 굴린다(실제 아이별 미래 상태 → 점 색). 라이브를 건드리지 않는다.
+  function forecastRoom(weeks,ov){
+    ov=ov||{};var arr=cloneStudents();
+    var sg=ov.sg!=null?ov.sg:val('s-sg')/100,mt=ov.mt!=null?ov.mt:val('s-mt')/100,tc=val('s-tc'),sp=val('s-speed')/100,dara=ov.dara!=null?ov.dara:val('s-daracbang')/100;
+    var sched=ov.schedule||schedule,cc=churchClimate,pv=parentVitality;
+    for(var w=week+1;w<=week+weeks;w++){
+      var active=arr.filter(function(s){return !s.left;});
+      var tEff=teacherEff(tc,active.length),we=weekEffects(sched,w),cu=advanceChurch(cc,pv,churchSchedule,w,sp,dara);cc=cu.cc;pv=cu.pv;
+      var ctx={arr:arr,sgFrac:sg,mtFrac:mt,tEff:tEff,speed:sp,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:pv,churchClimate:cc,allRetreat:cu.allRetreat,revival:cu.revival,careForce:CARE_FORCE,careFaith:CARE_FAITH};
+      active.forEach(function(s){tick(s,ctx);});
+      arr.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;}});
+      if(w%WEEKS_PER_YEAR===0)arr.forEach(function(s){if(!s.left){var was=s.grade;s.grade++;if(s.grade>MAX_GRADE){s.left=true;s.grad=true;}else if(was===3&&Math.random()<cliffProb(s)){s.left=true;s.dropped=true;}}});
+    }
+    var map={};arr.forEach(function(s){map[s.id]={eng:s.eng,left:s.left,dropped:s.dropped,grad:s.grad};});return map;
+  }
   function drawRoom(){
     var cv=document.getElementById('room');if(!cv)return;var g=cv.getContext('2d');
     var a=students.filter(function(s){return !s.left;}),W=600,pos={};roomDots=[];
+    var fc=roomWhen>0?forecastRoom(roomWhen,leverOpts(roomLever)):null;
     var shaken=a.filter(function(s){return s.eng<0.3;}).sort(function(x,y){return spreadScore(y,students)-spreadScore(x,students)||x.eng-y.eng;});
-    var first={};shaken.slice(0,3).forEach(function(s){first[s.id]=1;});
+    var first={};if(!fc)shaken.slice(0,3).forEach(function(s){first[s.id]=1;});
     var H,RAD,list;
-    if(roomZoom){ // 한 학년으로 줌: 점 크게 + 이름 + 친구선
+    if(roomZoom){
       list=a.filter(function(s){return s.grade===roomZoom;});
       var perRow=8,rowH=30,top=24;RAD=7;
       var rows=Math.max(1,Math.ceil(list.length/perRow));H=top+rows*rowH+14;cv.width=W;cv.height=H;
       g.clearRect(0,0,W,H);g.fillStyle='#475569';g.font='bold 12px sans-serif';g.textAlign='left';g.fillText(GRADE_LABELS[roomZoom]+' '+list.length+'명',8,15);
       list.forEach(function(s,i){var r=Math.floor(i/perRow),c=i%perRow;var x=24+c*((W-48)/(perRow-1)),y=top+r*rowH;pos[s.id]={x:x,y:y};roomDots.push({s:s,x:x,y:y});});
-    }else{ // 전체: 학년 6열
+    }else{
       var colW=W/6,perRow2=4,rowH2=15,top2=24;
       var byG=[[],[],[],[],[],[]];a.forEach(function(s){if(s.grade>=1&&s.grade<=6)byG[s.grade-1].push(s);});
       var maxRows=1;byG.forEach(function(l){maxRows=Math.max(maxRows,Math.ceil(l.length/perRow2));});
@@ -881,23 +908,29 @@
         if(gi>0){g.strokeStyle='#eef1f5';g.beginPath();g.moveTo(x0,18);g.lineTo(x0,H-4);g.stroke();}
         byG[gi].forEach(function(s,i){var r=Math.floor(i/perRow2),c=i%perRow2;var x=x0+14+c*((colW-26)/Math.max(1,perRow2-1)),y=top2+r*rowH2;pos[s.id]={x:x,y:y};roomDots.push({s:s,x:x,y:y});});}
     }
-    // 선(점 아래): 줌이면 학년 내 친구선 옅게, 전염 길 켜면 흔들리는→건강 친구 붉은 선, 선택 아이의 친구선
     function line(ax,ay,bx,by,col,w){g.strokeStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(ax,ay);g.lineTo(bx,by);g.stroke();}
     if(roomZoom&&list){list.forEach(function(s){(s.friends||[]).forEach(function(j){var o=students[j];if(o&&pos[o.id]&&s.id<o.id)line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'#e5e9f0',1);});});}
     if(roomSpread){a.forEach(function(s){if(s.eng>=0.3)return;(s.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&o.eng>=0.55&&pos[s.id]&&pos[o.id])line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'#fca5a5',1.2);});});}
     var ripple=0;
     if(selStudent&&pos[selStudent.id]){(selStudent.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&pos[o.id]){ripple++;line(pos[selStudent.id].x,pos[selStudent.id].y,pos[o.id].x,pos[o.id].y,'#1d4ed8',1.3);}});}
-    // 점
-    roomDots.forEach(function(d){var s=d.s;g.fillStyle=colOf(s);g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();
+    roomDots.forEach(function(d){var s=d.s,m=fc?fc[s.id]:null;
+      if(m&&m.left){ // 미래에 빠질 아이: 이탈=회색, 졸업=옅은 테
+        if(m.dropped){g.fillStyle='#cbd5e1';g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();g.strokeStyle='#94a3b8';g.lineWidth=1;g.beginPath();g.moveTo(d.x-RAD,d.y-RAD);g.lineTo(d.x+RAD,d.y+RAD);g.stroke();}
+        else{g.strokeStyle='#cbd5e1';g.lineWidth=1.4;g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.stroke();}
+        return;}
+      g.fillStyle=colByEng(m?m.eng:s.eng);g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();
       if(first[s.id]){g.strokeStyle='#111827';g.lineWidth=1.8;g.beginPath();g.arc(d.x,d.y,RAD+2.3,0,6.2832);g.stroke();}
       if(selStudent&&selStudent.id===s.id){g.strokeStyle='#1d4ed8';g.lineWidth=2.4;g.beginPath();g.arc(d.x,d.y,RAD+3.6,0,6.2832);g.stroke();}});
     if(roomZoom&&list){g.fillStyle='#64748b';g.font='9px sans-serif';g.textAlign='center';list.forEach(function(s){if(s.name)g.fillText(s.name.slice(0,4),pos[s.id].x,pos[s.id].y+RAD+9);});}
     g.textAlign='left';
     var leg=document.getElementById('room-leg');
-    if(leg){var base='<span style="color:#16a34a">●</span> 잘 나옴 <span style="color:#d08a1a">●</span> 뜸함 <span style="color:#dc2626">●</span> 흔들림 · 검은 테=먼저 만날 아이.';
-      if(roomZoom)base+=' <b>'+GRADE_LABELS[roomZoom]+'</b>만 크게 봅니다(회색 선=친구 사이). "전체"로 돌아가기.';
-      if(selStudent&&ripple)base+=' <br><b style="color:#1d4ed8">선택한 아이와 이어진 친구 '+ripple+'명</b> — 이 아이가 흔들리면 함께 흔들리기 쉽고, 든든하면 함께 끌어올립니다.';
-      if(roomSpread)base+=' <br><b style="color:#dc2626">붉은 선</b> = 흔들리는 아이에서 건강한 친구로 번질 수 있는 길.';
+    if(leg){var base;
+      if(fc){var lost=0,grd=0,shy=0;roomDots.forEach(function(d){var m=fc[d.s.id];if(m){if(m.dropped)lost++;else if(m.grad)grd++;else if(m.eng<0.3)shy++;}});
+        base='<b>이대로 '+(roomWhen/WEEKS_PER_YEAR)+'년 뒤</b>'+((roomLever&&roomLever!=='plan')?'('+({retreat:'수련회 강화',mentor:'멘토 강화',parent:'부모 세우기'}[roomLever])+' 하면)':'')+' — <span style="color:#94a3b8">●</span> 이탈 '+lost+'명, 졸업 '+grd+'명, <span style="color:#dc2626">●</span> 흔들림 '+shy+'명. 색이 그때 상태입니다. "지금"으로 돌아가기.';}
+      else{base='<span style="color:#16a34a">●</span> 잘 나옴 <span style="color:#d08a1a">●</span> 뜸함 <span style="color:#dc2626">●</span> 흔들림 · 검은 테=먼저 만날 아이.';
+        if(roomZoom)base+=' <b>'+GRADE_LABELS[roomZoom]+'</b>만 크게(회색 선=친구 사이). "전체"로 돌아가기.';
+        if(selStudent&&ripple)base+=' <br><b style="color:#1d4ed8">선택한 아이와 이어진 친구 '+ripple+'명</b> — 이 아이가 흔들리면 함께 흔들리기 쉽고, 든든하면 함께 끌어올립니다.';
+        if(roomSpread)base+=' <br><b style="color:#dc2626">붉은 선</b> = 흔들리는 아이에서 건강한 친구로 번질 수 있는 길.';}
       leg.innerHTML=base;}
     renderRoomCtrl();
   }
@@ -1203,7 +1236,9 @@
   var roomEl=document.getElementById('room');if(roomEl)roomEl.addEventListener('click',roomClick);
   var roomCtrl=document.getElementById('room-ctrl');if(roomCtrl)roomCtrl.addEventListener('click',function(e){
     var z=e.target.closest('[data-zoom]');if(z){roomZoom=z.dataset.zoom==='all'?null:+z.dataset.zoom;drawRoom();return;}
-    if(e.target.closest('[data-spread]')){roomSpread=!roomSpread;drawRoom();}});
+    if(e.target.closest('[data-spread]')){roomSpread=!roomSpread;drawRoom();return;}
+    var t=e.target.closest('[data-when]');if(t){roomWhen=+t.dataset.when;if(roomWhen===0)roomLever=null;drawRoom();return;}
+    var l=e.target.closest('[data-lever]');if(l){roomLever=l.dataset.lever;drawRoom();}});
   document.getElementById('care-log').addEventListener('click',function(e){
     var d=e.target.closest('[data-care-done]');if(d){var i=+d.dataset.careDone;if(careLog[i]){careLog[i].done=true;careLog[i].doneWk=week;saveCare();renderCareLog();}return;}
     if(e.target.id==='care-clear'){if(confirm('행동 일지를 모두 비울까요?')){careLog=[];saveCare();renderCareLog();updateStudCard();}}});
