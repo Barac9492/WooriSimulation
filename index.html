@@ -56,10 +56,13 @@ table.gt .num{font-family:ui-monospace,monospace;text-align:right}
       <button id="tab-team" onclick="setTab('team')">교사팀 상세</button>
     </span>
     <select id="scenario-sel" onchange="loadScenario()" style="font-family:inherit;font-size:12px;border:2px solid #4a3a2a;border-radius:5px;background:#fffaf0;color:#4a3a2a;padding:4px 8px">
-      <option value="plan">계획 시나리오 (1년)</option>
-      <option value="base">기본 운영만 (1년)</option>
-      <option value="decline">쇠퇴 부 (1년)</option>
+      <option value="data">우리 부 데이터 (CSV)</option>
+      <option value="plan">계획 시나리오 (가정)</option>
+      <option value="base">기본 운영만 (가정)</option>
+      <option value="decline">쇠퇴 부 (가정)</option>
     </select>
+    <label class="btn" style="cursor:pointer" title="이름·학년·신앙배경·코어·외톨이·출석상태 열을 가진 명단 CSV">📁 명단 CSV 업로드<input id="csv-file" type="file" accept=".csv,text/csv" style="display:none" onchange="onCSV(event)"></label>
+    <a class="btn" href="sample-data.csv" download style="text-decoration:none;color:#4a3a2a">⬇ 샘플 양식</a>
     <button class="btn" onclick="window.print()">🖨 인쇄·PDF</button>
   </div>
 </div>
@@ -273,7 +276,8 @@ function segStats(arr){
 }
 function simulateOnce(cfg,weeks){
   var D=cfg.dist,arr=[];
-  for(var i=0;i<D.n;i++)arr.push(spawn(D,pickGrade6(D.mid,D.high)));
+  if(cfg.seed&&cfg.seed.length){for(var si=0;si<cfg.seed.length;si++)arr.push(cloneStudent(cfg.seed[si]));}
+  else{for(var i=0;i<D.n;i++)arr.push(spawn(D,pickGrade6(D.mid,D.high)));}
   arr.forEach(function(s){s.loner?linkIn(s,arr,arr,0,1):linkIn(s,arr,arr,3,5);});
   var drop=0,gKeep=0,gLapse=0,hist=[],cc=0.5,pv=0.5,dara=cfg.ops.daracbang!=null?cfg.ops.daracbang:0.5,csched=cfg.church||[];
   for(var w=1;w<=weeks;w++){
@@ -313,6 +317,69 @@ function simulate(cfg,weeks,runs){
 }
 function copyEv(e){var o={};for(var k in e)o[k]=e[k];return o;}
 
+/* ===================== 백데이터(CSV 명단) → 엔진 시드 =====================
+   업로드한 실제 명단을 시뮬레이션 시작 인구로 그대로 쓴다. 모든 카드·차트는
+   이 명단(백데이터)에서 출발한 결과를 읽는다. 신규 유입은 명단 분포대로 생성. */
+var GRADE_NUM={'중1':1,'중2':2,'중3':3,'고1':4,'고2':5,'고3':6};
+function parseCSV(text){
+  var lines=String(text).replace(/^﻿/,'').replace(/\r/g,'').split('\n').filter(function(l){return l.trim().length;});
+  if(!lines.length)return [];
+  var head=lines[0].split(',').map(function(h){return h.trim();}),idx={};
+  head.forEach(function(h,i){idx[h]=i;});
+  var rows=[];
+  for(var i=1;i<lines.length;i++){
+    var c=lines[i].split(',');
+    var get=function(name){var j=idx[name];return (j!=null&&c[j]!=null)?c[j].trim():'';};
+    rows.push({name:get('이름'),grade:get('학년'),bg:get('신앙배경'),core:get('코어'),loner:get('외톨이'),status:get('출석상태')});
+  }
+  return rows;
+}
+function yn(v){v=(v||'').toUpperCase();return v==='Y'||v==='예'||v==='O'||v==='1'||v==='TRUE'||v==='참';}
+function bgCode(v){v=v||'';if(v.indexOf('모태')>=0||v.toLowerCase().indexOf('mota')>=0)return 'mota';if(v.indexOf('비신앙')>=0||v.toLowerCase().indexOf('none')>=0)return 'none';return 'normal';}
+function studentFromRow(r){
+  var grade=GRADE_NUM[r.grade]||(parseInt(r.grade,10)||0);if(grade<1)grade=0;if(grade>6)grade=6;
+  if(!grade)return null;
+  var bg=bgCode(r.bg),core=yn(r.core),loner=yn(r.loner),st=r.status||'',c,fa;
+  if(st.indexOf('활발')>=0||st.toLowerCase().indexOf('active')>=0){c=rnd(0.60,0.90);fa=rnd(0.45,0.75);}
+  else if(st.indexOf('위기')>=0||st.toLowerCase().indexOf('risk')>=0){c=rnd(0.12,0.32);fa=rnd(0.15,0.40);}
+  else{c=rnd(0.34,0.56);fa=rnd(0.30,0.55);}
+  if(core)fa=clamp(fa+0.12,0,1);if(bg==='mota')fa=clamp(fa+0.06,0,1);if(bg==='none')fa=clamp(fa-0.10,0,1);
+  var fam=bg==='mota'?rnd(0.7,0.95):bg==='none'?rnd(0.05,0.35):rnd(0.35,0.65);
+  return {name:r.name||'',grade:grade,bg:bg,core:core,loner:loner,commit:c,eng:c,faith:fa,fam:fam,
+    word:clamp(fa+rnd(-0.08,0.08),0,1),holy:clamp(fa+rnd(-0.10,0.06),0,1),belong:clamp((loner?fa-0.15:fa+0.06)+rnd(-0.08,0.08),0,1),
+    owned:clamp(fa*0.72+(core?0.10:0)+rnd(-0.06,0.06),0,1),doubtSpace:clamp(0.45+(core?0.12:0)+(loner?-0.10:0)+rnd(-0.08,0.08),0,1),
+    adults:core?2:(Math.random()<0.4?1:0),warmth:clamp((bg==='mota'?0.6:bg==='none'?0.45:0.55)+rnd(-0.18,0.18),0,1),doubt:clamp(0.20+0.05*grade+rnd(-0.08,0.10),0,1)};
+}
+function cloneStudent(t){return {name:t.name,grade:t.grade,bg:t.bg,core:t.core,loner:t.loner,commit:t.commit,eng:t.eng,faith:t.faith,fam:t.fam,
+  word:t.word,holy:t.holy,belong:t.belong,owned:t.owned,doubtSpace:t.doubtSpace,adults:t.adults,warmth:t.warmth,doubt:t.doubt,
+  rSg:Math.random(),rMt:Math.random(),sermonAcc:0,retreatGlow:0,examPress:0,absent:0,left:false,dropped:false,sg:false,mentor:false,friends:[]};}
+function rosterToDist(R){
+  var n=R.length||1,mid=0,high=0,mota=0,none=0,core=0,loner=0,act=0,risk=0;
+  R.forEach(function(s){if(s.grade<=3)mid++;else high++;if(s.bg==='mota')mota++;if(s.bg==='none')none++;
+    if(s.core)core++;if(s.loner)loner++;if(s.eng>=0.55)act++;else if(s.eng<0.34)risk++;});
+  return {n:n,mid:mid||1,high:high||1,mota:mota/n,none:none/n,core:core/n,loner:loner/n,active:act/n,risk:risk/n};
+}
+function makeDataDef(roster,label){
+  var dist=rosterToDist(roster);
+  return {label:label||'우리 부 데이터',isData:true,
+    desc:dist.n+'명 · 중등 '+dist.mid+'·고등 '+dist.high+' · 모태 '+Math.round(dist.mota*100)+'% · 외톨이 '+Math.round(dist.loner*100)+'% · 활발 '+Math.round(dist.active*100)+'% · 위기 '+Math.round(dist.risk*100)+'%',
+    dist:dist,seed:roster,
+    ops:{sg:0.65,mt:0.45,tc:22,intake:Math.max(20,Math.round(dist.n*0.4)),speed:0.4,daracbang:0.6},
+    sched:SC_DEFS.plan.sched.map(copyEv),church:SC_DEFS.plan.church.map(copyEv)};
+}
+function loadRoster(text,label){
+  var roster=parseCSV(text).map(studentFromRow).filter(function(s){return s;});
+  if(!roster.length){alert('CSV에서 학생을 읽지 못했습니다.\n머리글 줄을 확인하십시오: 이름,학년,신앙배경,코어,외톨이,출석상태');return false;}
+  SC_DEFS.data=makeDataDef(roster,label);delete SC_CACHE.data;
+  curScenario='data';var sel=document.getElementById('scenario-sel');if(sel)sel.value='data';
+  document.getElementById('loading').hidden=false;
+  document.getElementById('loading').textContent='명단 '+roster.length+'명을 불러와 분석 중…';
+  setTimeout(renderAll,30);
+  return true;
+}
+function onCSV(e){var f=e.target.files&&e.target.files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){loadRoster(rd.result,'우리 부 데이터 · '+f.name);};rd.readAsText(f,'utf-8');e.target.value='';}
+
 /* ===================== 시나리오 정의 + 엔진으로 데이터 만들기 ===================== */
 var DIST={n:120,mid:52,high:48,mota:0.40,none:0.15,core:0.30,loner:0.15,active:0.58,risk:0.12};
 var SC_DEFS={
@@ -328,9 +395,9 @@ var SC_DEFS={
     ops:{sg:0.25,mt:0.15,tc:12,intake:40,speed:0.4,daracbang:0.30},
     sched:[{type:'exam',start:9,weeks:3,repeat:13},{type:'sooneung',start:46,weeks:6,repeat:52}],church:[]}
 };
-function cfgOf(d,sched){return {dist:d.dist,ops:Object.assign({},d.ops),schedule:(sched||d.sched).map(copyEv),church:(d.church||[]).map(copyEv)};}
+function cfgOf(d,sched){return {dist:d.dist,ops:Object.assign({},d.ops),schedule:(sched||d.sched).map(copyEv),church:(d.church||[]).map(copyEv),seed:d.seed};}
 function withOps(d,extra){var c=cfgOf(d);c.ops=Object.assign({},c.ops,extra);return c;}
-function baseCfg(d){return {dist:d.dist,ops:Object.assign({},d.ops,{sg:Math.min(d.ops.sg,0.40),mt:Math.min(d.ops.mt,0.25)}),schedule:d.sched.filter(function(e){return e.type==='exam'||e.type==='sooneung';}).map(copyEv),church:[]};}
+function baseCfg(d){return {dist:d.dist,ops:Object.assign({},d.ops,{sg:Math.min(d.ops.sg,0.40),mt:Math.min(d.ops.mt,0.25)}),schedule:d.sched.filter(function(e){return e.type==='exam'||e.type==='sooneung';}).map(copyEv),church:[],seed:d.seed};}
 
 function buildScenario(key){
   var d=SC_DEFS[key],W=WEEKS_PER_YEAR;
@@ -505,15 +572,26 @@ function renderTornado(){
 }
 function renderAll(){
   document.getElementById('loading').hidden=true;
-  document.getElementById('subtitle').textContent=sc().label+' · '+sc().desc+' · 가정값 시나리오 — 현실 예측 아님';
+  var tail=SC_DEFS[curScenario]&&SC_DEFS[curScenario].isData?' · 업로드 명단에서 출발 · 앞으로 1년은 가정값 시뮬레이션':' · 가정값 시나리오 — 현실 예측 아님';
+  document.getElementById('subtitle').textContent=sc().label+' · '+sc().desc+tail;
   var team=!document.getElementById('view-team').hidden;
   renderKPI();
   if(!team){renderTrend();renderVerdict();comparePair('c-compare-pastor','compare-note-pastor');}
   else{renderAttendance();renderCrisis();renderFaith();renderBranches();renderSermon();renderRetreat();comparePair('c-compare',null);renderCompareTable();renderVuln();renderTornado();}
 }
-// 첫 화면: 담임 요약. 무거운 계산은 잠깐 뒤 시작(로딩 표시 먼저).
+/* 내장 샘플 백데이터 — 업로드 전 기본으로 보여 줄 임시 명단(파일 없이도 동작).
+   같은 내용이 sample-data.csv로도 들어 있어 양식 내려받기·편집에 쓴다. */
+var SAMPLE_CSV="이름,학년,신앙배경,코어,외톨이,출석상태\n한준민,고1,모태,N,N,활발\n안우윤,중1,일반,Y,N,활발\n류예빈,고1,일반,Y,N,활발\n윤서영,중2,모태,Y,N,느슨\n강예은,중2,일반,Y,Y,활발\n송재우,중3,비신앙,N,N,활발\n윤지시,중3,비신앙,N,N,위기\n최선준,중1,모태,N,N,위기\n박영우,중2,모태,N,N,활발\n박하준,고1,모태,N,N,느슨\n권은원,고3,모태,N,N,느슨\n황서수,고2,모태,Y,N,느슨\n박현연,중3,모태,Y,N,활발\n신윤원,고3,모태,Y,N,활발\n황태하,중2,모태,N,N,느슨\n정정호,고3,일반,N,N,느슨\n송주민,중3,모태,N,Y,활발\n조성율,중1,일반,Y,N,활발\n오경호,중1,모태,N,N,위기\n전윤준,중1,비신앙,N,N,느슨\n박준우,고2,일반,N,N,활발\n조선채,중1,일반,Y,N,위기\n박정린,중3,비신앙,N,N,느슨\n안시빈,고1,일반,N,N,활발\n서도은,중3,모태,Y,Y,활발\n장우안,중3,비신앙,N,N,활발\n윤예빈,중3,모태,N,N,느슨\n김유안,고2,모태,N,N,느슨\n조유하,중3,일반,Y,N,활발\n권주연,고2,모태,Y,Y,위기\n홍준준,고1,모태,N,Y,활발\n홍예은,고2,모태,N,N,느슨\n김하수,중2,모태,N,N,활발\n정서안,고3,일반,N,N,느슨\n안준우,중1,일반,N,N,느슨\n정현지,중3,일반,N,N,활발\n송유우,고3,모태,Y,Y,활발\n권영호,고2,비신앙,N,N,느슨\n안우도,중3,일반,N,N,느슨\n장영은,고2,모태,Y,N,활발\n윤재아,중2,모태,Y,N,느슨\n홍수채,중1,비신앙,N,N,위기\n서유율,고3,일반,Y,N,활발\n한재은,중2,모태,N,N,활발\n김주주,중3,모태,N,Y,위기\n윤예연,중2,모태,N,N,활발\n신수린,중3,일반,N,N,활발\n장서하,중3,모태,N,N,느슨\n박경빈,중1,비신앙,N,N,느슨\n장경영,중1,일반,N,N,활발\n강우시,고1,일반,Y,N,활발\n장윤호,고3,모태,Y,N,위기\n안유예,고3,모태,N,N,활발\n서선시,고1,비신앙,N,N,느슨\n홍준민,고3,비신앙,N,Y,느슨\n장재율,중1,일반,N,N,위기\n전도현,중1,모태,Y,Y,활발\n한영우,중2,비신앙,N,N,활발\n서지준,중2,일반,Y,N,활발\n박준민,고1,일반,N,N,활발\n안준원,고2,일반,N,N,느슨\n정서호,고1,일반,N,Y,느슨\n안태호,고2,일반,N,N,느슨\n윤지호,중1,일반,N,N,활발\n이혜호,고1,일반,N,Y,위기\n안영연,고1,모태,N,N,활발\n장도수,중2,일반,N,N,활발\n임서은,중1,모태,Y,N,활발\n류준준,중3,일반,N,Y,활발\n황은은,중2,일반,N,N,활발\n임지준,중1,일반,N,N,활발\n장주수,고3,비신앙,Y,Y,느슨\n장윤영,고1,일반,Y,Y,활발\n황유민,중1,모태,N,N,활발\n정재안,중2,모태,N,N,활발\n서예은,고2,비신앙,N,N,활발\n류지채,고3,일반,N,N,활발\n임혜지,중2,모태,N,N,활발\n신민민,고3,비신앙,N,N,활발\n신성영,고1,모태,Y,N,활발\n황재주,중2,모태,N,N,활발\n윤은준,고1,일반,Y,N,활발\n황영빈,중3,모태,N,N,활발\n윤지하,중2,모태,Y,N,활발\n김재원,중3,일반,N,N,활발\n장태채,중1,일반,N,N,활발\n장도원,중3,일반,N,N,느슨\n김준윤,중3,일반,N,N,활발\n박주은,고2,비신앙,Y,Y,활발\n안수우,고3,일반,N,N,활발\n송서준,고2,모태,N,N,활발\n정혜린,중3,일반,N,Y,활발\n류우원,중2,일반,Y,N,위기\n장시예,중3,모태,Y,N,활발\n임서호,중1,비신앙,N,Y,활발\n신윤빈,중3,일반,N,N,활발\n김은호,중1,일반,Y,N,활발\n권도린,고2,모태,N,N,활발\n윤유준,고3,모태,N,N,활발\n김경지,중3,일반,Y,N,활발\n한예연,고3,모태,Y,N,활발\n이은원,고2,비신앙,N,Y,활발\n박윤준,고3,모태,N,N,활발\n임재연,중1,일반,N,N,활발\n오유호,고1,모태,N,N,활발\n권지서,중2,일반,N,N,활발\n전서린,고2,일반,N,N,느슨\n전혜아,중1,모태,N,N,위기\n서하서,고2,모태,N,Y,위기\n임정지,고1,모태,N,N,느슨\n박선은,중3,모태,N,N,활발\n송시율,고3,비신앙,N,N,활발\n";
+
+// 첫 화면: 담임 요약 + 내장 샘플 백데이터. 무거운 계산은 잠깐 뒤(로딩 표시 먼저).
 setTab('pastor');
-setTimeout(function(){document.getElementById('view-pastor').hidden=false;renderAll();},40);
+setTimeout(function(){
+  var roster=parseCSV(SAMPLE_CSV).map(studentFromRow).filter(function(s){return s;});
+  SC_DEFS.data=makeDataDef(roster,'우리 부 데이터 (샘플)');
+  curScenario='data';document.getElementById('scenario-sel').value='data';
+  document.getElementById('view-pastor').hidden=false;
+  renderAll();
+},40);
 </script>
 </body>
 </html>
