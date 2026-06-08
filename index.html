@@ -150,24 +150,49 @@
   </header>
 
   <!-- 어떻게 보나 (한 줄 안내) -->
-  <p class="howto">바쁘시면 이 카드 하나만 보세요 — <b>신호등</b>(지금 괜찮은가) → <b>그림</b>(누가 빨간 점인가) → <b>① 먼저 만날 아이</b> → <b>② 이번 주 한 가지</b>. 아래 회색 줄 밑은 안 보셔도 됩니다.</p>
+  <p class="howto">이 화면은 <b>올해 계획</b>입니다 — 설교·시험·수련회·수능을 한 줄로 보고, 아래 칩으로 <b>바꾸면 효과가 바뀝니다</b>. 그 아래는 이번 주 실행, 더 아래 "디테일"에 아이들 사이의 흐름이 있습니다.</p>
 
   <!-- 이번 주 (주인공) — 목사용 세 가지만: 지금 어떤가 / 누구를 / 무엇을. 나머지 숫자는 접음 -->
   <section class="card hero" id="verdict-card">
     <div id="verdict" class="verdict"><div class="light">⏳</div><div><div class="vtext">한 주를 넘기면 지금 상태가 나옵니다.</div><div class="vsub">위 "다음 주 ▶"를 눌러 보세요.</div></div></div>
     <div id="kpi" class="stats" style="margin-top:14px"></div>
-    <div class="mapbox">
-      <div class="maptop"><span class="livedot"></span>우리 부 상황도 · LIVE<span class="sub">점=아이, 색=상태, 눌러 보기</span></div>
-      <div id="room-ctrl" class="chips"></div>
-      <canvas id="room" width="600" height="180" class="netcanvas" style="cursor:pointer"></canvas>
-      <div id="room-leg" class="hint" style="margin-top:6px"></div>
+
+    <!-- 올해 계획(의사결정 중심) — 무엇을 언제 + 칩으로 바꾸면 효과가 바뀐다 -->
+    <div class="maptop" style="margin-top:18px"><span class="livedot"></span>올해 계획 · 무엇을 언제<span class="sub">막대를 보고, 아래 칩으로 바꿔 보세요</span></div>
+    <canvas id="yearplan" width="600" height="148" class="netcanvas"></canvas>
+    <div id="plan-effect" class="plain-p" style="font-size:13.5px;margin-top:9px"></div>
+    <div class="mini-h" style="margin-top:14px">설교 결 — 올해 어떻게 설교할까 (하나)</div>
+    <div id="sermon-pick" class="chips"></div>
+    <div id="sermon-desc" class="hint" style="margin-top:5px"></div>
+    <div class="mini-h" style="margin-top:12px">프로그램 (여럿 가능)</div>
+    <div id="prog-pick" class="chips"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+      <button id="apply-plan" class="btn primary">이 계획으로 보기</button>
+      <button id="reco-btn" class="btn">다른 수도 견줘 보기</button>
     </div>
-    <div id="stud-card"></div>
-    <h2 class="plain-h" style="margin-top:18px">① 먼저 만날 아이</h2>
+    <div id="reco" style="margin-top:10px"></div>
+
+    <!-- 이번 주 실행 -->
+    <h2 class="plain-h" style="margin-top:20px">① 먼저 만날 아이</h2>
     <div id="visit-list"><p class="muted">한 주가 흐르면, 가장 먼저 만날 아이가 여기 모입니다.</p></div>
     <h2 class="plain-h" style="margin-top:18px">② 이번 주 한 가지</h2>
     <div id="action-one"><p class="muted">계획을 정하면 할 일이 나옵니다.</p></div>
-    <details style="margin-top:16px">
+
+    <!-- 디테일: 아이들 사이의 흐름(상황도) -->
+    <details style="margin-top:18px">
+      <summary class="summary-h">디테일 — 아이들 사이의 흐름(상황도) ▾</summary>
+      <div style="margin-top:10px">
+        <div class="mapbox">
+          <div class="maptop"><span class="livedot"></span>우리 부 상황도 · LIVE<span class="sub">점=아이, 색=상태, 눌러 보기</span></div>
+          <div id="room-ctrl" class="chips"></div>
+          <canvas id="room" width="600" height="180" class="netcanvas" style="cursor:pointer"></canvas>
+          <div id="room-leg" class="hint" style="margin-top:6px"></div>
+        </div>
+        <div id="stud-card"></div>
+      </div>
+    </details>
+
+    <details style="margin-top:14px">
       <summary class="summary-h">숫자로 더 보기 — 겉/속 · 졸업 신앙 잔존 · 믿음 단계 · 숨은 위험 ▾</summary>
       <div style="margin-top:12px">
         <div id="northstar-box"></div>
@@ -181,21 +206,6 @@
         <div id="hidden-list"><p class="muted">출석은 좋은데 믿음이 아직 자기 것이 안 된 아이. 전환기에 무너질 아이들입니다.</p></div>
         <div class="mini-h" style="margin-top:14px">이번 주 할 일(차례대로)</div>
         <div id="step-list"></div>
-      </div>
-    </details>
-    <details style="margin-top:14px">
-      <summary class="summary-h">계획 바꾸기 — 설교 결·프로그램 ▾</summary>
-      <div style="margin-top:12px">
-        <div class="mini-h">설교 결 (하나)</div>
-        <div id="sermon-pick" class="chips"></div>
-        <div id="sermon-desc" class="hint" style="margin-top:5px"></div>
-        <div class="mini-h" style="margin-top:10px">프로그램 (여럿 가능)</div>
-        <div id="prog-pick" class="chips"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-          <button id="apply-plan" class="btn primary">이 계획으로 보기</button>
-          <button id="reco-btn" class="btn">다른 수도 견줘 보기</button>
-        </div>
-        <div id="reco" style="margin-top:10px"></div>
       </div>
     </details>
   </section>
@@ -777,7 +787,7 @@
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
-    updateVerdict();updateKpi();drawRoom();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateStudCard();updateWhy();updateWar();updateReadouts();updateRecap();renderCareLog();
+    updateVerdict();updateKpi();drawYearPlan();planEffect();drawRoom();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateStudCard();updateWhy();updateWar();updateReadouts();updateRecap();renderCareLog();
     updateDiag();updateProj();
   }
   // 출석은 좋지만(eng 높음) 속이 빈(취약도 높음) 아이 — 출석 기반 대시보드엔 안 보이는 위험. 전환기에 무너진다.
@@ -885,6 +895,38 @@
     if(roomWhen>0){b+=' <span class="hint" style="margin:0 4px">만약:</span>';
       [['plan','그대로'],['retreat','수련회'],['mentor','멘토'],['parent','부모 세우기']].forEach(function(l){b+='<button class="chip'+((roomLever||'plan')===l[0]?' on':'')+'" data-lever="'+l[0]+'">'+l[1]+'</button>';});}
     el.innerHTML=b;
+  }
+  // ── 올해 계획(의사결정 중심): 1년 일정을 트랙별 막대로. 무엇을 언제 + 지금 주차 표시 ──
+  function drawYearPlan(){
+    var cv=document.getElementById('yearplan');if(!cv)return;var g=cv.getContext('2d');
+    var W=600,L=66,rows=[['sermon','설교'],['exam','시험기간'],['retreat','수련회·전도'],['sooneung','수능']];
+    var rowH=27,top=22,H=top+rows.length*rowH+6;cv.width=W;cv.height=H;g.clearRect(0,0,W,H);
+    var months=['3','4','5','6','7','8','9','10','11','12','1','2'];
+    g.textAlign='center';g.font='9px sans-serif';
+    for(var mo=0;mo<12;mo++){var mx=L+mo/12*(W-L-6);g.strokeStyle='rgba(90,150,230,.09)';g.beginPath();g.moveTo(mx,top-2);g.lineTo(mx,H-4);g.stroke();g.fillStyle='#7e8aa3';g.fillText(months[mo],mx+(W-L-6)/24,top-7);}
+    function xOf(w){return L+(w-1)/52*(W-L-6);}
+    rows.forEach(function(rw,ri){var y=top+ri*rowH;g.fillStyle='#9aa8c2';g.font='10px sans-serif';g.textAlign='left';g.fillText(rw[1],4,y+rowH/2+3);
+      g.strokeStyle='rgba(255,255,255,.05)';g.beginPath();g.moveTo(L,y+rowH/2);g.lineTo(W-6,y+rowH/2);g.stroke();});
+    var rowOf={sermon:0,exam:1,retreat:2,outreach:2,smallgroup:2,service:2,sooneung:3};
+    schedule.forEach(function(ev){var ri=rowOf[ev.type];if(ri==null)return;
+      var col=ev.type==='sermon'?SERMON_FOCUS[ev.focus].color:(EVENTS[ev.type]?EVENTS[ev.type].color:'#888');
+      var dur=ev.weeks||1,occ=[];if(ev.repeat>0){for(var w=ev.start;w<=52;w+=ev.repeat)occ.push(w);}else occ.push(ev.start);
+      occ.forEach(function(w){if(w>52)return;var y=top+ri*rowH+6,x=xOf(w),bw=Math.max(7,dur/52*(W-L-6));if(x+bw>W-6)bw=W-6-x;
+        g.fillStyle=col;g.globalAlpha=.9;g.fillRect(x,y,bw,rowH-13);g.globalAlpha=1;
+        if(ev.type==='sermon'&&bw>30){g.fillStyle='#fff';g.font='9px sans-serif';g.textAlign='left';g.fillText(SERMON_FOCUS[ev.focus].label.replace('형',''),x+3,y+rowH-16);}});});
+    var nx=xOf(((week%WEEKS_PER_YEAR)||WEEKS_PER_YEAR));g.strokeStyle='#fff';g.lineWidth=1.6;g.beginPath();g.moveTo(nx,top-2);g.lineTo(nx,H-4);g.stroke();
+    g.fillStyle='#fff';g.font='9px sans-serif';g.textAlign='left';g.fillText('지금',Math.min(nx+2,W-26),top-7);
+  }
+  function planEffect(){
+    var el=document.getElementById('plan-effect');if(!el)return;
+    var f=projData&&projData.length?projData[projData.length-1]:null,rg=projData&&projData.range?projData.range:null;
+    var L=[];
+    if(f)L.push('이 계획대로면 <b>3년 뒤</b> — 믿음 점수 <b>'+Math.round(f.idx)+'</b> · 내면화 <b>'+Math.round(f.own)+'</b> · 졸업 신앙 잔존 <b>'+(f.carry!=null?Math.round(f.carry)+'%':'—')+'</b>'+(rg&&rg.idx?' <span class="hint">(여러 번 돌리면 '+Math.round(rg.idx[0])+'~'+Math.round(rg.idx[1])+')</span>':''));
+    L.push('· <b>'+SERMON_FOCUS[DEC.focus].label+' 설교</b>: '+(SERMON_DESC[DEC.focus]||''));
+    L.push('· <b>시험기간</b>(연 4회): 그동안 출석이 눌렸다 끝나면 회복 — 영속 손상은 아닙니다.');
+    if(schedule.some(function(e){return e.type==='retreat';}))L.push('· <b>수련회</b>: 참가한 아이만 출석·헌신이 급등했다 몇 주에 걸쳐 식습니다(여운). 안 간 아이와 격차가 생깁니다.');
+    if(schedule.some(function(e){return e.type==='sooneung';}))L.push('· <b>수능</b>: 그 시즌 고3이 깊게 빠지고, 곧 졸업해 떠납니다.');
+    el.innerHTML=L.map(function(x){return '<div style="margin:3px 0">'+x+'</div>';}).join('');
   }
   function colByEng(e){return e>=0.55?'#22c55e':e>=0.3?'#fbbf24':'#f87171';}
   function cloneStudents(){return students.map(function(s){var o={};for(var k in s)o[k]=s[k];o.friends=(s.friends||[]).slice();return o;});}
