@@ -75,6 +75,51 @@ table.gt .num{font-family:ui-monospace,monospace;text-align:right}
 
 <div id="loading" class="panel" style="margin-bottom:12px;text-align:center;color:#6b5538">분석 중… (행위자 기반 모형을 돌리는 중)</div>
 
+<!-- 계획 편집기: 내 계획으로 시뮬레이션 -->
+<details class="panel no-print" style="margin-bottom:12px">
+  <summary style="cursor:pointer;font-weight:600;color:#4a3a2a;list-style:none">🛠 우리 부 계획 짜기 — 내 계획으로 돌려 보기 <span style="font-weight:400;color:#8a755a">(열기 ▾)</span></summary>
+  <div style="margin-top:10px">
+    <div class="hint" style="margin-bottom:8px">시작 인구는 현재 명단(업로드/샘플)을 그대로 쓴다. 평소 사역과 연간 일정을 우리 부에 맞게 바꾼 뒤 "이 계획으로 보기"를 누르면 그 계획대로 1년을 돌린 결과로 모든 카드·차트가 바뀐다.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 16px">
+      <label style="font-size:12px">소그룹 비중 <b id="pe-sg-v">65%</b><input id="pe-sg" type="range" min="0" max="100" value="65" style="width:100%"></label>
+      <label style="font-size:12px">멘토 비중 <b id="pe-mt-v">45%</b><input id="pe-mt" type="range" min="0" max="100" value="45" style="width:100%"></label>
+      <label style="font-size:12px">교사 수 <b id="pe-tc-v">22명</b><input id="pe-tc" type="range" min="4" max="40" value="22" style="width:100%"></label>
+      <label style="font-size:12px">변화 속도 <b id="pe-speed-v">0.40</b><input id="pe-speed" type="range" min="20" max="100" value="40" style="width:100%"></label>
+      <label style="font-size:12px">부모 다락방 <b id="pe-dara-v">60%</b><input id="pe-dara" type="range" min="0" max="100" value="60" style="width:100%"></label>
+      <label style="font-size:12px">연간 신입 <b id="pe-intake-v">50명</b><input id="pe-intake" type="range" min="0" max="120" value="50" style="width:100%"></label>
+    </div>
+    <div style="margin-top:12px;border-top:1px solid #eadfc6;padding-top:10px">
+      <div class="sec" style="margin-bottom:6px">연간 일정 추가</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px">
+        <select id="pe-type" onchange="peSyncFields()" style="font-family:inherit;font-size:12px;padding:3px 6px;border:1px solid #c9b896;border-radius:4px">
+          <option value="sermon">설교 시리즈</option>
+          <option value="retreat">수련회</option>
+          <option value="exam">시험기간(외부)</option>
+          <option value="sooneung">수능(외부)</option>
+          <option value="smallgroup">소그룹 집중</option>
+          <option value="outreach">전도</option>
+          <option value="senior">담임 말씀(교회)</option>
+          <option value="allretreat">전교인 수련회(교회)</option>
+          <option value="revival">부흥회(교회)</option>
+        </select>
+        <span>시작 <input id="pe-start" type="number" min="1" max="52" value="3" style="width:48px"></span>주차
+        <span id="pe-focus-wrap">결 <select id="pe-focus" style="font-family:inherit;font-size:12px;padding:3px 6px;border:1px solid #c9b896;border-radius:4px"><option value="nurture">양육</option><option value="evangel">전도</option><option value="recovery">회복</option><option value="word">말씀</option><option value="holiness">거룩</option><option value="grace">은혜</option></select></span>
+        <span id="pe-weeks-wrap">기간 <input id="pe-weeks" type="number" min="1" max="20" value="6" style="width:44px"></span>주
+        <span id="pe-nights-wrap" hidden>박수 <select id="pe-nights" style="font-family:inherit;font-size:12px;padding:3px 6px;border:1px solid #c9b896;border-radius:4px"><option value="1">1박</option><option value="2" selected>2박</option><option value="3">3박</option></select></span>
+        <button class="btn" onclick="peAddEvent()">＋ 추가</button>
+      </div>
+      <div id="pe-list" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+    <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <button class="btn" style="background:#3b6d11;color:#fff;border-color:#3b6d11" onclick="peApply()">▶ 이 계획으로 보기</button>
+      <button class="btn" onclick="peSave()">💾 저장</button>
+      <button class="btn" onclick="peLoad()">📂 불러오기</button>
+      <button class="btn" onclick="peReset()">초기화</button>
+      <span class="hint" id="pe-msg"></span>
+    </div>
+  </div>
+</details>
+
 <!-- 담임 요약 탭 -->
 <div id="view-pastor" hidden>
   <div class="krow">
@@ -492,6 +537,52 @@ function setTab(t){
 }
 function loadScenario(){curScenario=document.getElementById('scenario-sel').value;renderAll();}
 
+/* ===================== 계획 편집기 (내 계획으로 시뮬레이션) ===================== */
+var customSched=[],customChurch=[];
+function pv(id){return document.getElementById(id);}
+function peUpdSpans(){if(!pv('pe-sg'))return;pv('pe-sg-v').textContent=pv('pe-sg').value+'%';pv('pe-mt-v').textContent=pv('pe-mt').value+'%';pv('pe-tc-v').textContent=pv('pe-tc').value+'명';pv('pe-speed-v').textContent=(pv('pe-speed').value/100).toFixed(2);pv('pe-dara-v').textContent=pv('pe-dara').value+'%';pv('pe-intake-v').textContent=pv('pe-intake').value+'명';}
+function peReadOps(){return {sg:pv('pe-sg').value/100,mt:pv('pe-mt').value/100,tc:+pv('pe-tc').value,speed:pv('pe-speed').value/100,daracbang:pv('pe-dara').value/100,intake:+pv('pe-intake').value};}
+function peSetOps(o){pv('pe-sg').value=Math.round(o.sg*100);pv('pe-mt').value=Math.round(o.mt*100);pv('pe-tc').value=o.tc;pv('pe-speed').value=Math.round(o.speed*100);pv('pe-dara').value=Math.round((o.daracbang!=null?o.daracbang:0.5)*100);pv('pe-intake').value=o.intake;peUpdSpans();}
+function peSyncFields(){var t=pv('pe-type').value;pv('pe-focus-wrap').hidden=(t!=='sermon');pv('pe-nights-wrap').hidden=(t!=='retreat');pv('pe-weeks-wrap').hidden=!(t==='sermon'||t==='exam'||t==='sooneung'||t==='senior'||t==='revival');}
+function peLabel(ev){var m={sermon:(SERMON_FOCUS[ev.focus]&&SERMON_FOCUS[ev.focus].label)||'설교',retreat:'수련회 '+ev.nights+'박',exam:'시험',sooneung:'수능',smallgroup:'소그룹 집중',outreach:'전도',senior:'담임 말씀',allretreat:'전교인 수련회',revival:'부흥회'};return (m[ev.type]||ev.type)+' '+ev.start+'주'+(ev.weeks&&ev.type!=='retreat'?'~('+ev.weeks+'주)':'');}
+function peChip(track,i,ev){return '<span style="background:#f3e7cc;border:1px solid #dcc79a;border-radius:12px;padding:2px 9px;font-size:12px">'+esc(peLabel(ev))+' <a href="javascript:void(0)" onclick="peRemove(\''+track+'\','+i+')" style="color:#a33232;text-decoration:none;font-weight:700">✕</a></span>';}
+function peRenderList(){var html='';customSched.forEach(function(ev,i){html+=peChip('sched',i,ev);});customChurch.forEach(function(ev,i){html+=peChip('church',i,ev);});var el=pv('pe-list');if(el)el.innerHTML=html||'<span class="hint">아직 추가한 일정이 없다. 위에서 추가하라.</span>';}
+function peRemove(track,i){(track==='church'?customChurch:customSched).splice(i,1);peRenderList();}
+function peAddEvent(){
+  var t=pv('pe-type').value,start=Math.max(1,Math.min(52,+pv('pe-start').value||1)),ev={type:t,start:start},track='sched';
+  if(t==='sermon'){ev.focus=pv('pe-focus').value;ev.weeks=+pv('pe-weeks').value||6;ev.repeat=0;}
+  else if(t==='retreat'){ev.nights=+pv('pe-nights').value;ev.attendRate=0.72;ev.intensity=0.65;ev.repeat=0;}
+  else if(t==='exam'){ev.weeks=+pv('pe-weeks').value||3;ev.repeat=13;}
+  else if(t==='sooneung'){ev.weeks=+pv('pe-weeks').value||6;ev.repeat=52;}
+  else if(t==='smallgroup'||t==='outreach'){ev.repeat=0;}
+  else if(t==='senior'){ev.weeks=+pv('pe-weeks').value||10;ev.repeat=52;track='church';}
+  else if(t==='allretreat'){ev.repeat=52;track='church';}
+  else if(t==='revival'){ev.weeks=+pv('pe-weeks').value||2;ev.repeat=0;track='church';}
+  (track==='church'?customChurch:customSched).push(ev);peRenderList();
+}
+function peEnsureOption(){var sel=pv('scenario-sel');if(sel&&!sel.querySelector('option[value="custom"]')){var o=document.createElement('option');o.value='custom';o.textContent='내 계획 (편집)';sel.insertBefore(o,sel.firstChild);}}
+function peApply(){
+  var ops=peReadOps(),src=SC_DEFS.data,dist=src?src.dist:DIST;
+  SC_DEFS.custom={label:'내 계획',isData:!!(src&&src.seed),dist:dist,seed:src?src.seed:undefined,ops:ops,
+    sched:customSched.map(copyEv),church:customChurch.map(copyEv),
+    desc:(dist.n||'?')+'명 · 소그룹 '+Math.round(ops.sg*100)+'% 멘토 '+Math.round(ops.mt*100)+'% 교사 '+ops.tc+'명 · 일정 '+(customSched.length+customChurch.length)+'건'};
+  delete SC_CACHE.custom;peEnsureOption();
+  pv('scenario-sel').value='custom';curScenario='custom';
+  pv('loading').hidden=false;pv('loading').textContent='내 계획으로 분석 중…';
+  if(pv('pe-msg'))pv('pe-msg').textContent='적용됨. 아래 카드·차트가 내 계획 결과다.';
+  setTimeout(renderAll,30);
+}
+function peSave(){try{localStorage.setItem('woori_plan_v1',JSON.stringify({ops:peReadOps(),sched:customSched,church:customChurch}));pv('pe-msg').textContent='저장됨(이 브라우저).';}catch(e){pv('pe-msg').textContent='저장 실패.';}}
+function peLoad(){var s=null;try{s=JSON.parse(localStorage.getItem('woori_plan_v1'));}catch(e){}if(!s){pv('pe-msg').textContent='저장된 계획이 없다.';return;}peSetOps(s.ops);customSched=(s.sched||[]).map(copyEv);customChurch=(s.church||[]).map(copyEv);peRenderList();pv('pe-msg').textContent='불러옴. "이 계획으로 보기"를 누르라.';}
+function peReset(){peSetOps(SC_DEFS.plan.ops);customSched=SC_DEFS.plan.sched.map(copyEv);customChurch=SC_DEFS.plan.church.map(copyEv);peRenderList();pv('pe-msg').textContent='기본 계획으로 초기화.';}
+function peInit(){
+  ['pe-sg','pe-mt','pe-tc','pe-speed','pe-dara','pe-intake'].forEach(function(id){var e=pv(id);if(e)e.addEventListener('input',peUpdSpans);});
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('woori_plan_v1'));}catch(e){}
+  if(saved&&saved.ops){peSetOps(saved.ops);customSched=(saved.sched||[]).map(copyEv);customChurch=(saved.church||[]).map(copyEv);}
+  else{peSetOps(SC_DEFS.plan.ops);customSched=SC_DEFS.plan.sched.map(copyEv);customChurch=SC_DEFS.plan.church.map(copyEv);}
+  peSyncFields();peUpdSpans();peRenderList();
+}
+
 var PALETTE={active:'#5fb04e',loose:'#e0a52f',risk:'#d65a4f',faith:'#7a5c38',word:'#9a7a40',holy:'#6b4a8a',belong:'#2e8b8b',base:'#9a8e75',plan:'#5fb04e'};
 function baseOpts(extra){return Object.assign({responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:14,font:{size:11}}},tooltip:{bodyFont:{size:11},titleFont:{size:11}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:0,maxTicksLimit:8}},y:{ticks:{font:{size:10}}}}},extra||{});}
 function mkChart(id,type,data,opts,plugins){var el=document.getElementById(id);if(!el)return;if(charts[id])charts[id].destroy();charts[id]=new Chart(el.getContext('2d'),{type:type,data:data,options:opts||baseOpts(),plugins:plugins||[]});}
@@ -721,6 +812,7 @@ setTimeout(function(){
   SC_DEFS.data=makeDataDef(roster,'우리 부 데이터 (샘플)');
   curScenario='data';document.getElementById('scenario-sel').value='data';
   document.getElementById('view-pastor').hidden=false;
+  peInit();
   renderAll();
 },40);
 </script>
