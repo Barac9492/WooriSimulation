@@ -39,6 +39,7 @@
 - `README.md` : 비개발자용 사용 안내.
 - `SURVEY.md` : 진단 설문 설계(교사 관찰 1차, 검증 척도 RCI-A·FMS-12 출처).
 - `ONTOLOGY.md` : 교회 온톨로지(Palantir식) 설계도 — 객체·링크·행동·함수·권한.
+- `METHODOLOGY.md` : 방법론·진단의 인용 가능한 학술 근거(ABM·전염·측정척도·생존분석·조기경보) + 엔진 매핑.
 - `CLAUDE.md` : 이 파일.
 
 **행동(Action) 레이어** : 추천을 추적되는 돌봄으로 닫는다(온톨로지의 행동). `ACTIONS` 레지스트리(타입별 라벨·검증·기록; `care`=완료 추적형, `visit`/`talk`=즉시 기록형)와 `runAction(key,s)`(검증 → `careLog` 기록 → 저장 → 렌더). `careLog`(localStorage `woori_care_v1`)에 배정 시점 겉/속 스냅샷을 저장하고, `renderCareLog`(행동 일지 카드, 완료·효과 추적)·`findSoul`(id 또는 이름으로 매칭). 영혼마다 `s.id`. 진단·예측은 읽기, 행동은 쓰기 — 플래그를 책임자·완료·효과에 연결한다.
