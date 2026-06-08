@@ -886,10 +886,17 @@
     }
     var map={};arr.forEach(function(s){map[s.id]={eng:s.eng,left:s.left,dropped:s.dropped,grad:s.grad};});return map;
   }
+  // 여러 번 돌려 평균(확률) — 점이 들쭉날쭉하지 않게. lostP=이탈 확률, gradP=졸업 확률, eng=평균 출석.
+  function forecastRoomAvg(weeks,ov,R){R=R||3;var agg={};
+    for(var i=0;i<R;i++){var m=forecastRoom(weeks,ov);for(var id in m){var x=agg[id]||(agg[id]={e:0,l:0,g:0,n:0});x.e+=m[id].eng;x.l+=m[id].dropped?1:0;x.g+=m[id].grad?1:0;x.n++;}}
+    var out={};for(var k in agg){var a=agg[k];out[k]={eng:a.e/a.n,lostP:a.l/a.n,gradP:a.g/a.n};}return out;}
+  // 코스(계획) 비교: 어떤 미래에 이탈할 현재 아이 수(기대값=확률 합, 부드럽다). 'plan'(그대로)과 레버를 견준다.
+  function expLost(fc){var n=0;students.filter(function(s){return !s.left;}).forEach(function(s){if(fc[s.id])n+=fc[s.id].lostP;});return n;}
+  function coaLost(weeks,lever){return Math.round(expLost(forecastRoomAvg(weeks,leverOpts(lever),4)));}
   function drawRoom(){
     var cv=document.getElementById('room');if(!cv)return;var g=cv.getContext('2d');
     var a=students.filter(function(s){return !s.left;}),W=600,pos={};roomDots=[];
-    var fc=roomWhen>0?forecastRoom(roomWhen,leverOpts(roomLever)):null;
+    var fc=roomWhen>0?forecastRoomAvg(roomWhen,leverOpts(roomLever),3):null;
     var shaken=a.filter(function(s){return s.eng<0.3;}).sort(function(x,y){return spreadScore(y,students)-spreadScore(x,students)||x.eng-y.eng;});
     var first={};if(!fc)shaken.slice(0,3).forEach(function(s){first[s.id]=1;});
     var H,RAD,list;
@@ -914,10 +921,9 @@
     var ripple=0;
     if(selStudent&&pos[selStudent.id]){(selStudent.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&pos[o.id]){ripple++;line(pos[selStudent.id].x,pos[selStudent.id].y,pos[o.id].x,pos[o.id].y,'#1d4ed8',1.3);}});}
     roomDots.forEach(function(d){var s=d.s,m=fc?fc[s.id]:null;
-      if(m&&m.left){ // 미래에 빠질 아이: 이탈=회색, 졸업=옅은 테
-        if(m.dropped){g.fillStyle='#cbd5e1';g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();g.strokeStyle='#94a3b8';g.lineWidth=1;g.beginPath();g.moveTo(d.x-RAD,d.y-RAD);g.lineTo(d.x+RAD,d.y+RAD);g.stroke();}
-        else{g.strokeStyle='#cbd5e1';g.lineWidth=1.4;g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.stroke();}
-        return;}
+      if(m&&m.lostP>=0.5){ // 미래에 이탈 가능성 높은 아이: 회색 ×
+        g.fillStyle='#cbd5e1';g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();g.strokeStyle='#94a3b8';g.lineWidth=1;g.beginPath();g.moveTo(d.x-RAD,d.y-RAD);g.lineTo(d.x+RAD,d.y+RAD);g.stroke();return;}
+      if(m&&m.gradP>=0.5){g.strokeStyle='#cbd5e1';g.lineWidth=1.4;g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.stroke();return;}
       g.fillStyle=colByEng(m?m.eng:s.eng);g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();
       if(first[s.id]){g.strokeStyle='#111827';g.lineWidth=1.8;g.beginPath();g.arc(d.x,d.y,RAD+2.3,0,6.2832);g.stroke();}
       if(selStudent&&selStudent.id===s.id){g.strokeStyle='#1d4ed8';g.lineWidth=2.4;g.beginPath();g.arc(d.x,d.y,RAD+3.6,0,6.2832);g.stroke();}});
@@ -925,8 +931,11 @@
     g.textAlign='left';
     var leg=document.getElementById('room-leg');
     if(leg){var base;
-      if(fc){var lost=0,grd=0,shy=0;roomDots.forEach(function(d){var m=fc[d.s.id];if(m){if(m.dropped)lost++;else if(m.grad)grd++;else if(m.eng<0.3)shy++;}});
-        base='<b>이대로 '+(roomWhen/WEEKS_PER_YEAR)+'년 뒤</b>'+((roomLever&&roomLever!=='plan')?'('+({retreat:'수련회 강화',mentor:'멘토 강화',parent:'부모 세우기'}[roomLever])+' 하면)':'')+' — <span style="color:#94a3b8">●</span> 이탈 '+lost+'명, 졸업 '+grd+'명, <span style="color:#dc2626">●</span> 흔들림 '+shy+'명. 색이 그때 상태입니다. "지금"으로 돌아가기.';}
+      if(fc){var lost=Math.round(expLost(fc)),grd=0,shy=0;roomDots.forEach(function(d){var m=fc[d.s.id];if(m){if(m.gradP>=0.5)grd++;else if(m.lostP<0.5&&m.eng<0.3)shy++;}});
+        var yrs=roomWhen/WEEKS_PER_YEAR,lv={retreat:'수련회 강화',mentor:'멘토 강화',parent:'부모 세우기'}[roomLever];
+        base='<b>이대로 '+yrs+'년 뒤</b>'+(lv?'('+lv+' 하면)':'')+' — <span style="color:#94a3b8">●</span> 이탈 위험 약 '+lost+'명, 졸업 '+grd+'명, <span style="color:#dc2626">●</span> 흔들림 '+shy+'명. 회색 ×=떠날 위험 큰 아이. "지금"으로 돌아가기.';
+        if(lv){var baseLost=coaLost(roomWhen,'plan'),save=baseLost-lost;
+          base+='<br><b style="color:#16a34a">'+lv+'</b>: 그대로면 약 '+baseLost+'명 잃는데 약 '+lost+'명으로 — '+(save>=1?'<b style="color:#16a34a">'+save+'명쯤 더 건집니다.</b>':save<=-1?'오히려 '+(-save)+'명쯤 더 잃습니다.':'큰 차이는 없습니다(다른 손길과 배합이 필요).');}}
       else{base='<span style="color:#16a34a">●</span> 잘 나옴 <span style="color:#d08a1a">●</span> 뜸함 <span style="color:#dc2626">●</span> 흔들림 · 검은 테=먼저 만날 아이.';
         if(roomZoom)base+=' <b>'+GRADE_LABELS[roomZoom]+'</b>만 크게(회색 선=친구 사이). "전체"로 돌아가기.';
         if(selStudent&&ripple)base+=' <br><b style="color:#1d4ed8">선택한 아이와 이어진 친구 '+ripple+'명</b> — 이 아이가 흔들리면 함께 흔들리기 쉽고, 든든하면 함께 끌어올립니다.';
