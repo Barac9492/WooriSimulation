@@ -86,7 +86,8 @@ table.gt .num{font-family:ui-monospace,monospace;text-align:right}
   <div class="full panel">
     <div class="sec">활발·위기·신앙 추이 (1년)</div>
     <div class="ct-lg"><canvas id="c-trend"></canvas></div>
-    <div class="hint" style="margin-top:8px" id="trend-note">—</div>
+    <div class="hint" id="cal-legend" style="margin-top:8px"></div>
+    <div class="hint" style="margin-top:6px;border-top:1px solid #eadfc6;padding-top:6px" id="trend-note">—</div>
   </div>
   <div class="panel" style="margin-bottom:12px;background:#f3e7cc">
     <div class="sec">종합 판정 (한눈에)</div>
@@ -415,6 +416,27 @@ function cfgOf(d,sched){return {dist:d.dist,ops:Object.assign({},d.ops),schedule
 function withOps(d,extra){var c=cfgOf(d);c.ops=Object.assign({},c.ops,extra);return c;}
 function baseCfg(d){return {dist:d.dist,ops:Object.assign({},d.ops,{sg:Math.min(d.ops.sg,0.40),mt:Math.min(d.ops.mt,0.25)}),schedule:d.sched.filter(function(e){return e.type==='exam'||e.type==='sooneung';}).map(copyEv),church:[],seed:d.seed};}
 
+// 그 주에 무슨 일이 있었나(차트 호버 설명용). 일정·교회 트랙을 사람 말로 옮긴다.
+function seriesWeek(ev,w){var off=ev.repeat>0?(w-ev.start)%ev.repeat:(w-ev.start);return off+1;}
+function eventsForWeek(d,w){
+  var out=[];
+  (d.sched||[]).forEach(function(ev){
+    if(ev.type==='sermon'){if(periodActive(ev,w)){var lab=(SERMON_FOCUS[ev.focus]&&SERMON_FOCUS[ev.focus].label)||ev.focus;out.push(lab+' 설교('+seriesWeek(ev,w)+'/'+(ev.weeks||1)+'주)');}}
+    else if(ev.type==='exam'){if(periodActive(ev,w))out.push('시험기간(출석 일시 하락)');}
+    else if(ev.type==='sooneung'){if(periodActive(ev,w))out.push('수능 시즌(고3 깊게)');}
+    else if(ev.type==='retreat'){if(fires(ev,w))out.push('수련회 '+ev.nights+'박');}
+    else if(fires(ev,w)){out.push(ev.type==='smallgroup'?'소그룹 집중':ev.type==='service'?'봉사':ev.type==='outreach'?'전도':ev.type);}
+  });
+  (d.church||[]).forEach(function(ev){
+    if(ev.type==='senior'){if(periodActive(ev,w))out.push('담임 말씀 시리즈');}
+    else if(ev.type==='allretreat'){if(fires(ev,w))out.push('전교인 수련회');}
+    else if(ev.type==='revival'){if(periodActive(ev,w))out.push('부흥회');}
+    else if(ev.type==='season'){if(fires(ev,w))out.push('절기');}
+  });
+  return out;
+}
+
+
 function buildScenario(key){
   var d=SC_DEFS[key],W=WEEKS_PER_YEAR;
   var planAcc=simulate(cfgOf(d),W,6),baseAcc=simulate(baseCfg(d),W,6);
@@ -448,7 +470,8 @@ function buildScenario(key){
     {n:'부모 다락방',swing:sw({daracbang:Math.min(1,d.ops.daracbang+0.25)})},
     {n:'변화 속도',swing:sw({speed:Math.min(1,d.ops.speed+0.2)})}
   ];
-  return {label:d.label,desc:d.desc,hist:toHist(planAcc),base:toHist(baseAcc),vuln:vuln,sermon:sermon,retreat:retreat,tornado:tornado};
+  var events=[];for(var ew=1;ew<=W;ew++)events.push(eventsForWeek(d,ew));
+  return {label:d.label,desc:d.desc,hist:toHist(planAcc),base:toHist(baseAcc),vuln:vuln,sermon:sermon,retreat:retreat,tornado:tornado,events:events};
 }
 
 var curScenario='plan',charts={},SC_CACHE={};
@@ -468,7 +491,70 @@ function loadScenario(){curScenario=document.getElementById('scenario-sel').valu
 
 var PALETTE={active:'#5fb04e',loose:'#e0a52f',risk:'#d65a4f',faith:'#7a5c38',word:'#9a7a40',holy:'#6b4a8a',belong:'#2e8b8b',base:'#9a8e75',plan:'#5fb04e'};
 function baseOpts(extra){return Object.assign({responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:14,font:{size:11}}},tooltip:{bodyFont:{size:11},titleFont:{size:11}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:0,maxTicksLimit:8}},y:{ticks:{font:{size:10}}}}},extra||{});}
-function mkChart(id,type,data,opts){var el=document.getElementById(id);if(!el)return;if(charts[id])charts[id].destroy();charts[id]=new Chart(el.getContext('2d'),{type:type,data:data,options:opts||baseOpts()});}
+function mkChart(id,type,data,opts,plugins){var el=document.getElementById(id);if(!el)return;if(charts[id])charts[id].destroy();charts[id]=new Chart(el.getContext('2d'),{type:type,data:data,options:opts||baseOpts(),plugins:plugins||[]});}
+// 구글/야후 파이낸스식: 세로 십자선 + "그 주에 무슨 일이 있었나" 툴팁.
+var crosshairPlugin={id:'crosshair',afterDraw:function(c){
+  var po=c.options&&c.options.plugins;if(!po||!po.crosshairEnabled)return;
+  var t=c.tooltip;if(!t||!t._active||!t._active.length)return;
+  var x=t._active[0].element.x,a=c.chartArea,ctx=c.ctx;
+  ctx.save();ctx.beginPath();ctx.moveTo(x,a.top);ctx.lineTo(x,a.bottom);ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(74,58,42,0.4)';ctx.stroke();ctx.restore();
+}};
+function weekStory(i){
+  var S=sc(),ev=(S.events&&S.events[i])||[],h=S.hist[i],p=i>0?S.hist[i-1]:null,lines=[];
+  if(p){var d=h.active-p.active;lines.push('활발 전주 대비 '+(d>0?'+':'')+d+'명'+(d>0?' ▲':d<0?' ▼':' ―'));}
+  lines.push(ev.length?('이번 주: '+ev.join(', ')):'특이 일정 없음');
+  return lines;
+}
+function weeklyOpts(extra){
+  var o=baseOpts(extra);
+  o.interaction={mode:'index',intersect:false};
+  o.plugins=o.plugins||{};
+  o.plugins.crosshairEnabled=true;
+  o.plugins.eventBandsOn=true;
+  o.plugins.tooltip=Object.assign({},o.plugins.tooltip,{mode:'index',intersect:false,callbacks:{afterBody:function(items){return (items&&items.length)?weekStory(items[0].dataIndex):'';}}});
+  return o;
+}
+// 연간 일정을 차트에 직접 그린다(파이낸스의 침체 음영처럼). 외부 환경=붉은 음영,
+// 설교 진행=아래 파란 띠, 수련회=초록 ▽. x축(주차)에 맞춰 자동 정렬된다.
+var eventBandsPlugin={id:'eventBands',beforeDatasetsDraw:function(c){
+  var po=c.options&&c.options.plugins;if(!po||!po.eventBandsOn)return;
+  var S=sc();if(!S||!S.events)return;var xs=c.scales.x;if(!xs)return;
+  var a=c.chartArea,ctx=c.ctx,n=S.events.length;
+  var step=n>1?Math.abs(xs.getPixelForValue(1)-xs.getPixelForValue(0)):16;
+  ctx.save();
+  for(var i=0;i<n;i++){var ev=S.events[i];if(!ev||!ev.length)continue;
+    var cx=xs.getPixelForValue(i),x0=Math.max(a.left,cx-step/2),x1=Math.min(a.right,cx+step/2),w=x1-x0;
+    var ext=false,serm=false,ret=false;
+    for(var j=0;j<ev.length;j++){var s=ev[j];if(s.indexOf('시험')>=0||s.indexOf('수능')>=0)ext=true;if(s.indexOf('설교')>=0)serm=true;if(s.indexOf('수련회')>=0)ret=true;}
+    if(ext){ctx.fillStyle='rgba(214,90,79,0.12)';ctx.fillRect(x0,a.top,w,a.bottom-a.top);}
+    if(serm){ctx.fillStyle='rgba(63,111,176,0.55)';ctx.fillRect(x0,a.bottom-3,w,3);}
+    if(ret){ctx.fillStyle='#3b8a2e';ctx.beginPath();ctx.moveTo(cx-4,a.top);ctx.lineTo(cx+4,a.top);ctx.lineTo(cx,a.top+6);ctx.closePath();ctx.fill();}
+  }
+  ctx.restore();
+}};
+var WK_PLUGINS=[crosshairPlugin,eventBandsPlugin];
+// 차트 아래 읽는 캘린더 요약: 설교·내부 사역·외부 환경을 색 점으로 묶어 나열.
+function calendarSummary(d){
+  var serm=[],intern=[],extern=[];
+  (d.sched||[]).forEach(function(ev){
+    if(ev.type==='sermon')serm.push(((SERMON_FOCUS[ev.focus]&&SERMON_FOCUS[ev.focus].label)||ev.focus)+' '+ev.start+'주~');
+    else if(ev.type==='retreat')intern.push('수련회 '+ev.start+'주');
+    else if(ev.type==='smallgroup')intern.push('소그룹 집중 '+ev.start+'주');
+    else if(ev.type==='outreach')intern.push('전도 '+ev.start+'주');
+    else if(ev.type==='service')intern.push('봉사 '+ev.start+'주');
+    else if(ev.type==='exam')extern.push('시험 '+ev.start+'주~(연 '+(ev.repeat?Math.round(WEEKS_PER_YEAR/ev.repeat):1)+'회)');
+    else if(ev.type==='sooneung')extern.push('수능 '+ev.start+'주~(고3)');
+  });
+  (d.church||[]).forEach(function(ev){
+    if(ev.type==='senior')intern.push('담임 말씀 '+ev.start+'주~');
+    else if(ev.type==='allretreat')intern.push('전교인 수련회 '+ev.start+'주');
+    else if(ev.type==='revival')intern.push('부흥회 '+ev.start+'주');
+    else if(ev.type==='season')intern.push('절기 '+ev.start+'주');
+  });
+  function grp(dot,name,arr){return arr.length?('<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+dot+';margin:0 4px -1px 0"></span><b>'+name+'</b> '+arr.join(' · ')):'';}
+  var parts=[grp('#3f6fb0','설교',serm),grp('#5fb04e','내부 사역',intern),grp('#d65a4f','외부 환경',extern)].filter(function(x){return x;});
+  return parts.length?('연간 일정 · '+parts.join(' &nbsp;|&nbsp; ')+'<br><span style="color:#8a755a">그래프 위에 마우스를 올리면 그 주에 무슨 일이 있었는지(설교·수련회·시험)가 뜬다. 붉은 음영=외부 환경, 아래 파란 띠=설교 진행, ▽=수련회.</span>'):'';
+}
 
 function renderKPI(){
   var L=last(),F=first(),dA=L.active-F.active,dR=L.risk-F.risk,dF=L.f-F.f;
@@ -489,8 +575,9 @@ function renderTrend(){
     {label:'느슨',data:h.map(function(x){return x.loose;}),borderColor:PALETTE.loose,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4},
     {label:'위기',data:h.map(function(x){return x.risk;}),borderColor:PALETTE.risk,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4},
     {label:'신앙(%)',data:h.map(function(x){return Math.round(x.f*100);}),borderColor:PALETTE.faith,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4,borderDash:[4,3]}
-  ]},baseOpts());
+  ]},weeklyOpts(),WK_PLUGINS);
   var L=last(),F=first();
+  var cl=document.getElementById('cal-legend');if(cl)cl.innerHTML=calendarSummary(SC_DEFS[curScenario]||{});
   document.getElementById('trend-note').textContent='시작 '+F.n+'명 → 현재 '+Math.round(L.n)+'명. 활발 '+F.active+'명 → '+L.active+'명 · 위기 '+F.risk+'명 → '+L.risk+'명 · 평균 신앙 '+Math.round(F.f*100)+'% → '+Math.round(L.f*100)+'%.';
 }
 function renderVerdict(){
@@ -508,7 +595,7 @@ function comparePair(id,noteId){
   mkChart(id,'line',{labels:ls,datasets:[
     {label:'계획 · 활발',data:hp.map(function(x){return x.active;}),borderColor:PALETTE.plan,borderWidth:2.5,fill:false,tension:0.3,pointRadius:0},
     {label:'기본 운영 · 활발',data:hb.map(function(x){return x.active;}),borderColor:PALETTE.base,borderWidth:1.6,fill:false,tension:0.3,pointRadius:0,borderDash:[5,3]}
-  ]},baseOpts());
+  ]},weeklyOpts(),WK_PLUGINS);
   if(noteId){var Lp=hp[hp.length-1],Lb=hb[hb.length-1],diff=Lp.active-Lb.active,ddrop=Lp.drop-Lb.drop,df=(Lp.f-Lb.f)*100;
     document.getElementById(noteId).textContent='1년 뒤 계획 활발 '+Lp.active+'명 vs 기본 운영 '+Lb.active+'명. 차이: 활발 '+(diff>=0?'+':'')+diff+'명 · 이탈 '+(ddrop>0?'+':'')+ddrop+'명 · 신앙 '+(df>=0?'+':'')+Math.round(df)+'%p. 가정값이므로 방향으로만 읽으십시오.';}
 }
@@ -518,7 +605,7 @@ function renderAttendance(){
     {label:'활발',data:h.map(function(x){return x.active;}),backgroundColor:PALETTE.active+'cc',stack:'s'},
     {label:'느슨',data:h.map(function(x){return x.loose;}),backgroundColor:PALETTE.loose+'cc',stack:'s'},
     {label:'위기',data:h.map(function(x){return x.risk;}),backgroundColor:PALETTE.risk+'cc',stack:'s'}
-  ]},baseOpts({scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10},maxTicksLimit:8,maxRotation:0}},y:{stacked:true,beginAtZero:true,ticks:{font:{size:10}}}}}));
+  ]},weeklyOpts({scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10},maxTicksLimit:8,maxRotation:0}},y:{stacked:true,beginAtZero:true,ticks:{font:{size:10}}}}}),WK_PLUGINS);
 }
 function renderCrisis(){
   var v=sc().vuln;
@@ -531,7 +618,7 @@ function renderCrisis(){
 function renderFaith(){
   var h=sc().hist,ls=lbls();
   mkChart('c-faith','line',{labels:ls,datasets:[{label:'평균 신앙',data:h.map(function(x){return Math.round(x.f*100);}),borderColor:PALETTE.faith,backgroundColor:PALETTE.faith+'22',borderWidth:2,fill:true,tension:0.3,pointRadius:0}]},
-    baseOpts({scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:8,maxRotation:0}},y:{min:30,max:80,ticks:{font:{size:10},callback:function(v){return v+'%';}}}}}));
+    weeklyOpts({scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:8,maxRotation:0}},y:{min:30,max:80,ticks:{font:{size:10},callback:function(v){return v+'%';}}}}}),WK_PLUGINS);
 }
 function renderBranches(){
   var h=sc().hist,ls=lbls();
@@ -539,7 +626,7 @@ function renderBranches(){
     {label:'말씀',data:h.map(function(x){return Math.round(x.word*100);}),borderColor:PALETTE.word,borderWidth:2,fill:false,tension:0.3,pointRadius:0},
     {label:'거룩',data:h.map(function(x){return Math.round(x.holy*100);}),borderColor:PALETTE.holy,borderWidth:2,fill:false,tension:0.3,pointRadius:0},
     {label:'소속',data:h.map(function(x){return Math.round(x.belong*100);}),borderColor:PALETTE.belong,borderWidth:2,fill:false,tension:0.3,pointRadius:0}
-  ]},baseOpts({scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:8,maxRotation:0}},y:{min:30,max:80,ticks:{font:{size:10},callback:function(v){return v+'%';}}}}}));
+  ]},weeklyOpts({scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:8,maxRotation:0}},y:{min:30,max:80,ticks:{font:{size:10},callback:function(v){return v+'%';}}}}}),WK_PLUGINS);
 }
 function renderSermon(){
   var s=sc().sermon,labels=['양육형','회복형','전도형','말씀형','거룩형','은혜형'],keys=['nurture','recovery','evangel','word','holy','grace'];
