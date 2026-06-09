@@ -430,12 +430,16 @@ function parseCSV(text){
   for(var i=1;i<lines.length;i++){
     var c=splitCSVLine(lines[i]);
     var get=function(name){var j=idx[name];return (j!=null&&c[j]!=null)?c[j].trim():'';};
-    rows.push({name:get('이름'),grade:get('학년'),bg:get('신앙배경'),core:get('코어'),loner:get('외톨이'),status:get('출석상태')});
+    rows.push({name:get('이름'),grade:get('학년'),bg:get('신앙배경'),core:get('코어'),loner:get('외톨이'),status:get('출석상태'),
+      owned:get('내면화'),word:get('말씀'),holy:get('거룩'),belong:get('소속'),doubtSpace:get('의심나눔'),warmth:get('부모관계'),fam:get('가정신앙'),adults:get('곁의어른수')});
   }
   return rows;
 }
 function yn(v){v=(v||'').toUpperCase();return v==='Y'||v==='예'||v==='O'||v==='1'||v==='TRUE'||v==='참';}
 function bgCode(v){v=v||'';if(v.indexOf('모태')>=0||v.toLowerCase().indexOf('mota')>=0)return 'mota';if(v.indexOf('비신앙')>=0||v.toLowerCase().indexOf('none')>=0)return 'none';return 'normal';}
+// 수집 폼(COLLECTION.md)의 관찰값을 모형 변수로. 빈 칸이면 null(가정값 유지).
+function lvl3(v,hi,mid,lo){v=(v||'').trim();return v==='상'?hi:v==='중'?mid:v==='하'?lo:null;}
+function jit(x,a){return x==null?null:clamp(x+rnd(-a,a),0,1);}
 function studentFromRow(r){
   var grade=GRADE_NUM[r.grade]||(parseInt(r.grade,10)||0);if(grade<1)grade=0;if(grade>6)grade=6;
   if(!grade)return null;
@@ -445,10 +449,22 @@ function studentFromRow(r){
   else{c=rnd(0.34,0.56);fa=rnd(0.30,0.55);tier='느슨';}
   if(core)fa=clamp(fa+0.12,0,1);if(bg==='mota')fa=clamp(fa+0.06,0,1);if(bg==='none')fa=clamp(fa-0.10,0,1);
   var fam=bg==='mota'?rnd(0.7,0.95):bg==='none'?rnd(0.05,0.35):rnd(0.35,0.65);
-  return {name:r.name||'',status:tier,grade:grade,bg:bg,core:core,loner:loner,commit:c,eng:c,faith:fa,fam:fam,
+  var s={name:r.name||'',status:tier,grade:grade,bg:bg,core:core,loner:loner,commit:c,eng:c,faith:fa,fam:fam,
     word:clamp(fa+rnd(-0.08,0.08),0,1),holy:clamp(fa+rnd(-0.10,0.06),0,1),belong:clamp((loner?fa-0.15:fa+0.06)+rnd(-0.08,0.08),0,1),
     owned:clamp(fa*0.72+(core?0.10:0)+rnd(-0.06,0.06),0,1),doubtSpace:clamp(0.45+(core?0.12:0)+(loner?-0.10:0)+rnd(-0.08,0.08),0,1),
     adults:core?2:(Math.random()<0.4?1:0),warmth:clamp((bg==='mota'?0.6:bg==='none'?0.45:0.55)+rnd(-0.18,0.18),0,1),doubt:clamp(0.20+0.05*grade+rnd(-0.08,0.10),0,1)};
+  // 풍부 칸이 채워져 있으면 가정값을 실제 관찰로 덮는다(빈 칸은 그대로).
+  var ov,obs=false;
+  if((ov=lvl3(r.owned,0.78,0.5,0.25))!=null){s.owned=jit(ov,0.05);obs=true;}
+  if((ov=lvl3(r.word,0.72,0.5,0.3))!=null){s.word=jit(ov,0.05);obs=true;}
+  if((ov=lvl3(r.holy,0.72,0.5,0.3))!=null){s.holy=jit(ov,0.05);obs=true;}
+  if((ov=lvl3(r.belong,0.72,0.5,0.3))!=null){s.belong=jit(ov,0.05);obs=true;}
+  var ds=(r.doubtSpace||'').trim();if(ds.indexOf('예')>=0){s.doubtSpace=jit(0.72,0.05);obs=true;}else if(ds.indexOf('아니오')>=0){s.doubtSpace=jit(0.25,0.05);obs=true;}
+  var wm=(r.warmth||'').trim(),wv=wm.indexOf('따뜻')>=0?0.8:wm.indexOf('보통')>=0?0.5:wm.indexOf('소원')>=0?0.25:null;if(wv!=null){s.warmth=jit(wv,0.05);obs=true;}
+  var fm=(r.fam||'').trim(),fv=fm.indexOf('열심')>=0?0.85:fm.indexOf('보통')>=0?0.55:fm.indexOf('약함')>=0?0.3:fm.indexOf('없')>=0?0.1:null;if(fv!=null){s.fam=jit(fv,0.05);obs=true;}
+  var ad=(r.adults||'').trim();if(ad!==''){var an=parseInt(ad,10);if(!isNaN(an)){s.adults=clamp(an,0,5);obs=true;}}
+  if(obs)s._obs=true;
+  return s;
 }
 function cloneStudent(t){return {name:t.name,grade:t.grade,bg:t.bg,core:t.core,loner:t.loner,commit:t.commit,eng:t.eng,faith:t.faith,fam:t.fam,
   word:t.word,holy:t.holy,belong:t.belong,owned:t.owned,doubtSpace:t.doubtSpace,adults:t.adults,warmth:t.warmth,doubt:t.doubt,
@@ -460,9 +476,9 @@ function rosterToDist(R){
   return {n:n,mid:mid||1,high:high||1,mota:mota/n,none:none/n,core:core/n,loner:loner/n,active:act/n,risk:risk/n};
 }
 function makeDataDef(roster,label){
-  var dist=rosterToDist(roster);
+  var dist=rosterToDist(roster),obs=roster.filter(function(s){return s._obs;}).length;
   return {label:label||'우리 부 데이터',isData:true,
-    desc:dist.n+'명 · 중등 '+dist.mid+'·고등 '+dist.high+' · 모태 '+Math.round(dist.mota*100)+'% · 외톨이 '+Math.round(dist.loner*100)+'% · 활발 '+Math.round(dist.active*100)+'% · 위기 '+Math.round(dist.risk*100)+'%',
+    desc:dist.n+'명 · 중등 '+dist.mid+'·고등 '+dist.high+' · 모태 '+Math.round(dist.mota*100)+'% · 외톨이 '+Math.round(dist.loner*100)+'% · 활발 '+Math.round(dist.active*100)+'% · 위기 '+Math.round(dist.risk*100)+'%'+(obs?(' · 관찰 입력 '+obs+'명(가정값 대신 실제값)'):''),
     dist:dist,seed:roster,
     ops:{sg:0.65,mt:0.45,tc:22,intake:Math.max(3,Math.round(dist.n*0.4)),speed:0.4,daracbang:0.6},
     sched:SC_DEFS.plan.sched.map(copyEv),church:SC_DEFS.plan.church.map(copyEv)};
