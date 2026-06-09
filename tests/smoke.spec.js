@@ -56,6 +56,28 @@ test('boots, renders charts on both tabs, hover + every scenario, no errors', as
     }
   }
 
+  // "이렇게 바꿔보기": moving an inline lever must overlay a dotted what-if trajectory.
+  await page.evaluate(() => {
+    const e = document.getElementById('mn-sg');
+    e.value = Math.min(100, (+e.value) + 25);
+    e.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.waitForTimeout(700); // debounced sim (260ms) + redraw
+  const overlayDrawn = await page.evaluate(() =>
+    window.charts['c-trend'].data.datasets.some(d => d.label && d.label.indexOf('바꾼 계획') >= 0));
+  expect(overlayDrawn, 'moving a what-if lever should overlay a dotted changed-plan trajectory').toBeTruthy();
+
+  // Care list moved off the main tab — it now lives in the team tab.
+  await page.click('#tab-team');
+  await page.waitForTimeout(300);
+  const careOnTeam = await page.evaluate(() => {
+    const e = document.getElementById('care-list');
+    return !!(e && e.innerText.trim().length > 1);
+  });
+  expect(careOnTeam, 'care list should render on the team tab').toBeTruthy();
+  await page.click('#tab-pastor');
+  await page.waitForTimeout(300);
+
   // Cycle every built-in scenario (rebuilds + re-renders each).
   for (const v of ['plan', 'base', 'decline', 'data']) {
     await page.selectOption('#scenario-sel', v);
