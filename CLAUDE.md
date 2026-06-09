@@ -47,12 +47,19 @@
 
 ## 파일 구성
 
-- `index.html` : 전체 시뮬레이션. HTML + CSS + 바닐라 JavaScript가 한 파일에 들어 있다. 외부 라이브러리 의존성 없음.
+- `index.html` : 전체 시뮬레이션. HTML + CSS + 바닐라 JavaScript가 한 파일에 들어 있다. 외부 라이브러리 의존성 없음(file://·오프라인 동작).
 - `README.md` : 비개발자용 사용 안내.
-- `SURVEY.md` : 진단 설문 설계(교사 관찰 1차, 검증 척도 RCI-A·FMS-12 출처).
+- `SURVEY.md` : 진단 설문 설계(관찰 원칙·도구별 문항·CSV 열 정의, 검증 척도 RCI-A·FMS-12 출처).
+- `STEERING.md` : 감독 목사 헌장(분석 대시보드 시절 작성) — 금함 세 가지(점수 노출·줄세우기·거짓 정밀)와 우선순위. 수첩 UI에도 그대로 적용된다.
+- `DIAGNOSIS.md` : "교회학교가 약해졌다"의 분해(닿음·양육·잔존·번짐·역량). 이 도구는 양육·잔존을 특권화한다.
+- `COLLECTION.md` : 수집 양식(역설계) 문서. `collection-template.csv`(필수 6칸+풍부 칸)와 짝. 수첩 파서가 이 양식도 별칭으로 읽는다(거룩 칸만 미사용).
+- `collection-template.csv` / `sample-data.csv` : 수집 양식 마스터 시트와 112명 샘플. 둘 다 업로드하면 그대로 읽힌다.
 - `ONTOLOGY.md` : 교회 온톨로지(Palantir식) 설계도 — 객체·링크·행동·함수·권한.
-- `METHODOLOGY.md` : 방법론·진단의 인용 가능한 학술 근거(ABM·전염·측정척도·생존분석·조기경보) + 엔진 매핑.
+- `METHODOLOGY.md` : 방법론·진단의 인용 가능한 학술 근거(ABM·전염·측정척도·생존분석·조기경보) + 엔진 매핑 + 증거 등급.
+- `tests/` : Playwright 스모크 테스트(`smoke.spec.js`) — 실제 브라우저로 온보딩→예시 명단→세 탭→모의 실험→수집 양식 호환을 돌려 콘솔 오류를 잡는다. 루트에 package.json을 두지 않아 정적 배포는 그대로다. CI는 `.github/workflows/test.yml`(PR·main 푸시마다 실행).
 - `CLAUDE.md` : 이 파일.
+
+분석 대시보드(main PR #1~#21)에서 이식한 것: 시험 압박 STEP 정합성(#11, `tick`의 examPress 누적·회복을 STEP에 태움), 시트 자동 급식(#12, `normalizeSheetUrl`/`loadFromUrl`/`woori_roster_url` — 다음 방문에 조용히 갱신), 수집 양식 호환(#18~19, `splitCSVLine`+글 값 셔임), 생태계 천장선(#16, `drawIdx`에 `50+35*(0.5pv+0.5cc)` 점선), 잔존 변동 띠(#14, `renderOutcome`의 "돌릴 때마다 열 명 중 N~M"). 즉석 비교(#21)·역할 가림(#13)·불확실성 띠(#5)·호버(#4)는 수첩에 같은 기능이 이미 있어 이식하지 않았다.
 
 **행동(Action) 레이어** : 추천을 추적되는 돌봄으로 닫는다(온톨로지의 행동). `ACTIONS` 레지스트리(타입별 라벨·검증·기록; `care`=완료 추적형, `visit`/`talk`=즉시 기록형)와 `runAction(key,s)`(검증 → `careLog` 기록 → 저장 → 렌더). `careLog`(localStorage `woori_care_v1`)에 배정 시점 겉/속 스냅샷을 저장하고, `renderCareLog`(행동 일지 카드, 완료·효과 추적)·`findSoul`(id 또는 이름으로 매칭). 영혼마다 `s.id`. 진단·예측은 읽기, 행동은 쓰기 — 플래그를 책임자·완료·효과에 연결한다.
 

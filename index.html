@@ -209,7 +209,10 @@
     <div id="onboard" hidden>
       <h2 class="pv-h">우리 부 명단으로 시작하세요 (세 걸음)</h2>
       <div class="ob-step"><span class="ob-n">①</span><div><button class="btn pv-btn" id="ob-template">명단 양식 받기</button><p class="hint">출석부·행정 기록(이름·학년·출석·소그룹)만으로 시작할 수 있습니다. 모르는 칸은 비워 두면 됩니다.</p></div></div>
-      <div class="ob-step"><span class="ob-n">②</span><div><label class="btn pv-btn primary" style="position:relative;overflow:hidden;cursor:pointer">채운 명단 올리기<input type="file" id="ob-file" accept=".csv,text/csv" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><p class="hint">올리면 바로 우리 아이들 이름으로 진단이 나옵니다. 출석 칸만 바꿔 다시 올리면 진단이 새로워집니다.</p></div></div>
+      <div class="ob-step"><span class="ob-n">②</span><div><label class="btn pv-btn primary" style="position:relative;overflow:hidden;cursor:pointer">채운 명단 올리기<input type="file" id="ob-file" accept=".csv,text/csv" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><p class="hint">올리면 바로 우리 아이들 이름으로 진단이 나옵니다. 출석 칸만 바꿔 다시 올리면 진단이 새로워집니다.</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><input id="ob-url" type="url" placeholder="또는 구글 시트 링크 붙여넣기 (파일 → 웹에 게시 → CSV)" style="flex:1;min-width:220px;font-size:14px;padding:9px 12px;border:1.5px solid var(--line);border-radius:var(--r-sm)"><button id="ob-url-btn" class="btn">링크로 불러오기</button></div>
+        <p id="ob-url-msg" class="hint"></p>
+        <p class="hint">시트 링크를 쓰면 다음 방문 때 자동으로 새 명단을 받아 옵니다(출석부를 시트에서 관리하면 편합니다).</p></div></div>
       <div class="ob-step"><span class="ob-n">③</span><div><span style="display:inline-flex;gap:8px;flex-wrap:wrap"><button class="btn" id="ob-sheet-teacher">교사 관찰지 인쇄</button><button class="btn" id="ob-sheet-parent">학부모 설문지 인쇄</button><button class="btn" id="ob-sheet-student">학생 설문지 인쇄</button></span><p class="hint">더 정확히 보려면: 교사는 자기 반 6명만(학기 1회), 학부모는 모임에서(학기 1회), 학생 설문은 연 1회 표본이면 충분합니다.</p></div></div>
       <p class="hint" style="margin-top:10px"><a href="#" id="ob-sample">예시 명단으로 둘러보기</a> · <a href="#" id="ob-rough">명단 없이 대략 보기(설정)</a></p>
     </div>
@@ -424,6 +427,11 @@
       <button class="btn sm" id="sheet-parent">학부모 설문지 인쇄</button>
       <button class="btn sm" id="sheet-student">학생 설문지 인쇄</button>
     </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+      <input id="roster-url" type="url" placeholder="구글 시트 링크 (웹에 게시 → CSV)" style="flex:1;min-width:180px;font-size:12.5px;padding:7px 10px;border:1px solid var(--line);border-radius:8px">
+      <button class="btn sm" id="url-btn">링크로 불러오기</button>
+    </div>
+    <div id="url-msg" class="hint" style="margin-bottom:6px"></div>
     <div id="roster-status" class="hint" style="margin-bottom:6px"></div>
     <details style="margin-bottom:8px"><summary class="summary-h" style="font-size:12.5px">엑셀 칸에 뭘 적나 ▾</summary>
       <div class="hint" style="line-height:1.7;margin-top:6px">
@@ -626,7 +634,8 @@
     var press=0,cap=0;
     if(ctx.exam){press=Math.max(press,0.14);cap=Math.max(cap,0.30);}
     if(ctx.sooneung){if(s.grade===6){press=Math.max(press,0.20);cap=Math.max(cap,0.45);}else{press=Math.max(press,0.05);cap=Math.max(cap,0.18);}}
-    if(press>0)s.examPress=Math.min(cap,s.examPress+press);else s.examPress*=0.45;
+    // 정합성(main PR #11 이식): 압박의 누적·회복도 STEP에 태운다. 안 태우면 한 칸 충격이 과대해 비현실적 급락이 난다.
+    if(press>0)s.examPress=Math.min(cap,s.examPress+press*STEP);else s.examPress*=(1-0.55*STEP);
     if(s.examPress<0.004)s.examPress=0;
     // 표시 출석 = 헌신 + 수련회 여운 - 시험 압박
     s.eng=clamp(s.commit+0.20*s.retreatGlow-s.examPress,0,1);
@@ -783,8 +792,8 @@
   }
   // ── 명단(CSV) 가져오기 ── 아이별 데이터로 진단. 지금은 예시 명단(placeholder).
   var roster=null;
-  // 파싱이 받아들이는 전체 열(새 관찰 열 + 옛 열 별칭 호환). 새 열이 있으면 새 열 우선.
-  var CSV_COLS=['이름','학년','부모신앙','형제신앙','교회친구수','소그룹','멘토','봉사역할','출석4주','QT','학업압박','신앙주인의식','가정예배','챙기는어른','소속감','의심나눔','부모관계','내면화점수','신앙대화','다락방','친구이름','부모출석','형제등록','자기말표현','의심질문','예배후머묾'];
+  // 파싱이 받아들이는 전체 열: 새 관찰 열 + 옛 열 별칭 + 수집 양식(collection-template.csv, main 이식) 호환. 새 열이 있으면 새 열 우선.
+  var CSV_COLS=['이름','학년','부모신앙','형제신앙','교회친구수','소그룹','멘토','봉사역할','출석4주','QT','학업압박','신앙주인의식','가정예배','챙기는어른','소속감','의심나눔','부모관계','내면화점수','신앙대화','다락방','친구이름','부모출석','형제등록','자기말표현','의심질문','예배후머묾','신앙배경','코어','외톨이','출석상태','내면화','말씀','소속','가정신앙','곁의어른수','친한친구'];
   // 양식이 권하는 열: 관찰·기록 가능한 것만(행정 → 교사 행동 관찰 → 학부모 사실 → 학생 내면).
   var TEMPLATE_COLS=['이름','학년','출석4주','소그룹','멘토','봉사역할','부모출석','형제등록','다락방','친구이름','자기말표현','의심질문','예배후머묾','챙기는어른','신앙대화','가정예배','부모관계','내면화점수'];
   var rosterCols=[]; // 명단에 실제로 들어온 열(데이터 충실도·출처 배지용)
@@ -792,33 +801,55 @@
   function yn(v){v=(v||'').toString().trim().toLowerCase();return v==='y'||v==='예'||v==='o'||v==='1'||v==='true';}
   function num(v,d){var n=parseFloat(v);return isNaN(n)?d:n;}
   function clampn(v,a,b){return v<a?a:v>b?b:v;}
+  // 따옴표 셀("김민수, 박지훈")·BOM 지원 — collection-template.csv 호환(main 이식)
+  function splitCSVLine(line){
+    var out=[],cur='',q=false;
+    for(var i=0;i<line.length;i++){var ch=line[i];
+      if(q){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+      else{if(ch==='"')q=true;else if(ch===','){out.push(cur);cur='';}else cur+=ch;}}
+    out.push(cur);return out;
+  }
   function parseCSV(text){
-    var lines=text.replace(/\r/g,'').split('\n').filter(function(l){return l.trim().length;});
+    var lines=String(text).replace(/^﻿/,'').replace(/\r/g,'').split('\n').filter(function(l){return l.trim().length;});
     if(!lines.length)return [];
-    var head=lines[0].split(',').map(function(h){return h.trim();});
+    var head=splitCSVLine(lines[0]).map(function(h){return h.trim();});
     // 헤더 매칭: 부분 일치를 허용하되 가장 긴 열 이름이 이긴다('친구이름' 헤더가 '이름' 열을 가로채지 않게).
     var idx={};head.forEach(function(h,i){
       var best=null;CSV_COLS.forEach(function(c){if(h.indexOf(c)>=0&&(!best||c.length>best.length))best=c;});
       if(best&&idx[best]==null)idx[best]=i;});
     var rows=[];
-    // 관찰 열(0~2 행동 빈도)을 옛 1~5 척도 자리로 환산하는 셔임 — makeFromRow 공식은 그대로 쓴다.
+    // 셔임: 관찰 열(0~2 행동 빈도)과 수집 양식의 글 값(상/중/하 등)을 옛 1~5 척도 자리로 환산 — makeFromRow 공식은 그대로 쓴다.
     var L2=[2,3.5,4.5];
-    for(var li=1;li<lines.length;li++){var c=lines[li].split(',');var g=function(k){return idx[k]!=null?(c[idx[k]]||'').trim():'';};
+    var T3=function(v){v=(v||'').trim();return v.indexOf('상')===0?4.5:v.indexOf('중')===0?3:v.indexOf('하')===0?1.5:null;};
+    for(var li=1;li<lines.length;li++){var c=splitCSVLine(lines[li]);var g=function(k){return idx[k]!=null?(c[idx[k]]||'').trim():'';};
       var has=function(k){return idx[k]!=null&&g(k)!=='';};
       var gr=g('학년');var grade=GMAP[gr]||num(gr,1);
-      var fNames=has('친구이름')?g('친구이름').split(/[·;/\s]+/).filter(Boolean):null; // 주로 함께 다니는 친구 이름(공백·가운뎃점 구분)
+      // 친구이름(우리 양식: 공백·가운뎃점) 또는 친한친구(수집 양식: 쉼표·세미콜론 따옴표 셀) → 실제 친구망
+      var fRaw=has('친구이름')?g('친구이름'):has('친한친구')?g('친한친구'):null;
+      var fNames=fRaw!=null?fRaw.split(/[·;,/\s]+/).filter(Boolean):null;
+      // 수집 양식의 글 값들
+      var bgT=g('신앙배경'),bgPf=bgT?(bgT.indexOf('모태')>=0?3:bgT.indexOf('비신앙')>=0?1:2):null;        // 모태/일반/비신앙 → 부모 신앙 자리
+      var stT=g('출석상태'),stAtt=stT?(stT.indexOf('활발')>=0?4:stT.indexOf('위기')>=0?0:2):null;          // 활발/느슨/위기 → 출석4주 자리(위기=최근 4주 결석)
+      var fmT=g('가정신앙'),fmHw=fmT?(fmT.indexOf('열심')>=0?5:fmT.indexOf('약함')>=0?2:fmT.indexOf('없')>=0?1:3):null; // → 가정예배 자리
+      var dsRaw=g('의심나눔'),dsVal=dsRaw===''?null:(dsRaw.indexOf('예')>=0?4:dsRaw.indexOf('아니')>=0?2.5:clampn(num(dsRaw,3),1,5)); // 숫자(1~5)와 글(예/아니오) 모두
+      var wmRaw=g('부모관계'),wmVal=wmRaw===''?null:(wmRaw.indexOf('따뜻')>=0?4.5:wmRaw.indexOf('소원')>=0?1.5:wmRaw.indexOf('보통')>=0?3:clampn(num(wmRaw,3),1,5));
       rows.push({name:g('이름')||('학생'+li),grade:clampn(Math.round(grade),1,6),
-        parentFaith:has('부모출석')?clampn(Math.round(num(g('부모출석'),1)),0,2)+1:clampn(num(g('부모신앙'),2),1,3),   // 행정: 본 교회 출석 부모 수
-        sibFaith:has('형제등록')?(yn(g('형제등록'))?3:2):clampn(num(g('형제신앙'),2),1,3),                              // 행정: 형제가 명단에 있는가
+        parentFaith:has('부모출석')?clampn(Math.round(num(g('부모출석'),1)),0,2)+1:has('부모신앙')?clampn(num(g('부모신앙'),2),1,3):(bgPf!=null?bgPf:2), // 행정 우선
+        sibFaith:has('형제등록')?(yn(g('형제등록'))?3:2):clampn(num(g('형제신앙'),2),1,3),
         fNames:fNames,
-        friendN:fNames?clampn(fNames.length,0,6):clampn(num(g('교회친구수'),2),0,6),
+        friendN:fNames?clampn(fNames.length,0,6):has('교회친구수')?clampn(num(g('교회친구수'),2),0,6):(has('외톨이')?(yn(g('외톨이'))?0:3):2),
         sg:yn(g('소그룹')),mentor:yn(g('멘토')),
-        serve:yn(g('봉사역할')),att4:clampn(num(g('출석4주'),3),0,4),qt:clampn(num(g('QT'),3),1,5),acad:clampn(num(g('학업압박'),3),1,5),
+        serve:yn(g('봉사역할'))||yn(g('코어')),
+        att4:has('출석4주')?clampn(num(g('출석4주'),3),0,4):(stAtt!=null?stAtt:3),
+        qt:has('QT')?clampn(num(g('QT'),3),1,5):(T3(g('말씀'))!=null?T3(g('말씀')):3),
+        acad:clampn(num(g('학업압박'),3),1,5),
         own:has('자기말표현')?L2[clampn(Math.round(num(g('자기말표현'),1)),0,2)]:clampn(num(g('신앙주인의식'),3),1,5),  // 관찰: 자기 말로 신앙을 표현한 것을 봄
-        hw:clampn(num(g('가정예배'),3),1,5),adults:clampn(num(g('챙기는어른'),1),0,5),
-        belongQ:has('예배후머묾')?L2[clampn(Math.round(num(g('예배후머묾'),1)),0,2)]:clampn(num(g('소속감'),3),1,5),    // 관찰: 모임 후 남아 어울림
-        doubt:has('의심질문')?(yn(g('의심질문'))?4:2.5):clampn(num(g('의심나눔'),3),1,5),                               // 관찰: 의심·질문을 꺼낸 사건
-        warmth:clampn(num(g('부모관계'),3),1,5),intern:clampn(num(g('내면화점수'),0),0,5),
+        hw:has('가정예배')?clampn(num(g('가정예배'),3),1,5):(fmHw!=null?fmHw:3),
+        adults:has('챙기는어른')?clampn(num(g('챙기는어른'),1),0,5):clampn(num(g('곁의어른수'),1),0,5),
+        belongQ:has('예배후머묾')?L2[clampn(Math.round(num(g('예배후머묾'),1)),0,2)]:(T3(g('소속'))!=null?T3(g('소속')):clampn(num(g('소속감'),3),1,5)), // 관찰: 모임 후 남아 어울림
+        doubt:has('의심질문')?(yn(g('의심질문'))?4:2.5):(dsVal!=null?dsVal:3),                               // 관찰: 의심·질문을 꺼낸 사건
+        warmth:wmVal!=null?wmVal:3,
+        intern:has('내면화점수')?clampn(num(g('내면화점수'),0),0,5):(T3(g('내면화'))!=null?T3(g('내면화')):0), // 학생 설문 우선, 수집 양식의 교사 추정은 보조
         talk:has('신앙대화')?clampn(num(g('신앙대화'),2),0,7):null,  // 학부모 설문: 주간 신앙 대화 횟수(없으면 null=기존 계산)
         dara:has('다락방')?yn(g('다락방')):null});}                   // 행정(다락방 출석부) 또는 학부모 설문
     rows._cols=Object.keys(idx);
@@ -900,6 +931,32 @@
   }
   function loadSampleRoster(){roster=placeholderRoster();document.getElementById('settings').hidden=true;buildFromRoster();}
   function handleCSVFile(f){if(!f)return;var rd=new FileReader();rd.onload=function(){try{var r=parseCSV(rd.result);if(!r.length){document.getElementById('roster-status').textContent='빈 명단이거나 형식이 맞지 않습니다.';return;}roster=r;document.getElementById('settings').hidden=true;buildFromRoster();}catch(err){document.getElementById('roster-status').textContent='읽기 실패: '+err.message;alert('명단을 읽지 못했습니다: '+err.message);}};rd.readAsText(f,'utf-8');}
+  // ── 시트 자동 급식(main PR #12 이식): 구글 시트 "웹에 게시 → CSV" 링크로 명단을 받고, 다음 방문에 자동 갱신 ──
+  function normalizeSheetUrl(u){u=(u||'').trim();
+    var m=u.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+    if(m&&u.indexOf('output=csv')<0&&u.indexOf('format=csv')<0){
+      var gid=(u.match(/[#&?]gid=([0-9]+)/)||[])[1];
+      return 'https://docs.google.com/spreadsheets/d/'+m[1]+'/export?format=csv'+(gid?'&gid='+gid:'');}
+    return u;}
+  function urlMsg(t){['ob-url-msg','url-msg'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=t;});}
+  function loadFromUrl(url,quiet){
+    url=normalizeSheetUrl(url);
+    if(!/^https?:\/\//.test(url)){if(!quiet)urlMsg('http(s) 링크가 아닙니다.');return;}
+    if(typeof fetch==='undefined'){if(!quiet)urlMsg('이 브라우저는 링크 불러오기를 지원하지 않습니다. CSV 파일로 올리세요.');return;}
+    if(!quiet)urlMsg('불러오는 중...');
+    var ctl=(typeof AbortController!=='undefined')?new AbortController():null,to=ctl?setTimeout(function(){ctl.abort();},9000):0;
+    fetch(url,ctl?{signal:ctl.signal}:undefined)
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
+      .then(function(txt){if(to)clearTimeout(to);
+        if(/^\s*<(!doctype|html)/i.test(txt)){if(!quiet)urlMsg('CSV가 아니라 웹페이지가 왔습니다. 시트를 "파일 → 공유 → 웹에 게시 → CSV"로 공개했는지 확인하세요.');return;}
+        var r2=parseCSV(txt);
+        if(!r2.length){if(!quiet)urlMsg('CSV를 읽지 못했습니다. 머리글을 확인하세요.');return;}
+        roster=r2;document.getElementById('settings').hidden=true;buildFromRoster();
+        try{localStorage.setItem('woori_roster_url',url);}catch(err){}
+        urlMsg('명단을 링크에서 불러왔습니다. 다음 방문 때 자동으로 새로 받습니다.');})
+      .catch(function(e){if(to)clearTimeout(to);
+        if(!quiet)urlMsg('불러오지 못했습니다('+(e&&e.name==='AbortError'?'시간 초과':'네트워크/CORS')+'). CSV 파일로 올리세요.');});}
+  function savedRosterUrl(){try{return localStorage.getItem('woori_roster_url')||'';}catch(err){return '';}}
   document.getElementById('csv-template').addEventListener('click',downloadCSV);
   document.getElementById('csv-sample').addEventListener('click',loadSampleRoster);
   document.getElementById('csv-file').addEventListener('change',function(e){handleCSVFile(e.target.files&&e.target.files[0]);});
@@ -911,6 +968,12 @@
   // 인쇄 설문지(온보딩·설정 서랍 양쪽)
   [['ob-sheet-teacher','teacher'],['ob-sheet-parent','parent'],['ob-sheet-student','student'],['sheet-teacher','teacher'],['sheet-parent','parent'],['sheet-student','student']].forEach(function(p){
     var el=document.getElementById(p[0]);if(el)el.addEventListener('click',function(){printSurveySheets(p[1]);});});
+  // 시트 링크(온보딩·설정 서랍 양쪽). 저장된 링크는 입력칸에 미리 채운다.
+  [['ob-url','ob-url-btn'],['roster-url','url-btn']].forEach(function(p){
+    var inp=document.getElementById(p[0]),btn=document.getElementById(p[1]);if(!inp||!btn)return;
+    inp.value=savedRosterUrl();
+    btn.addEventListener('click',function(){loadFromUrl(inp.value,false);});
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();loadFromUrl(inp.value,false);}});});
   var eventLog=[];
   function logEv(t,warn){eventLog.push({wk:week,t:t,warn:!!warn});if(eventLog.length>80)eventLog.shift();}
   function step(){
@@ -1362,15 +1425,15 @@
   function anyCol(){for(var i=0;i<arguments.length;i++)if(hasCol(arguments[i]))return true;return false;}
   function fidelityLine(){
     if(!roster||!roster.length)return '지금은 명단 없이 슬라이더로 잡은 <b>추정</b>입니다'+badge('est')+' 명단을 올리면 우리 아이들 이름으로 진단합니다.';
-    // 개념 단위로 센다(새 관찰 열과 옛 열 별칭을 함께 인정).
-    var t1=[anyCol('친구이름','교회친구수'),anyCol('자기말표현','신앙주인의식'),anyCol('의심질문','의심나눔'),anyCol('예배후머묾','소속감'),anyCol('챙기는어른')].filter(Boolean).length;
-    var t2=[anyCol('신앙대화'),anyCol('가정예배')].filter(Boolean).length;
+    // 개념 단위로 센다(새 관찰 열·옛 열·수집 양식 별칭을 함께 인정).
+    var t1=[anyCol('친구이름','친한친구','교회친구수','외톨이'),anyCol('자기말표현','신앙주인의식'),anyCol('의심질문','의심나눔'),anyCol('예배후머묾','소속감','소속'),anyCol('챙기는어른','곁의어른수')].filter(Boolean).length;
+    var t2=[anyCol('신앙대화'),anyCol('가정예배','가정신앙')].filter(Boolean).length;
     var t3=hasCol('내면화점수');
     var parts=['명단 '+roster.length+'명'+badge('obs')];
-    parts.push(hasCol('친구이름')?'친구망 실측'+badge('teach'):'친구망 추정'+badge('est'));
+    parts.push(anyCol('친구이름','친한친구')?'친구망 실측'+badge('teach'):'친구망 추정'+badge('est'));
     parts.push(t1>0?'교사 관찰 '+t1+'/5'+badge('teach'):'교사 관찰 전'+badge('est'));
     parts.push(t2>0?'학부모 설문 '+t2+'/2'+badge('survey'):'학부모 설문 전'+badge('est'));
-    parts.push(t3?'속(내면화) 실측'+badge('survey'):'속(내면화)은 추정'+badge('est'));
+    parts.push(t3?'속(내면화) 실측'+badge('survey'):hasCol('내면화')?'속(내면화) 교사 추정'+badge('est'):'속(내면화)은 추정'+badge('est'));
     return parts.join(' · ');
   }
   function updateOnboard(){var ob=document.getElementById('onboard');if(ob)ob.hidden=!!(roster&&roster.length);}
@@ -1387,7 +1450,7 @@
       else if(!vp.total)pvv.innerHTML='<p class="muted" style="color:var(--good)">지금 무너지는 아이가 없습니다. 든든한 아이들을 한 걸음 더 깊이 세우세요.</p>';
       else pvv.innerHTML=vp.top.map(function(o){return '<div class="pv-card" data-si="'+o.si+'"><span class="who">'+studName(o.s)+'</span><span class="what">'+o.why+' → <b>'+o.what+'</b></span></div>';}).join('')
         +(vp.total>3?'<p class="hint" style="margin-top:6px">외 '+(vp.total-3)+'명 더 있습니다("자세히"에 전체).</p>':'')
-        +'<p class="hint" style="margin-top:6px">만날 순서는 친구 관계로 가늠했습니다'+badge(hasCol('친구이름')?'teach':'est')+'</p>';}
+        +'<p class="hint" style="margin-top:6px">만날 순서는 친구 관계로 가늠했습니다'+badge(anyCol('친구이름','친한친구')?'teach':'est')+'</p>';}
     var pa=document.getElementById('pv-action');
     if(pa&&recoState)pa.innerHTML='<div class="callout" style="font-size:16.5px;line-height:1.65">'+recoState.action+'</div>';
   }
@@ -1401,9 +1464,13 @@
     var dots='';for(var i=0;i<10;i++)dots+='<span class="'+(i<k?'keep':'')+'"></span>';
     var line=k>0?'이 계획대로 가면, 졸업하는 아이 <b>열 명 중 '+N_TEN[k]+'</b>이 믿음을 지니고 나갑니다':'이 계획대로면, 믿음을 지니고 졸업하는 아이가 거의 없습니다';
     var base=kb!=null?(kb===k?' 아무것도 안 해도 비슷합니다(이 계획의 힘이 약하다는 뜻).':' 아무것도 안 하면 열 명 중 '+(kb>0?N_TEN[kb]:'거의 없음')+'입니다.'):'';
+    // 변동 띠(main PR #14 이식): 단일 숫자 과신을 막는다 — 돌릴 때마다 흔들리는 폭을 자연빈도로.
+    var band='',rg=projData.range&&projData.range.carry;
+    if(rg&&isFinite(rg[0])&&isFinite(rg[1])){var kLo=clamp(Math.round(rg[0]/10),0,10),kHi=clamp(Math.round(rg[1]/10),0,10);
+      if(kLo!==kHi)band=' 돌릴 때마다 열 명 중 '+(kLo>0?N_TEN[kLo]:'없음')+'에서 '+N_TEN[kHi]+' 사이로 흔들립니다.';}
     el.innerHTML='<div class="ten">'+dots+'</div>'
       +'<p style="font-size:17.5px;line-height:1.65;margin:10px 0 0">'+line+'.'+base+' '+badge('model')+'</p>'
-      +'<p class="hint" style="margin-top:6px">3년을 여러 번 굴린 평균입니다. 출석 수가 아니라 이 숫자가 진짜 성적표입니다.</p>';
+      +'<p class="hint" style="margin-top:6px">3년을 여러 번 굴린 평균입니다.'+band+' 출석 수가 아니라 이 숫자가 진짜 성적표입니다.</p>';
   }
   // ── 인쇄 설문지 3종(교사 관찰지·학부모 설문지·학생 설문지) — 종이로 모아 명단 CSV에 옮긴다 ──
   function printSurveySheets(kind){
@@ -1552,9 +1619,15 @@
     g.strokeStyle='#2563eb';g.lineWidth=2.2;g.beginPath();projData.forEach(function(p,i){var x=34+(i/(n-1))*(W-40),y=H-8-(p.idx/100)*(H-22);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
     // 내면화 지수(자기 것이 된 믿음) — 보라 점선. 믿음 지수와의 간격이 '겉과 속의 차이'다.
     if(projData[0].own!=null){g.strokeStyle='#7c3aed';g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();projData.forEach(function(p,i){var x=34+(i/(n-1))*(W-40),y=H-8-(p.own/100)*(H-22);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();g.setLineDash([]);}
+    // 생태계 천장(main PR #16 이식): 가정·부모 다락방과 교회 분위기가 받치는 신앙 높이. 부모를 점수로 보지 말고 천장 높낮이로만 읽는다.
+    var E=clamp(0.5*(parentVitality!=null?parentVitality:0.5)+0.5*(churchClimate!=null?churchClimate:0.5),0,1);
+    var ceil=Math.round(50+35*E),cy=H-8-(ceil/100)*(H-22);
+    g.strokeStyle='rgba(107,74,138,.55)';g.lineWidth=1.6;g.setLineDash([2,4]);g.beginPath();g.moveTo(34,cy);g.lineTo(W-6,cy);g.stroke();g.setLineDash([]);
+    g.fillStyle='#6b4a8a';g.font='9px sans-serif';g.textAlign='right';g.fillText('생태계 천장 '+ceil,W-8,cy-4);g.textAlign='left';
     var L=projData[n-1],rg=projData.range;
     var band=rg&&rg.idx?' (여러 번 돌리면 '+Math.round(rg.idx[0])+'~'+Math.round(rg.idx[1])+' 사이)':'';
-    document.getElementById('idx-now').textContent='3년 뒤 믿음 '+Math.round(L.idx)+band+' · 내면화 '+Math.round(L.own!=null?L.own:0)+' · 진한 파랑=평균, 연한 가닥=가능한 시나리오, 보라 점선=내면화';
+    var ceilLvl=E<0.4?'낮음':E>0.6?'높음':'보통';
+    document.getElementById('idx-now').textContent='3년 뒤 믿음 '+Math.round(L.idx)+band+' · 내면화 '+Math.round(L.own!=null?L.own:0)+' · 생태계 천장 '+ceilLvl+'(약 '+ceil+', 가정·교회가 받치는 높이) · 진한 파랑=평균, 연한 가닥=가능한 시나리오, 보라 점선=내면화';
   }
   function updateRisk(){
     var el=document.getElementById('risk-box');if(!el||!projData)return;
@@ -1705,7 +1778,7 @@
   document.getElementById('btn-report').addEventListener('click',buildReport);
   document.getElementById('set-close').addEventListener('click',function(){drawer.hidden=true;});
   drawer.addEventListener('click',function(e){if(e.target===drawer)drawer.hidden=true;});
-  document.getElementById('set-apply').addEventListener('click',function(){drawer.hidden=true;roster=null;rosterCols=[];try{localStorage.removeItem('woori_roster_v1');}catch(err){}document.getElementById('roster-status').textContent='';generate();updateOnboard();});
+  document.getElementById('set-apply').addEventListener('click',function(){drawer.hidden=true;roster=null;rosterCols=[];try{localStorage.removeItem('woori_roster_v1');localStorage.removeItem('woori_roster_url');}catch(err){}document.getElementById('roster-status').textContent='';generate();updateOnboard();});
 
   // ── 주 진행 컨트롤 ──
   var playing2=false,last=0;
@@ -1765,6 +1838,7 @@
   // ── 시작 ── 명단(실측)이 저장돼 있으면 그것으로, 없으면 슬라이더 추정으로.
   loadUI();loadRoster();renderDecide();applyDecision();
   setView(pendingView||'week');
+  if(savedRosterUrl())loadFromUrl(savedRosterUrl(),true); // 시트 자동 급식: 저장된 링크가 있으면 조용히 최신 명단으로 갱신
 })();
 </script>
 </body>

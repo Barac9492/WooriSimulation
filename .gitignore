@@ -1,3 +1,6 @@
 .DS_Store
 files.zip
 .vercel
+tests/node_modules/
+tests/test-results/
+tests/package-lock.json
