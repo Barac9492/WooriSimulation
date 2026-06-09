@@ -11,8 +11,16 @@ const url = 'file://' + path.resolve(__dirname, '..', 'index.html');
 
 test('boots, renders charts on both tabs, hover + every scenario, no errors', async ({ page }) => {
   const errors = [];
-  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  // Uncaught exceptions (the blank-screen class, e.g. incident #7) are the primary signal.
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
+  // Console errors too, but ignore resource/network noise (file:// favicon, CDN hiccups)
+  // so the test fails on real JS errors only.
+  page.on('console', m => {
+    if (m.type() !== 'error') return;
+    const t = m.text();
+    if (/Failed to load resource|favicon|net::ERR|ERR_FILE_NOT_FOUND/i.test(t)) return;
+    errors.push('console: ' + t);
+  });
 
   await page.goto(url);
 
