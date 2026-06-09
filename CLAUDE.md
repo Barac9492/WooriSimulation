@@ -58,7 +58,11 @@
 
 ## 미구현 설계 (문서만, 코드에 없음)
 
-`ONTOLOGY.md`(객체·링크·행동(Action) 레이어·권한 `ROLES`), `SURVEY.md`(측정 설문), `DIAGNOSIS.md`(정의 합의)는 **설계 문서**다. 현재 `index.html`에는 행동 레이어(`careLog`/`runAction`)·역할 권한(`ROLES`/`setRole`)·한 영혼 드릴다운(`selStudent`)·전염 관계 지도가 **없다**. 윤리선(목양이지 사찰 아님)은 지금은 민감 속성을 화면에 아예 띄우지 않음으로 지켜진다(권한 게이트가 아니라 부재로). 이들을 구현하려면 ONTOLOGY의 `ROLES` 게이트가 먼저 와야 한다.
+`ONTOLOGY.md`(객체·링크·행동(Action) 레이어·권한 `ROLES`), `SURVEY.md`(측정 설문), `DIAGNOSIS.md`(정의 합의)는 **설계 문서**다.
+
+지금까지 **구현된 최소 형태**: ① 돌봄 루프(`renderCareList`/`careLog`/`careCycleAt`, localStorage `woori_care_v1`) — "먼저 만날 아이"를 위기·속이 빈으로 뽑아 안 함→연락함→완료 추적. ② 역할 뷰(`ROLES`/`role`/`setRole`, localStorage `woori_role`) — 담임(전체)·교사(이름은 보되 내면화 "속이 빈 아이"는 가림)·부모/공유(이름 가리고 집계만). `renderCareList`·`renderRoster`가 `roleCfg().names`/`sensitive`로 가린다.
+
+아직 **없는 것**: ONTOLOGY의 완전한 행동 레지스트리(`runAction` 타입별 검증·효과 추적)·한 영혼 드릴다운(`selStudent`)·전염 관계 지도, 그리고 **진짜 인증**. 역할 뷰는 보안 경계가 아니라 *기본 노출 줄이기*다(누구나 역할을 바꿀 수 있다 — 공유·인쇄 때 과노출을 막는 예의선). 윤리선(목양이지 사찰 아님)은 이제 *부재*가 아니라 *역할 기본값*으로도 지켜진다.
 
 ## 모형 규칙 (확장 시 일관성 유지)
 
