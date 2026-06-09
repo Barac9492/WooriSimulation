@@ -388,11 +388,12 @@ function simulateOnce(cfg,weeks){
 function simulate(cfg,weeks,runs){
   var acc=null,segAcc=null;
   for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks);
-    if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,wd:p.wd,hl:p.hl,bl:p.bl,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop,own:p.own,gKeep:p.gKeep,gLapse:p.gLapse,aLo:p.active,aHi:p.active,rLo:p.risk,rHi:p.risk,fLo:p.f,fHi:p.f};});segAcc=h.seg;}
+    if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,wd:p.wd,hl:p.hl,bl:p.bl,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop,own:p.own,gKeep:p.gKeep,gLapse:p.gLapse,aLo:p.active,aHi:p.active,rLo:p.risk,rHi:p.risk,fLo:p.f,fHi:p.f,cLo:p.carry,cHi:p.carry};});segAcc=h.seg;}
     else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].wd+=p.wd;acc[i].hl+=p.hl;acc[i].bl+=p.bl;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;acc[i].own+=p.own;acc[i].gKeep+=p.gKeep;acc[i].gLapse+=p.gLapse;
       if(p.active<acc[i].aLo)acc[i].aLo=p.active;if(p.active>acc[i].aHi)acc[i].aHi=p.active;
       if(p.risk<acc[i].rLo)acc[i].rLo=p.risk;if(p.risk>acc[i].rHi)acc[i].rHi=p.risk;
-      if(p.f<acc[i].fLo)acc[i].fLo=p.f;if(p.f>acc[i].fHi)acc[i].fHi=p.f;});
+      if(p.f<acc[i].fLo)acc[i].fLo=p.f;if(p.f>acc[i].fHi)acc[i].fHi=p.f;
+      if(p.carry!=null){if(acc[i].cLo==null||p.carry<acc[i].cLo)acc[i].cLo=p.carry;if(acc[i].cHi==null||p.carry>acc[i].cHi)acc[i].cHi=p.carry;}});
       for(var d in h.seg)for(var g in h.seg[d])for(var k in h.seg[d][g])segAcc[d][g][k]+=h.seg[d][g][k];}}
   acc.forEach(function(p){p.n/=runs;p.f/=runs;p.wd/=runs;p.hl/=runs;p.bl/=runs;p.active/=runs;p.loose/=runs;p.risk/=runs;p.drop/=runs;p.own/=runs;p.gKeep/=runs;p.gLapse/=runs;p.carry=(p.gKeep+p.gLapse)?Math.round(p.gKeep/(p.gKeep+p.gLapse)*100):null;});
   for(var d2 in segAcc)for(var g2 in segAcc[d2])for(var k2 in segAcc[d2][g2])segAcc[d2][g2][k2]/=runs;
@@ -539,7 +540,7 @@ function eventsForWeek(d,w){
 function buildScenario(key){
   var d=SC_DEFS[key],W=WEEKS_PER_YEAR;
   var planAcc=simulate(cfgOf(d),W,6),baseAcc=simulate(baseCfg(d),W,6);
-  function toHist(acc){return acc.map(function(p,i){return {w:i+1,n:Math.round(p.n),active:Math.round(p.active),loose:Math.round(p.loose),risk:Math.round(p.risk),drop:Math.round(p.drop),f:p.f,word:p.wd,holy:p.hl,belong:p.bl,own:Math.round(p.own),carry:p.carry,aLo:Math.round(p.aLo),aHi:Math.round(p.aHi),rLo:Math.round(p.rLo),rHi:Math.round(p.rHi),fLo:p.fLo,fHi:p.fHi};});}
+  function toHist(acc){return acc.map(function(p,i){return {w:i+1,n:Math.round(p.n),active:Math.round(p.active),loose:Math.round(p.loose),risk:Math.round(p.risk),drop:Math.round(p.drop),f:p.f,word:p.wd,holy:p.hl,belong:p.bl,own:Math.round(p.own),carry:p.carry,cLo:p.cLo,cHi:p.cHi,aLo:Math.round(p.aLo),aHi:Math.round(p.aHi),rLo:Math.round(p.rLo),rHi:Math.round(p.rHi),fLo:p.fLo,fHi:p.fHi};});}
   var seg=planAcc.seg;
   function pc(b,den){return den?Math.round(b/den*100):0;}
   var vuln={loner_y:pc(seg.lon.y.dropped,seg.lon.y.tot),loner_n:pc(seg.lon.n.dropped,seg.lon.n.tot),
@@ -739,7 +740,8 @@ function renderVerdict(){
   else if(ar>=0.60){v='<span class="badge badge-g">양호</span> 활발한 학생이 '+Math.round(ar*100)+'%입니다. 공동체가 건강합니다. 한 걸음 더 깊은 제자훈련을 시작할 때입니다.';}
   else{v='<span class="badge badge-y">보통</span> 활발 '+Math.round(ar*100)+'% · 위기 '+Math.round(rr*100)+'%. 느슨한 학생('+pct(L.loose,n)+'%)을 소그룹으로 끌어들이는 것이 다음 과제입니다.';}
   var diff=L.active-sc().base[sc().base.length-1].active;
-  v+='<br><span style="font-size:12px;color:#6b5538">계획 vs 기본 운영: 활발 '+(diff>=0?'+':'')+Math.round(diff)+'명 차이. 졸업 후에도 신앙을 지킬 비율 약 '+(L.carry!=null?L.carry:'—')+'%. (가정값, 방향 참고)</span>';
+  var cl=L.cLo,ch=L.cHi,carryTxt=(cl!=null&&ch!=null)?(cl===ch?('약 '+cl+'%'):('약 '+cl+'~'+ch+'%')):(L.carry!=null?('약 '+L.carry+'%'):'—');
+  v+='<br><span style="font-size:12px;color:#6b5538">계획 vs 기본 운영: 활발 '+(diff>=0?'+':'')+Math.round(diff)+'명 차이. 졸업 후에도 신앙을 지킬 비율 '+carryTxt+' (회차마다 흔들리는 가정값).</span>';
   document.getElementById('verdict').innerHTML=v;
 }
 function comparePair(id,noteId){
