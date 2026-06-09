@@ -1,96 +1,113 @@
-// Real-browser smoke test. Exists because node tests stub Chart.js, so chart
-// callbacks/plugins never run there — which is exactly how the blank-screen
-// incident (#7, a wrong Chart.js v4 legend-filter signature) slipped through.
-// This loads the actual index.html in headless Chromium, exercises both tabs,
-// hover, and every scenario, and fails on ANY console/page error or any card
-// that failed to render (#render-warn).
+// 실제 브라우저 스모크 테스트 — 목회 수첩(3탭) UI.
+// 단위 테스트가 캔버스·DOM 콜백을 안 태우는 맹점(빈 화면 사고)을 막기 위해
+// file://로 index.html을 열어 핵심 흐름(온보딩 → 예시 명단 → 세 탭 → 모의 실험 → 수집 양식 호환)을
+// 돌리고 콘솔·페이지 오류를 잡는다.
 const { test, expect } = require('@playwright/test');
 const path = require('path');
 
-const url = 'file://' + path.resolve(__dirname, '..', 'index.html');
+const FILE_URL = 'file://' + path.resolve(__dirname, '..', 'index.html');
 
-test('boots, renders charts on both tabs, hover + every scenario, no errors', async ({ page }) => {
-  const errors = [];
-  // Uncaught exceptions (the blank-screen class, e.g. incident #7) are the primary signal.
-  page.on('pageerror', e => errors.push('pageerror: ' + e.message));
-  // Console errors too, but ignore resource/network noise (file:// favicon, CDN hiccups)
-  // so the test fails on real JS errors only.
-  page.on('console', m => {
-    if (m.type() !== 'error') return;
-    const t = m.text();
-    if (/Failed to load resource|favicon|net::ERR|ERR_FILE_NOT_FOUND/i.test(t)) return;
+// file:// 환경의 리소스·파비콘 소음은 무시하고 진짜 오류만 모은다.
+function collectErrors(page, errors) {
+  page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+  page.on('console', (msg) => {
+    if (msg.type() !== 'error') return;
+    const t = msg.text();
+    if (/net::|favicon|ERR_FILE_NOT_FOUND/i.test(t)) return;
     errors.push('console: ' + t);
   });
+}
 
-  await page.goto(url);
+async function freshPage(page) {
+  await page.goto(FILE_URL);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+}
 
-  // Boot finishes when the loading panel is hidden (renderAll ran).
-  await page.waitForFunction(() => {
-    const l = document.getElementById('loading');
-    return l && l.hidden === true;
-  }, null, { timeout: 20000 });
+test('부팅: 이번 주 탭이 기본이고 온보딩이 보인다', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  await freshPage(page);
+  await expect(page.locator('#view-week')).toBeVisible();
+  await expect(page.locator('#view-plan')).toBeHidden();
+  await expect(page.locator('#view-detail')).toBeHidden();
+  await expect(page.locator('#onboard')).toBeVisible();
+  expect(errors).toEqual([]);
+});
 
-  // At least one chart instance was actually created (pastor tab).
-  const pastorCharts = await page.evaluate(() => (window.charts ? Object.keys(window.charts).length : 0));
-  expect(pastorCharts, 'pastor tab should have rendered at least one chart').toBeGreaterThan(0);
+test('예시 명단: 진단 문장·만날 아이·충실도 배지가 나온다', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  await freshPage(page);
+  await page.locator('#ob-sample').click();
+  await expect(page.locator('#onboard')).toBeHidden();
+  await expect(page.locator('#pv-verdict .vtext')).toHaveText(/.+/);
+  await expect(page.locator('#data-badge')).toContainText('명단');
+  await expect(page.locator('#data-badge')).toContainText('친구망');
+  expect(errors).toEqual([]);
+});
 
-  // Team tab forces the heavy renderers + all plugins (bands, crosshair, event shading).
-  await page.click('#tab-team');
-  await page.waitForTimeout(600);
+test('올해 계획 탭: 설교 칩과 픽토그램(열 명 중 N)이 그려진다', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  await freshPage(page);
+  await page.locator('#ob-sample').click();
+  await page.locator('#tab-plan').click();
+  await expect(page.locator('#view-plan')).toBeVisible();
+  await expect(page.locator('#sermon-pick .chip')).toHaveCount(6);
+  await expect(page.locator('#pv-outcome .ten span')).toHaveCount(10);
+  await expect(page.locator('#pv-outcome')).toContainText('열 명 중');
+  // 결을 바꾸고 적용해도 오류 없이 다시 그려진다
+  await page.locator('#sermon-pick .chip[data-f="word"]').click();
+  await page.locator('#apply-plan').click();
+  await expect(page.locator('#pv-outcome')).toContainText('열 명 중', { timeout: 20000 });
+  expect(errors).toEqual([]);
+});
 
-  // Hover the comparison chart to fire tooltip/crosshair callbacks (the #7 class).
-  const tbox = await page.locator('#c-compare').boundingBox();
-  if (tbox) {
-    await page.mouse.move(tbox.x + tbox.width / 2, tbox.y + tbox.height / 2);
-    await page.waitForTimeout(150);
-  }
+test('자세히 탭: 모의 실험(다음 주 ▶)이 주차를 올리고 차트를 그린다', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  await freshPage(page);
+  await page.locator('#ob-sample').click();
+  await page.locator('#tab-detail').click();
+  await expect(page.locator('#view-detail')).toBeVisible();
+  const wk0 = await page.locator('#wk').textContent();
+  await page.locator('#btn-step').click();
+  await page.locator('#btn-step').click();
+  const wk1 = await page.locator('#wk').textContent();
+  expect(Number(wk1)).toBeGreaterThan(Number(wk0));
+  // 추이 캔버스가 실제 크기로 다시 그려졌다(논리 폭 dataset)
+  const lw = await page.locator('#trend').getAttribute('data-lw');
+  expect(Number(lw)).toBeGreaterThan(100);
+  expect(errors).toEqual([]);
+});
 
-  // Back to pastor, hover the trend chart (legend filter + tooltip afterBody + crosshair).
-  await page.click('#tab-pastor');
-  await page.waitForTimeout(400);
-  const box = await page.locator('#c-trend').boundingBox();
-  if (box) {
-    for (let i = 1; i <= 6; i++) {
-      await page.mouse.move(box.x + (box.width * i) / 7, box.y + box.height / 2);
-      await page.waitForTimeout(60);
-    }
-  }
+test('수집 양식 호환: collection-template(글 값)이 그대로 읽힌다', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  await freshPage(page);
+  const csv = [
+    '이름,학년,신앙배경,코어,외톨이,출석상태,내면화,의심나눔,부모관계,가정신앙,곁의어른수,친한친구',
+    '김민수,중3,모태,Y,N,활발,상,예,따뜻,열심,3,"박지훈, 이서연"',
+    '이서연,고1,비신앙,N,Y,위기,하,아니오,소원,없음,0,',
+    '박지훈,고2,일반,N,N,느슨,중,예,보통,보통,1,김민수'
+  ].join('\n');
+  await page.locator('#ob-file').setInputFiles({ name: 't.csv', mimeType: 'text/csv', buffer: Buffer.from('﻿' + csv, 'utf-8') });
+  await expect(page.locator('#data-badge')).toContainText('명단 3명');
+  await expect(page.locator('#data-badge')).toContainText('친구망 실측');
+  // 이름이 친구 칸에 가로채이지 않았다(헤더 최장 일치) — 위기인 이서연이 만날 아이에 뜬다
+  await expect(page.locator('#pv-visit')).toContainText('이서연');
+  expect(errors).toEqual([]);
+});
 
-  // "이렇게 바꿔보기": moving an inline lever must overlay a dotted what-if trajectory.
-  await page.evaluate(() => {
-    const e = document.getElementById('mn-sg');
-    e.value = Math.min(100, (+e.value) + 25);
-    e.dispatchEvent(new Event('input', { bubbles: true }));
-  });
-  await page.waitForTimeout(700); // debounced sim (260ms) + redraw
-  const overlayDrawn = await page.evaluate(() =>
-    window.charts['c-trend'].data.datasets.some(d => d.label && d.label.indexOf('바꾼 계획') >= 0));
-  expect(overlayDrawn, 'moving a what-if lever should overlay a dotted changed-plan trajectory').toBeTruthy();
-
-  // Care list moved off the main tab — it now lives in the team tab.
-  await page.click('#tab-team');
-  await page.waitForTimeout(300);
-  const careOnTeam = await page.evaluate(() => {
-    const e = document.getElementById('care-list');
-    return !!(e && e.innerText.trim().length > 1);
-  });
-  expect(careOnTeam, 'care list should render on the team tab').toBeTruthy();
-  await page.click('#tab-pastor');
-  await page.waitForTimeout(300);
-
-  // Cycle every built-in scenario (rebuilds + re-renders each).
-  for (const v of ['plan', 'base', 'decline', 'data']) {
-    await page.selectOption('#scenario-sel', v);
-    await page.waitForTimeout(500);
-  }
-
-  // No card was allowed to fail (the resilience banner must stay hidden).
-  const warnShown = await page.evaluate(() => {
-    const w = document.getElementById('render-warn');
-    return !!(w && !w.hidden);
-  });
-  expect(warnShown, 'a render card failed — see #render-warn / console').toBeFalsy();
-
-  // The actual guard that would have caught incident #7.
-  expect(errors, 'console/page errors:\n' + errors.join('\n')).toEqual([]);
+test('새로고침 복원: 명단과 탭이 유지된다', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  await freshPage(page);
+  await page.locator('#ob-sample').click();
+  await page.locator('#tab-plan').click();
+  await page.reload();
+  await expect(page.locator('#view-plan')).toBeVisible();
+  await expect(page.locator('#data-badge')).toContainText('명단');
+  expect(errors).toEqual([]);
 });
