@@ -365,7 +365,10 @@ function simulateOnce(cfg,weeks){
   var D=cfg.dist,arr=[];
   if(cfg.seed&&cfg.seed.length){for(var si=0;si<cfg.seed.length;si++)arr.push(cloneStudent(cfg.seed[si]));}
   else{for(var i=0;i<D.n;i++)arr.push(spawn(D,pickGrade6(D.mid,D.high)));}
-  arr.forEach(function(s){s.loner?linkIn(s,arr,arr,0,1):linkIn(s,arr,arr,3,5);});
+  // 친구망: 수집된 '친한친구'(이름)가 있으면 실제 관계로 잇고(상호), 없으면 임의로.
+  var nameIdx={};arr.forEach(function(s,i){if(s.name&&nameIdx[s.name]==null)nameIdx[s.name]=i;});
+  arr.forEach(function(s,i){if(s.friendNames&&s.friendNames.length){s.friendNames.forEach(function(nm){var j=nameIdx[nm];if(j!=null&&j!==i){if(s.friends.indexOf(j)<0)s.friends.push(j);if(arr[j].friends.indexOf(i)<0)arr[j].friends.push(i);}});}});
+  arr.forEach(function(s){if(!(s.friendNames&&s.friendNames.length))s.loner?linkIn(s,arr,arr,0,1):linkIn(s,arr,arr,3,5);});
   var drop=0,gKeep=0,gLapse=0,hist=[],cc=0.5,pv=0.5,dara=cfg.ops.daracbang!=null?cfg.ops.daracbang:0.5,csched=cfg.church||[];
   for(var w=1;w<=weeks;w++){
     var active=arr.filter(function(s){return !s.left;});
@@ -431,7 +434,7 @@ function parseCSV(text){
     var c=splitCSVLine(lines[i]);
     var get=function(name){var j=idx[name];return (j!=null&&c[j]!=null)?c[j].trim():'';};
     rows.push({name:get('이름'),grade:get('학년'),bg:get('신앙배경'),core:get('코어'),loner:get('외톨이'),status:get('출석상태'),
-      owned:get('내면화'),word:get('말씀'),holy:get('거룩'),belong:get('소속'),doubtSpace:get('의심나눔'),warmth:get('부모관계'),fam:get('가정신앙'),adults:get('곁의어른수')});
+      owned:get('내면화'),word:get('말씀'),holy:get('거룩'),belong:get('소속'),doubtSpace:get('의심나눔'),warmth:get('부모관계'),fam:get('가정신앙'),adults:get('곁의어른수'),friends:get('친한친구')});
   }
   return rows;
 }
@@ -463,11 +466,12 @@ function studentFromRow(r){
   var wm=(r.warmth||'').trim(),wv=wm.indexOf('따뜻')>=0?0.8:wm.indexOf('보통')>=0?0.5:wm.indexOf('소원')>=0?0.25:null;if(wv!=null){s.warmth=jit(wv,0.05);obs=true;}
   var fm=(r.fam||'').trim(),fv=fm.indexOf('열심')>=0?0.85:fm.indexOf('보통')>=0?0.55:fm.indexOf('약함')>=0?0.3:fm.indexOf('없')>=0?0.1:null;if(fv!=null){s.fam=jit(fv,0.05);obs=true;}
   var ad=(r.adults||'').trim();if(ad!==''){var an=parseInt(ad,10);if(!isNaN(an)){s.adults=clamp(an,0,5);obs=true;}}
+  var fn=(r.friends||'').split(/[;,]/).map(function(x){return x.trim();}).filter(function(x){return x;});if(fn.length){s.friendNames=fn;obs=true;}
   if(obs)s._obs=true;
   return s;
 }
 function cloneStudent(t){return {name:t.name,grade:t.grade,bg:t.bg,core:t.core,loner:t.loner,commit:t.commit,eng:t.eng,faith:t.faith,fam:t.fam,
-  word:t.word,holy:t.holy,belong:t.belong,owned:t.owned,doubtSpace:t.doubtSpace,adults:t.adults,warmth:t.warmth,doubt:t.doubt,
+  word:t.word,holy:t.holy,belong:t.belong,owned:t.owned,doubtSpace:t.doubtSpace,adults:t.adults,warmth:t.warmth,doubt:t.doubt,friendNames:t.friendNames,
   rSg:Math.random(),rMt:Math.random(),sermonAcc:0,retreatGlow:0,examPress:0,absent:0,left:false,dropped:false,sg:false,mentor:false,friends:[]};}
 function rosterToDist(R){
   var n=R.length||1,mid=0,high=0,mota=0,none=0,core=0,loner=0,act=0,risk=0;
