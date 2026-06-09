@@ -202,6 +202,8 @@ table.gt .num{font-family:ui-monospace,monospace;text-align:right}
 /* ===================== 엔진 (행위자 기반 모형, 헤드리스) ===================== */
 var clamp=function(v,a,b){return v<a?a:v>b?b:v;},rnd=function(a,b){return a+Math.random()*(b-a);};
 var WEEKS_PER_YEAR=52,LEAVE_AFTER=12,MAX_GRADE=6,STEP=24/WEEKS_PER_YEAR,CARE_FORCE=0.075,CARE_FAITH=0.018;
+// 출석 분류 임계(한 곳에서): 활발 eng>=ACTIVE_MIN, 위기 eng<RISK_MAX, 그 사이 느슨.
+var ACTIVE_MIN=0.55,RISK_MAX=0.30;
 var GRADE_LABELS=['','중1','중2','중3','고1','고2','고3'];
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function teacherEff(tc,n){var r=n/Math.max(1,tc);return clamp(1-Math.max(0,r-6)*0.06,0.2,1);}
@@ -280,7 +282,7 @@ function tick(s,ctx){
   var sat=1-0.15*Math.max(0,sup-1);
   var warmth=(s.warmth!=null?s.warmth:0.55),famT2=(s.fam-0.5)*(0.4+1.2*warmth);
   var force=-0.045+0.11*(pull-0.5)+(s.sg?0.06:0)*ctx.tEff*sat+(s.mentor?0.05:0)*ctx.tEff*sat+care*ctx.tEff+0.05*famT2+(ctx.churchClimate!=null?0.035*(ctx.churchClimate-0.5):0)+(Math.random()-0.5)*0.03;
-  if(fr.length){var low=0,hi=0;for(var fi=0;fi<fr.length;fi++){if(fr[fi].eng<0.3)low++;else if(fr[fi].eng>=0.55)hi++;}
+  if(fr.length){var low=0,hi=0;for(var fi=0;fi<fr.length;fi++){if(fr[fi].eng<RISK_MAX)low++;else if(fr[fi].eng>=ACTIVE_MIN)hi++;}
     var lf=low/fr.length,hf=hi/fr.length;
     if(lf>=0.5)force-=0.05*(lf-0.5);
     if(hf>=0.6)force+=0.03*(hf-0.6);}
@@ -301,7 +303,9 @@ function tick(s,ctx){
   var press=0,cap=0;
   if(ctx.exam){press=Math.max(press,0.14);cap=Math.max(cap,0.30);}
   if(ctx.sooneung){if(s.grade===6){press=Math.max(press,0.20);cap=Math.max(cap,0.45);}else{press=Math.max(press,0.05);cap=Math.max(cap,0.18);}}
-  if(press>0)s.examPress=Math.min(cap,s.examPress+press);else s.examPress*=0.45;
+  // 시험 압박도 다른 주간 변화처럼 STEP(24/52)에 태운다. 안 그러면 느린 기준선(STEP)보다
+  // 충격이 과대해 시험 주 급락이 비현실적으로 커진다. 누적·회복 모두 STEP 비례.
+  if(press>0)s.examPress=Math.min(cap,s.examPress+press*STEP);else s.examPress*=(1-0.55*STEP);
   if(s.examPress<0.004)s.examPress=0;
   s.eng=clamp(s.commit+0.20*s.retreatGlow-s.examPress,0,1);
   s.absent=s.eng<0.12?s.absent+1:Math.max(0,s.absent-1);
@@ -327,7 +331,7 @@ function tick(s,ctx){
 function segStats(arr){
   function bk(){return {tot:0,dropped:0,active:0,risk:0};}
   var by={bg:{mota:bk(),normal:bk(),none:bk()},lon:{y:bk(),n:bk()},core:{y:bk(),n:bk()},grade:{mid:bk(),high:bk()}};
-  function add(b,s){b.tot++;if(s.dropped)b.dropped++;if(!s.left){b.active++;if(s.eng<0.3)b.risk++;}}
+  function add(b,s){b.tot++;if(s.dropped)b.dropped++;if(!s.left){b.active++;if(s.eng<RISK_MAX)b.risk++;}}
   arr.forEach(function(s){add(by.bg[s.bg],s);add(by.lon[s.loner?'y':'n'],s);add(by.core[s.core?'y':'n'],s);add(by.grade[s.grade<=3?'mid':'high'],s);});
   return by;
 }
@@ -354,7 +358,7 @@ function simulateOnce(cfg,weeks){
     var wd=a2.length?a2.reduce(function(x,s){return x+s.word;},0)/a2.length:0;
     var hl=a2.length?a2.reduce(function(x,s){return x+s.holy;},0)/a2.length:0;
     var bl=a2.length?a2.reduce(function(x,s){return x+s.belong;},0)/a2.length:0;
-    var ac=a2.filter(function(s){return s.eng>=0.55;}).length,lo=a2.filter(function(s){return s.eng>=0.3&&s.eng<0.55;}).length;
+    var ac=a2.filter(function(s){return s.eng>=ACTIVE_MIN;}).length,lo=a2.filter(function(s){return s.eng>=RISK_MAX&&s.eng<ACTIVE_MIN;}).length;
     var own=a2.length?Math.round(a2.reduce(function(x,s){return x+(s.owned!=null?s.owned:0);},0)/a2.length*100):0;
     var carry=(gKeep+gLapse)?Math.round(gKeep/(gKeep+gLapse)*100):null;
     hist.push({n:a2.length,f:favg,wd:wd,hl:hl,bl:bl,active:ac,loose:lo,risk:a2.length-ac-lo,drop:drop,own:own,carry:carry,gKeep:gKeep,gLapse:gLapse});
@@ -425,7 +429,7 @@ function cloneStudent(t){return {name:t.name,grade:t.grade,bg:t.bg,core:t.core,l
 function rosterToDist(R){
   var n=R.length||1,mid=0,high=0,mota=0,none=0,core=0,loner=0,act=0,risk=0;
   R.forEach(function(s){if(s.grade<=3)mid++;else high++;if(s.bg==='mota')mota++;if(s.bg==='none')none++;
-    if(s.core)core++;if(s.loner)loner++;if(s.eng>=0.55)act++;else if(s.eng<0.34)risk++;});
+    if(s.core)core++;if(s.loner)loner++;if(s.eng>=ACTIVE_MIN)act++;else if(s.eng<RISK_MAX)risk++;});
   return {n:n,mid:mid||1,high:high||1,mota:mota/n,none:none/n,core:core/n,loner:loner/n,active:act/n,risk:risk/n};
 }
 function makeDataDef(roster,label){
