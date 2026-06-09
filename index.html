@@ -74,6 +74,7 @@ table.gt .num{font-family:ui-monospace,monospace;text-align:right}
 </details>
 
 <div id="loading" class="panel" style="margin-bottom:12px;text-align:center;color:#6b5538">분석 중… (행위자 기반 모형을 돌리는 중)</div>
+<div id="render-warn" class="no-print" hidden style="margin-bottom:12px;padding:8px 12px;background:#f7e4d6;border:1px solid #d6a07a;border-radius:6px;color:#8a4a2a;font-size:12px"></div>
 
 <!-- 계획 편집기: 내 계획으로 시뮬레이션 -->
 <details class="panel no-print" style="margin-bottom:12px">
@@ -541,7 +542,7 @@ function loadScenario(){curScenario=document.getElementById('scenario-sel').valu
 var customSched=[],customChurch=[];
 function pv(id){return document.getElementById(id);}
 function peUpdSpans(){if(!pv('pe-sg'))return;pv('pe-sg-v').textContent=pv('pe-sg').value+'%';pv('pe-mt-v').textContent=pv('pe-mt').value+'%';pv('pe-tc-v').textContent=pv('pe-tc').value+'명';pv('pe-speed-v').textContent=(pv('pe-speed').value/100).toFixed(2);pv('pe-dara-v').textContent=pv('pe-dara').value+'%';pv('pe-intake-v').textContent=pv('pe-intake').value+'명';}
-function peReadOps(){return {sg:pv('pe-sg').value/100,mt:pv('pe-mt').value/100,tc:+pv('pe-tc').value,speed:pv('pe-speed').value/100,daracbang:pv('pe-dara').value/100,intake:+pv('pe-intake').value};}
+function peReadOps(){return {sg:clamp(+pv('pe-sg').value/100||0,0,1),mt:clamp(+pv('pe-mt').value/100||0,0,1),tc:clamp(Math.round(+pv('pe-tc').value)||22,1,60),speed:clamp(+pv('pe-speed').value/100||0.4,0.2,1),daracbang:clamp(+pv('pe-dara').value/100||0,0,1),intake:clamp(Math.round(+pv('pe-intake').value)||0,0,200)};}
 function peSetOps(o){pv('pe-sg').value=Math.round(o.sg*100);pv('pe-mt').value=Math.round(o.mt*100);pv('pe-tc').value=o.tc;pv('pe-speed').value=Math.round(o.speed*100);pv('pe-dara').value=Math.round((o.daracbang!=null?o.daracbang:0.5)*100);pv('pe-intake').value=o.intake;peUpdSpans();}
 function peSyncFields(){var t=pv('pe-type').value;pv('pe-focus-wrap').hidden=(t!=='sermon');pv('pe-nights-wrap').hidden=(t!=='retreat');pv('pe-weeks-wrap').hidden=!(t==='sermon'||t==='exam'||t==='sooneung'||t==='senior'||t==='revival');}
 function peLabel(ev){var m={sermon:(SERMON_FOCUS[ev.focus]&&SERMON_FOCUS[ev.focus].label)||'설교',retreat:'수련회 '+ev.nights+'박',exam:'시험',sooneung:'수능',smallgroup:'소그룹 집중',outreach:'전도',senior:'담임 말씀',allretreat:'전교인 수련회',revival:'부흥회'};return (m[ev.type]||ev.type)+' '+ev.start+'주'+(ev.weeks&&ev.type!=='retreat'?'~('+ev.weeks+'주)':'');}
@@ -550,14 +551,15 @@ function peRenderList(){var html='';customSched.forEach(function(ev,i){html+=peC
 function peRemove(track,i){(track==='church'?customChurch:customSched).splice(i,1);peRenderList();}
 function peAddEvent(){
   var t=pv('pe-type').value,start=Math.max(1,Math.min(52,+pv('pe-start').value||1)),ev={type:t,start:start},track='sched';
-  if(t==='sermon'){ev.focus=pv('pe-focus').value;ev.weeks=+pv('pe-weeks').value||6;ev.repeat=0;}
-  else if(t==='retreat'){ev.nights=+pv('pe-nights').value;ev.attendRate=0.72;ev.intensity=0.65;ev.repeat=0;}
-  else if(t==='exam'){ev.weeks=+pv('pe-weeks').value||3;ev.repeat=13;}
-  else if(t==='sooneung'){ev.weeks=+pv('pe-weeks').value||6;ev.repeat=52;}
+  var wk=function(def){return clamp(Math.round(+pv('pe-weeks').value)||def,1,52);};
+  if(t==='sermon'){ev.focus=pv('pe-focus').value;ev.weeks=wk(6);ev.repeat=0;}
+  else if(t==='retreat'){ev.nights=clamp(Math.round(+pv('pe-nights').value)||2,1,3);ev.attendRate=0.72;ev.intensity=0.65;ev.repeat=0;}
+  else if(t==='exam'){ev.weeks=wk(3);ev.repeat=13;}
+  else if(t==='sooneung'){ev.weeks=wk(6);ev.repeat=52;}
   else if(t==='smallgroup'||t==='outreach'){ev.repeat=0;}
-  else if(t==='senior'){ev.weeks=+pv('pe-weeks').value||10;ev.repeat=52;track='church';}
+  else if(t==='senior'){ev.weeks=wk(10);ev.repeat=52;track='church';}
   else if(t==='allretreat'){ev.repeat=52;track='church';}
-  else if(t==='revival'){ev.weeks=+pv('pe-weeks').value||2;ev.repeat=0;track='church';}
+  else if(t==='revival'){ev.weeks=wk(2);ev.repeat=0;track='church';}
   (track==='church'?customChurch:customSched).push(ev);peRenderList();
 }
 function peEnsureOption(){var sel=pv('scenario-sel');if(sel&&!sel.querySelector('option[value="custom"]')){var o=document.createElement('option');o.value='custom';o.textContent='내 계획 (편집)';sel.insertBefore(o,sel.firstChild);}}
@@ -662,11 +664,11 @@ function renderKPI(){
   document.getElementById('k-active').textContent=Math.round(L.active);kd(document.getElementById('k-active-d'),dA,true);
   document.getElementById('k-risk').textContent=Math.round(L.risk);kd(document.getElementById('k-risk-d'),dR,false);
   document.getElementById('k-faith').textContent=Math.round(L.f*100);kd(document.getElementById('k-faith-d'),dF*100,true);
-  document.getElementById('k-drop').textContent=Math.round(L.drop);document.getElementById('k-drop-d').textContent='명 ('+Math.round(L.drop/F.n*100)+'%)';
+  document.getElementById('k-drop').textContent=Math.round(L.drop);document.getElementById('k-drop-d').textContent='명 ('+pct(L.drop,F.n)+'%)';
   document.getElementById('t-total').textContent=Math.round(L.n);document.getElementById('t-total-d').textContent='명 (시작 '+F.n+'명)';
-  document.getElementById('t-active').textContent=Math.round(L.active);document.getElementById('t-active-d').textContent='명 ('+Math.round(L.active/L.n*100)+'%)';
-  document.getElementById('t-loose').textContent=Math.round(L.loose);document.getElementById('t-loose-d').textContent='명 ('+Math.round(L.loose/L.n*100)+'%)';
-  document.getElementById('t-risk').textContent=Math.round(L.risk);document.getElementById('t-risk-d').textContent='명 ('+Math.round(L.risk/L.n*100)+'%)';
+  document.getElementById('t-active').textContent=Math.round(L.active);document.getElementById('t-active-d').textContent='명 ('+pct(L.active,L.n)+'%)';
+  document.getElementById('t-loose').textContent=Math.round(L.loose);document.getElementById('t-loose-d').textContent='명 ('+pct(L.loose,L.n)+'%)';
+  document.getElementById('t-risk').textContent=Math.round(L.risk);document.getElementById('t-risk-d').textContent='명 ('+pct(L.risk,L.n)+'%)';
 }
 function renderTrend(){
   var h=sc().hist,ls=lbls();
@@ -681,11 +683,11 @@ function renderTrend(){
   document.getElementById('trend-note').textContent='시작 '+F.n+'명 → 현재 '+Math.round(L.n)+'명. 활발 '+F.active+'명 → '+L.active+'명(6회 '+L.aLo+'~'+L.aHi+'명) · 위기 '+F.risk+'명 → '+L.risk+'명 · 평균 신앙 '+Math.round(F.f*100)+'% → '+Math.round(L.f*100)+'%. 옅은 띠는 6회 변동 폭이다.';
 }
 function renderVerdict(){
-  var L=last(),ar=L.active/L.n,rr=L.risk/L.n,v;
+  var L=last(),n=L.n||1,ar=L.active/n,rr=L.risk/n,v;
   if(curScenario==='decline'){v='<span class="badge badge-r">주의</span> 전체 인원이 줄고 위기군이 두껍습니다. 근본적인 변화가 필요합니다. 소그룹·멘토를 늘리고, 회복형 설교로 흔들리는 학생을 먼저 붙드십시오.';}
   else if(rr>=0.18){v='<span class="badge badge-y">살핌</span> 출석이 바닥인 위기군이 '+Math.round(rr*100)+'%로 두껍습니다. 먼저 만날 명단을 정해 심방하고, 소그룹으로 잇는 것이 급합니다.';}
   else if(ar>=0.60){v='<span class="badge badge-g">양호</span> 활발한 학생이 '+Math.round(ar*100)+'%입니다. 공동체가 건강합니다. 한 걸음 더 깊은 제자훈련을 시작할 때입니다.';}
-  else{v='<span class="badge badge-y">보통</span> 활발 '+Math.round(ar*100)+'% · 위기 '+Math.round(rr*100)+'%. 느슨한 학생('+Math.round(L.loose/L.n*100)+'%)을 소그룹으로 끌어들이는 것이 다음 과제입니다.';}
+  else{v='<span class="badge badge-y">보통</span> 활발 '+Math.round(ar*100)+'% · 위기 '+Math.round(rr*100)+'%. 느슨한 학생('+pct(L.loose,n)+'%)을 소그룹으로 끌어들이는 것이 다음 과제입니다.';}
   var diff=L.active-sc().base[sc().base.length-1].active;
   v+='<br><span style="font-size:12px;color:#6b5538">계획 vs 기본 운영: 활발 '+(diff>=0?'+':'')+Math.round(diff)+'명 차이. 졸업 후에도 신앙을 지킬 비율 약 '+(L.carry!=null?L.carry:'—')+'%. (가정값, 방향 참고)</span>';
   document.getElementById('verdict').innerHTML=v;
@@ -792,14 +794,21 @@ function renderRoster(){
   if(lastSkipped>0)note+=' 학년 표기를 못 읽은 '+lastSkipped+'행은 건너뛰었다.';
   document.getElementById('roster-note').textContent=note;
 }
+// 비율은 분모가 0이면 0으로(NaN%·Infinity% 방지).
+function pct(a,b){return b?Math.round(a/b*100):0;}
+// 카드별 격리: 한 카드가 throw해도 나머지는 그린다(빈 화면 방지).
+var _renderErrs=[];
+function safe(name,fn){try{fn();}catch(e){if(typeof console!=='undefined')console.error('[render]',name,e);_renderErrs.push(name);}}
 function renderAll(){
   document.getElementById('loading').hidden=true;
-  var tail=SC_DEFS[curScenario]&&SC_DEFS[curScenario].isData?' · 업로드 명단에서 출발 · 앞으로 1년은 가정값 시뮬레이션':' · 가정값 시나리오 — 현실 예측 아님';
-  document.getElementById('subtitle').textContent=sc().label+' · '+sc().desc+tail;
+  _renderErrs=[];
+  safe('요약',function(){var tail=SC_DEFS[curScenario]&&SC_DEFS[curScenario].isData?' · 업로드 명단에서 출발 · 앞으로 1년은 가정값 시뮬레이션':' · 가정값 시나리오 — 현실 예측 아님';document.getElementById('subtitle').textContent=sc().label+' · '+sc().desc+tail;});
   var team=!document.getElementById('view-team').hidden;
-  renderKPI();
-  if(!team){renderTrend();renderVerdict();comparePair('c-compare-pastor','compare-note-pastor');}
-  else{renderAttendance();renderCrisis();renderFaith();renderBranches();renderSermon();renderRetreat();comparePair('c-compare',null);renderCompareTable();renderVuln();renderTornado();renderRoster();}
+  safe('지표',renderKPI);
+  if(!team){safe('추이',renderTrend);safe('판정',renderVerdict);safe('계획비교',function(){comparePair('c-compare-pastor','compare-note-pastor');});}
+  else{safe('출석',renderAttendance);safe('위기군',renderCrisis);safe('신앙',renderFaith);safe('갈래',renderBranches);safe('설교',renderSermon);safe('수련회',renderRetreat);safe('계획비교',function(){comparePair('c-compare',null);});safe('비교표',renderCompareTable);safe('취약',renderVuln);safe('지렛대',renderTornado);safe('명단',renderRoster);}
+  var w=document.getElementById('render-warn');
+  if(w){if(_renderErrs.length){w.hidden=false;w.textContent='⚠ 일부 카드를 그리지 못했습니다: '+_renderErrs.join(', ')+' (콘솔에서 자세히). 나머지는 정상입니다.';}else{w.hidden=true;}}
 }
 /* 내장 샘플 백데이터 — 업로드 전 기본으로 보여 줄 임시 명단(파일 없이도 동작).
    같은 내용이 sample-data.csv로도 들어 있어 양식 내려받기·편집에 쓴다. */

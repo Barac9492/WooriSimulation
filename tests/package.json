@@ -1,0 +1,11 @@
+{
+  "name": "woori-tests",
+  "private": true,
+  "description": "Real-browser smoke tests for index.html (kept out of repo root so Vercel still deploys index.html as a static file).",
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  },
+  "scripts": {
+    "test": "playwright test"
+  }
+}
