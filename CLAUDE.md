@@ -26,7 +26,7 @@
 - `README.md` : 비개발자용 사용 안내.
 - `sample-data.csv` : 백데이터 샘플 명단(112명). 머리글 `이름,학년,신앙배경,코어,외톨이,출석상태`. 업로드 양식이자 기본 표시 데이터(같은 내용이 `index.html`에 `SAMPLE_CSV`로 내장돼 file://·오프라인에서도 동작한다).
 - `COLLECTION.md` : 데이터 모으기 양식(역설계). 모형이 쓰는 모든 입력(학생·운영·일정·생태계)을 실제로 모으기 위한 3단계 폼. 지금 도구가 읽는 6칸 vs 모으되 아직 안 읽는 풍부 칸을 구분. 감독 목사 금함(점수·줄세우기·사찰 금지) 유지.
-- `collection-template.csv` : 위 양식의 명단 마스터 시트(필수 6칸 + 풍부 칸: 내면화·말씀·거룩·소속·의심나눔·부모관계·가정신앙·곁의어른수·친한친구). `studentFromRow`가 채워진 풍부 칸을 시작값(`owned`·`word`·`holy`·`belong`·`doubtSpace`·`warmth`·`fam`·`adults`)으로 읽어 가정값을 덮는다(빈 칸은 가정값). `친한친구`(관계망)만 아직 미구현.
+- `collection-template.csv` : 위 양식의 명단 마스터 시트(필수 6칸 + 풍부 칸: 내면화·말씀·거룩·소속·의심나눔·부모관계·가정신앙·곁의어른수·친한친구). `studentFromRow`가 채워진 풍부 칸을 시작값(`owned`·`word`·`holy`·`belong`·`doubtSpace`·`warmth`·`fam`·`adults`)으로 읽어 가정값을 덮는다(빈 칸은 가정값). `친한친구`는 이름을 `friendNames`로 모았다가 `simulateOnce`가 부서 안 인덱스로 상호 링크해 친구 효과·임계점 동역학에 넣는다(빈 칸은 옛날처럼 임의 `linkIn`).
 - `DIAGNOSIS.md` : "교회학교가 약해졌다"는 말의 분해. 대시보드보다 먼저 오는 정의 합의 도구 ("약해졌다"=닿음·양육·잔존·번짐·역량 다섯 주장의 분해, 우리탓/환경탓 분모 가르기, 이해관계자 불일치 설문). 도구가 어느 정의를 특권화하는지 밝힌다.
 - `SURVEY.md` : 진단 설문 설계(교사 관찰 1차, 검증 척도 RCI-A·FMS-12 출처).
 - `ONTOLOGY.md` : 교회 온톨로지(Palantir식) 설계도 — 객체·링크·행동·함수·권한.
@@ -46,7 +46,7 @@
 - `fragility`/`cliffProb`/`teacherEff`/`segStats` : 취약도·전환 절벽·교사 효율·취약 집계.
 
 **백데이터 (CSV 명단)**
-- `parseCSV`/`splitCSVLine`(따옴표·BOM 처리) → `studentFromRow`(행을 시작 속성으로) → `makeDataDef`(`rosterToDist`로 분포 도출) → `SC_DEFS.data`. 업로드는 `onCSV`/`loadRoster`. 업로드 전엔 내장 `SAMPLE_CSV`(=`sample-data.csv`)가 기본이다.
+- `parseCSV`/`splitCSVLine`(따옴표·BOM 처리) → `studentFromRow`(행을 시작 속성으로; `친한친구`는 `friendNames` 배열로) → `makeDataDef`(`rosterToDist`로 분포 도출) → `SC_DEFS.data`. 업로드는 `onCSV`/`loadRoster`. 업로드 전엔 내장 `SAMPLE_CSV`(=`sample-data.csv`)가 기본이다. `simulateOnce`는 인구를 만든 뒤 `friendNames`를 이름→인덱스로 상호 링크하고, 친구 이름이 없는 학생만 옛 `linkIn`으로 또래를 임의로 잇는다(두 경로 공존).
 
 **시나리오·렌더**
 - `SC_DEFS`(시나리오 정의)·`buildScenario(key)`(plan·base·sermon·retreat·tornado·events를 한 번에 계산)·`sc()`(`SC_CACHE` 캐시)·`setTab`/`loadScenario`.
