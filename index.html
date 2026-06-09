@@ -63,8 +63,20 @@ table.gt .num{font-family:ui-monospace,monospace;text-align:right}
     </select>
     <label class="btn" style="cursor:pointer" title="이름·학년·신앙배경·코어·외톨이·출석상태 열을 가진 명단 CSV">📁 명단 CSV 업로드<input id="csv-file" type="file" accept=".csv,text/csv" style="display:none" onchange="onCSV(event)"></label>
     <a class="btn" href="sample-data.csv" download style="text-decoration:none;color:#4a3a2a">⬇ 샘플 양식</a>
+    <button class="btn" onclick="toggleUrlBar()" title="구글 시트를 'CSV로 웹에 게시'한 링크로 명단 불러오기">🔗 시트 링크</button>
     <button class="btn" onclick="window.print()">🖨 인쇄·PDF</button>
   </div>
+</div>
+
+<div id="url-bar" class="no-print" hidden style="margin-bottom:12px;background:#fff;border:1px solid #dcc79a;border-radius:6px;padding:8px 10px;font-size:12px">
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+    <span>🔗 구글 시트 명단 링크:</span>
+    <input id="roster-url" type="text" placeholder="https://docs.google.com/spreadsheets/.../pub?output=csv (또는 일반 시트 링크)" style="flex:1;min-width:240px;font-family:inherit;font-size:12px;padding:4px 6px;border:1px solid #c9b896;border-radius:4px">
+    <button class="btn" onclick="loadFromUrlInput()">불러오기</button>
+    <label style="display:flex;align-items:center;gap:3px;white-space:nowrap"><input type="checkbox" id="roster-url-remember" checked>다음 방문에 자동</label>
+    <span class="hint" id="url-msg"></span>
+  </div>
+  <div class="hint" style="margin-top:5px">구글 시트 → 파일 → 공유 → <b>웹에 게시</b> → 쉼표로 구분된 값(.csv)으로 게시한 링크를 붙여라. 일반 시트 링크(보기 권한 공개)도 자동 변환을 시도한다. 머리글은 업로드 CSV와 같다(이름,학년,신앙배경,코어,외톨이,출석상태). 명단은 이 브라우저에서만 쓰인다.</div>
 </div>
 
 <!-- 전제 안내 -->
@@ -454,6 +466,28 @@ function loadRoster(text,label){
 }
 function onCSV(e){var f=e.target.files&&e.target.files[0];if(!f)return;var rd=new FileReader();
   rd.onload=function(){loadRoster(rd.result,'우리 부 데이터 · '+f.name);};rd.readAsText(f,'utf-8');e.target.value='';}
+/* 명단 링크(구글 시트 'CSV로 웹에 게시'): 빌드·서버 없이 온라인일 때 명단을 직접 당겨 온다.
+   기억해 두면 다음 방문에 자동 갱신. file://나 비공개 시트는 CORS로 막히니 안내로 떨군다. */
+function normalizeSheetUrl(u){u=(u||'').trim();
+  var m=u.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if(m&&u.indexOf('output=csv')<0&&u.indexOf('format=csv')<0){var gid=(u.match(/[#&?]gid=([0-9]+)/)||[])[1];return 'https://docs.google.com/spreadsheets/d/'+m[1]+'/export?format=csv'+(gid?'&gid='+gid:'');}
+  return u;}
+function urlMsg(t){var e=document.getElementById('url-msg');if(e)e.textContent=t||'';}
+function toggleUrlBar(){var b=document.getElementById('url-bar');if(!b)return;b.hidden=!b.hidden;if(!b.hidden){var s=null;try{s=localStorage.getItem('woori_roster_url');}catch(e){}var i=document.getElementById('roster-url');if(s&&i&&!i.value)i.value=s;}}
+function loadFromUrl(url,remember,quiet){
+  url=normalizeSheetUrl(url);
+  if(!/^https?:\/\//.test(url)){if(!quiet)urlMsg('http(s) 링크가 아니다.');return;}
+  if(typeof fetch==='undefined'){if(!quiet)urlMsg('이 브라우저는 링크 불러오기를 지원하지 않는다. CSV를 내려받아 업로드하라.');return;}
+  if(!quiet)urlMsg('불러오는 중…');
+  var ctl=(typeof AbortController!=='undefined')?new AbortController():null,to=ctl?setTimeout(function(){ctl.abort();},9000):0;
+  fetch(url,ctl?{signal:ctl.signal}:undefined).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(txt){
+    if(to)clearTimeout(to);
+    if(/^\s*<(!doctype|html)/i.test(txt)){if(!quiet)urlMsg('CSV가 아니라 웹페이지가 왔다. 시트를 "웹에 게시 → CSV"로 공개했는지 확인하라.');return;}
+    var ok=loadRoster(txt,'우리 부 데이터 · 시트');
+    if(ok){try{if(remember===true)localStorage.setItem('woori_roster_url',url);else if(remember===false)localStorage.removeItem('woori_roster_url');}catch(e){}urlMsg('명단을 링크에서 불러왔다.'+(remember===true?' 다음 방문에 자동.':''));}
+    else if(!quiet)urlMsg('CSV를 읽지 못했다. 머리글을 확인하라.');
+  }).catch(function(e){if(to)clearTimeout(to);if(!quiet)urlMsg('직접 못 불러왔다('+(e&&e.name==='AbortError'?'시간 초과':'네트워크/CORS')+'). 시트를 "웹에 게시 → CSV"로 공개하거나 CSV를 내려받아 📁 업로드하라.');});}
+function loadFromUrlInput(){var i=document.getElementById('roster-url');if(!i)return;var rem=document.getElementById('roster-url-remember');loadFromUrl(i.value,rem?rem.checked:true,false);}
 
 /* ===================== 시나리오 정의 + 엔진으로 데이터 만들기 ===================== */
 var DIST={n:120,mid:52,high:48,mota:0.40,none:0.15,core:0.30,loner:0.15,active:0.58,risk:0.12};
@@ -860,6 +894,8 @@ setTimeout(function(){
   document.getElementById('view-pastor').hidden=false;
   peInit();
   renderAll();
+  // 기억된 시트 링크가 있으면 온라인일 때 조용히 갱신(실패해도 샘플 유지).
+  try{var su=localStorage.getItem('woori_roster_url');if(su)loadFromUrl(su,null,true);}catch(e){}
 },40);
 </script>
 </body>
