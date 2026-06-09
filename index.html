@@ -140,29 +140,33 @@ table.gt .num{font-family:ui-monospace,monospace;text-align:right}
   </div>
 </details>
 
-<!-- 담임 요약 탭: 첫 화면은 "먼저 만날 아이" 하나. 상태 한 줄·방향 한 줄. 나머지는 접는다. -->
+<!-- 담임 요약 탭: 흐름 내러티브 + 추이 그래프. 레버를 움직이면 바뀐 흐름이 점선으로 겹친다. 돌봄·관계는 교사팀 상세로. -->
 <div id="view-pastor" hidden>
-  <div class="panel" id="status-line" style="margin-bottom:10px;background:#f3e7cc;font-size:15px;line-height:1.7;color:#4a3a2a">—</div>
-  <div class="panel" style="margin-bottom:8px">
-    <div class="sec">먼저 만날 아이 · 이번 주 돌봄</div>
-    <div id="care-list">—</div>
-    <div class="hint" style="margin-top:8px;border-top:1px solid #e0cda0;padding-top:7px">먼저 돌볼 순서이지 평가가 아니다. 배지를 눌러 <b>안 함 → 연락함 → 완료</b>로 표시하면 이 브라우저에 저장된다(다음 방문에 그대로).</div>
+  <div class="panel" id="narrative" style="margin-bottom:10px;background:#f3e7cc;font-size:15px;line-height:1.8;color:#4a3a2a">—</div>
+  <div class="full panel">
+    <div class="sec">이 계획대로 한 해 (활발·위기·신앙)</div>
+    <div class="ct-lg"><canvas id="c-trend"></canvas></div>
+    <div class="hint" id="cal-legend" style="margin-top:8px"></div>
+    <div class="hint" style="margin-top:6px;border-top:1px solid #eadfc6;padding-top:6px" id="trend-note">—</div>
   </div>
-  <div class="hint" id="direction-line" style="margin:0 4px 12px;font-size:13px;color:#3b6d11">—</div>
-  <details class="panel no-print" id="pastor-more" open ontoggle="if(this.open)pastorMoreOpen()" style="margin-bottom:12px">
-    <summary style="cursor:pointer;font-weight:600;color:#4a3a2a;list-style:none">숫자·그래프 <span style="font-weight:400;color:#8a755a">(접으려면 클릭 ▴)</span></summary>
+  <div class="panel" id="whatif" style="margin-bottom:12px">
+    <div class="sec">이렇게 바꿔보기 <span style="font-weight:400;color:#8a755a;font-size:12px">· 레버를 움직이면 바뀐 흐름이 점선으로 겹친다</span></div>
+    <div style="display:flex;flex-direction:column;gap:9px;margin-top:8px">
+      <label style="display:flex;align-items:center;gap:10px;font-size:13px"><span style="min-width:74px;color:#4a3a2a">소그룹</span><input type="range" id="mn-sg" min="0" max="100" step="5" oninput="mnWhatIf()" style="flex:1"><span id="mn-sg-v" style="min-width:46px;text-align:right;color:#3b6d11;font-weight:600">—</span></label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:13px"><span style="min-width:74px;color:#4a3a2a">멘토</span><input type="range" id="mn-mt" min="0" max="100" step="5" oninput="mnWhatIf()" style="flex:1"><span id="mn-mt-v" style="min-width:46px;text-align:right;color:#3b6d11;font-weight:600">—</span></label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:13px"><span style="min-width:74px;color:#4a3a2a">교사 수</span><input type="range" id="mn-tc" min="8" max="40" step="1" oninput="mnWhatIf()" style="flex:1"><span id="mn-tc-v" style="min-width:46px;text-align:right;color:#3b6d11;font-weight:600">—</span></label>
+    </div>
+    <div id="whatif-delta" class="hint" style="margin-top:10px;border-top:1px solid #e0cda0;padding-top:8px">—</div>
+    <div style="margin-top:6px"><a href="javascript:void(0)" onclick="mnReset()" style="font-size:12px;color:#8a6a3a">↺ 현재 계획으로 되돌리기</a> <span class="hint" style="margin-left:8px">자세한 레버·일정은 위 <b>계획 편집기</b>에서.</span></div>
+  </div>
+  <details class="panel no-print" id="pastor-more" ontoggle="if(this.open)pastorMoreOpen()" style="margin-bottom:12px">
+    <summary style="cursor:pointer;font-weight:600;color:#4a3a2a;list-style:none">숫자·판정 더 보기 <span style="font-weight:400;color:#8a755a">(펼치려면 클릭 ▾)</span></summary>
     <div style="margin-top:10px">
       <div class="krow">
         <div class="kcard"><div class="kl">현재 활발</div><div class="kv" id="k-active" style="color:#3b6d11">—</div><div class="kd" id="k-active-d">명</div></div>
         <div class="kcard"><div class="kl">위기군</div><div class="kv" id="k-risk" style="color:#a33232">—</div><div class="kd" id="k-risk-d">명</div></div>
         <div class="kcard"><div class="kl">평균 신앙</div><div class="kv" id="k-faith" style="color:#7a5c38">—</div><div class="kd" id="k-faith-d">%</div></div>
         <div class="kcard"><div class="kl">누적 이탈</div><div class="kv" id="k-drop" style="color:#6b5538">—</div><div class="kd" id="k-drop-d">명</div></div>
-      </div>
-      <div class="full panel">
-        <div class="sec">활발·위기·신앙 추이 (1년)</div>
-        <div class="ct-lg"><canvas id="c-trend"></canvas></div>
-        <div class="hint" id="cal-legend" style="margin-top:8px"></div>
-        <div class="hint" style="margin-top:6px;border-top:1px solid #eadfc6;padding-top:6px" id="trend-note">—</div>
       </div>
       <div class="panel" style="margin-bottom:12px;background:#f3e7cc">
         <div class="sec">종합 판정 (한눈에)</div>
@@ -184,6 +188,11 @@ table.gt .num{font-family:ui-monospace,monospace;text-align:right}
     <div class="kcard"><div class="kl">활발 (출석≥55%)</div><div class="kv" id="t-active" style="color:#3b6d11">—</div><div class="kd" id="t-active-d">명</div></div>
     <div class="kcard"><div class="kl">느슨 (30~55%)</div><div class="kv" id="t-loose" style="color:#9a6c12">—</div><div class="kd eq" id="t-loose-d">명</div></div>
     <div class="kcard"><div class="kl">위기 (&lt;30%)</div><div class="kv" id="t-risk" style="color:#a33232">—</div><div class="kd dn" id="t-risk-d">명</div></div>
+  </div>
+  <div class="panel" style="margin-bottom:12px">
+    <div class="sec">먼저 만날 아이 · 이번 주 돌봄</div>
+    <div id="care-list">—</div>
+    <div class="hint" style="margin-top:8px;border-top:1px solid #e0cda0;padding-top:7px">먼저 돌볼 순서이지 평가가 아니다. 배지를 눌러 <b>안 함 → 연락함 → 완료</b>로 표시하면 이 브라우저에 저장된다(다음 방문에 그대로).</div>
   </div>
   <div class="row2">
     <div class="panel"><div class="sec">출석 구성 추이</div><div class="ct"><canvas id="c-attendance"></canvas></div></div>
@@ -755,30 +764,64 @@ function renderTrend(){
   var E=clamp(0.5*(L.pv!=null?L.pv:0.5)+0.5*(L.cc!=null?L.cc:0.5),0,1);
   var ceil=Math.round(50+35*E),ceilLvl=E<0.4?'낮음':E>0.6?'높음':'보통';
   var ceilHi=h.map(function(){return ceil+3;}),ceilLo=h.map(function(){return ceil-3;});
-  mkChart('c-trend','line',{labels:ls,datasets:[
+  var ds=[
     {label:'활발',data:h.map(function(x){return x.active;}),borderColor:PALETTE.active,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4},
     {label:'느슨',data:h.map(function(x){return x.loose;}),borderColor:PALETTE.loose,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4},
     {label:'위기',data:h.map(function(x){return x.risk;}),borderColor:PALETTE.risk,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4},
     {label:'신앙(%)',data:h.map(function(x){return Math.round(x.f*100);}),borderColor:PALETTE.faith,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4,borderDash:[4,3]}
-  ].concat(bandDS(h.map(function(x){return x.aHi;}),h.map(function(x){return x.aLo;}),PALETTE.active+'1f')).concat(bandDS(ceilHi,ceilLo,'#6b4a8a22'))},weeklyOpts(),WK_PLUGINS);
+  ];
+  // 바꾼 계획(점선): 레버를 움직였을 때의 활발·위기를 현재 위에 겹친다.
+  if(whatIfHist&&whatIfHist.length===h.length){
+    ds.push({label:'바꾼 계획 · 활발',data:whatIfHist.map(function(x){return x.active;}),borderColor:PALETTE.active,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4,borderDash:[7,4]});
+    ds.push({label:'바꾼 계획 · 위기',data:whatIfHist.map(function(x){return x.risk;}),borderColor:PALETTE.risk,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4,borderDash:[7,4]});
+  }
+  mkChart('c-trend','line',{labels:ls,datasets:ds.concat(bandDS(h.map(function(x){return x.aHi;}),h.map(function(x){return x.aLo;}),PALETTE.active+'1f')).concat(bandDS(ceilHi,ceilLo,'#6b4a8a22'))},weeklyOpts(),WK_PLUGINS);
   var F=first(),fn=Math.round(L.f*100);
   var cl=document.getElementById('cal-legend');if(cl)cl.innerHTML=calendarSummary(SC_DEFS[curScenario]||{})+'<br><span style="color:#6b4a8a"><b>생태계 천장</b>(연보라 띠): 가정·교회가 받치는 신앙 높이 <b>'+ceilLvl+'</b>(약 '+ceil+'%, 가정값). '+(fn>=ceil-3?'신앙선이 천장에 닿았다. 더 좋은 수련회보다 부모·본당을 함께 깨울 때다.':'아직 천장 아래 여유가 있다.')+' 부모를 점수로 보지 말고 천장 높낮이로만 읽는다.</span>';
   document.getElementById('trend-note').textContent='시작 '+F.n+'명 → 현재 '+Math.round(L.n)+'명. 활발 '+F.active+'명 → '+L.active+'명(6회 '+L.aLo+'~'+L.aHi+'명) · 위기 '+F.risk+'명 → '+L.risk+'명 · 평균 신앙 '+Math.round(F.f*100)+'% → '+fn+'%. 옅은 띠는 6회 변동 폭이다.';
 }
-// 첫 화면 두 줄: 상태 한 줄(신호등) + 방향 한 줄(계획 vs 기본). 숫자·그래프는 "더 자세히" 안으로.
-function renderHeadline(){
-  var L=last(),n=L.n||1,ar=L.active/n,rr=L.risk/n,sl;
-  if(curScenario==='decline'||rr>=0.18)sl='<span class="badge badge-r">살핌</span> 위기군이 '+Math.round(rr*100)+'%로 두껍다. 아래 \'먼저 만날 아이\'부터 챙기자.';
-  else if(ar>=0.60)sl='<span class="badge badge-g">양호</span> 활발한 아이가 '+Math.round(ar*100)+'%다. 든든하다. 그래도 먼저 만날 아이를 본다.';
-  else sl='<span class="badge badge-y">보통</span> 활발 '+Math.round(ar*100)+'% · 위기 '+Math.round(rr*100)+'%. 느슨한 아이를 소그룹으로 잇는다.';
-  var s=document.getElementById('status-line');if(s)s.innerHTML=sl;
-  var base=sc().base,Lb=base[base.length-1],diff=L.active-Lb.active,ddrop=L.drop-Lb.drop,dl;
-  if(diff>=2)dl='↑ 이 계획이 우리를 들어올린다. 특별 사역 없는 때보다 활발 +'+diff+'명'+(ddrop<0?(', 이탈 '+(-ddrop)+'명 덜'):'')+' (가정값, 방향).';
-  else if(diff<=-2)dl='↓ 이 계획이 기본 운영만 못하다(활발 '+diff+'명). 한 수를 손볼 때 (가정값).';
-  else dl='→ 이 계획과 기본 운영이 비슷하다. 더 분명한 한 수가 필요하다 (가정값).';
-  var d=document.getElementById('direction-line');if(d)d.textContent=dl;
+// 흐름 내러티브(메인 hero): "이 계획대로면 한 해가 이렇게 흐른다 — 활발·위기·졸업 신앙." 한눈에 읽는 한 문단.
+function carryText(o){var cl=o.cLo,ch=o.cHi;return (cl!=null&&ch!=null)?(cl===ch?('약 '+cl+'%'):('약 '+cl+'~'+ch+'%')):(o.carry!=null?('약 '+Math.round(o.carry)+'%'):'—');}
+function renderNarrative(){
+  var L=last(),F=first(),n=L.n||1,ar=L.active/n,rr=L.risk/n;
+  var badge=(curScenario==='decline'||rr>=0.18)?'<span class="badge badge-r">살핌</span>':ar>=0.60?'<span class="badge badge-g">양호</span>':'<span class="badge badge-y">보통</span>';
+  var lead=badge+' 이 계획대로 한 해가 흐르면 — 활발 <b>'+Math.round(L.active)+'명</b> · 위기 <b>'+Math.round(L.risk)+'명</b> · 졸업 후에도 신앙을 지킬 비율 <b>'+carryText(L)+'</b>.';
+  var dA=Math.round(L.active-F.active),dR=Math.round(L.risk-F.risk);
+  var move=(dA>0?'활발이 시작보다 '+dA+'명 늘고':dA<0?'활발이 시작보다 '+(-dA)+'명 줄고':'활발은 시작과 비슷하고')+(dR>0?' 위기는 '+dR+'명 는다':dR<0?' 위기는 '+(-dR)+'명 준다':' 위기는 그대로다');
+  var base=sc().base,Lb=base[base.length-1],diff=Math.round(L.active-Lb.active);
+  var vs=diff>=2?'특별 사역이 없는 때보다 활발 +'+diff+'명. 이 계획이 우리를 들어올린다':diff<=-2?'기본 운영만 못하다(활발 '+diff+'명). 한 수를 손볼 때다':'기본 운영과 비슷하다. 더 분명한 한 수가 필요하다';
+  var el=document.getElementById('narrative');
+  if(el)el.innerHTML=lead+'<div style="font-size:13px;color:#6b5538;margin-top:6px">'+move+'. '+vs+'. <span style="color:#9a8765">아래 레버를 움직이면 바뀐 흐름이 점선으로 겹친다 (가정값, 방향).</span></div>';
 }
-function pastorMoreOpen(){['c-trend','c-compare-pastor'].forEach(function(id){if(charts[id]){try{charts[id].resize();}catch(e){}}});}
+function pastorMoreOpen(){['c-compare-pastor'].forEach(function(id){if(charts[id]){try{charts[id].resize();}catch(e){}}});}
+
+/* ===== 이렇게 바꿔보기: 메인 인라인 레버(소그룹·멘토·교사) → 바뀐 흐름을 점선으로 겹친다 ===== */
+var whatIfHist=null,_mnTimer=null,_mnScenario=null;
+function mnCurOps(){var d=SC_DEFS[curScenario];return (d&&d.ops)?d.ops:SC_DEFS.plan.ops;}
+function mnUpdSpans(){if(!pv('mn-sg'))return;pv('mn-sg-v').textContent=pv('mn-sg').value+'%';pv('mn-mt-v').textContent=pv('mn-mt').value+'%';pv('mn-tc-v').textContent=pv('mn-tc').value+'명';}
+function mnSetLevers(o){if(!pv('mn-sg'))return;pv('mn-sg').value=Math.round(o.sg*100);pv('mn-mt').value=Math.round(o.mt*100);pv('mn-tc').value=o.tc;mnUpdSpans();}
+function mnReadOverrides(){return {sg:clamp(+pv('mn-sg').value/100,0,1),mt:clamp(+pv('mn-mt').value/100,0,1),tc:clamp(Math.round(+pv('mn-tc').value),1,60)};}
+// 시나리오가 바뀌면 레버를 그 계획값으로 다시 맞추고 겹침을 지운다(불필요한 재계산 방지로 _mnScenario 추적).
+function mnSyncIfNeeded(){if(_mnScenario!==curScenario){_mnScenario=curScenario;whatIfHist=null;mnSetLevers(mnCurOps());}}
+function mnReset(){whatIfHist=null;mnSetLevers(mnCurOps());safe('추이',renderTrend);renderWhatIfDelta(null);}
+function mnWhatIf(){mnUpdSpans();if(_mnTimer)clearTimeout(_mnTimer);_mnTimer=setTimeout(mnRunWhatIf,260);}
+function mnRunWhatIf(){
+  var d=SC_DEFS[curScenario];if(!d)return;
+  var ov=mnReadOverrides(),cur=mnCurOps();
+  var same=Math.round(ov.sg*100)===Math.round(cur.sg*100)&&Math.round(ov.mt*100)===Math.round(cur.mt*100)&&Math.round(ov.tc)===Math.round(cur.tc);
+  if(same){whatIfHist=null;safe('추이',renderTrend);renderWhatIfDelta(null);return;}
+  var acc=simulate(withOps(d,ov),WEEKS_PER_YEAR,4);
+  whatIfHist=acc.map(function(p,i){return {w:i+1,active:Math.round(p.active),risk:Math.round(p.risk),f:p.f,carry:p.carry,cLo:p.cLo,cHi:p.cHi};});
+  safe('추이',renderTrend);
+  renderWhatIfDelta(whatIfHist[whatIfHist.length-1]);
+}
+function renderWhatIfDelta(WL){
+  var el=pv('whatif-delta');if(!el)return;
+  if(!WL){el.innerHTML='레버를 움직이면 바뀐 흐름이 <b style="color:#5fb04e">점선</b>으로 겹쳐 보인다. 지금은 현재 계획 그대로다.';return;}
+  var L=last();
+  function arrow(a,b,goodUp){a=Math.round(a);b=Math.round(b);if(a===b)return '<b>'+a+'</b> 그대로';var good=goodUp?(b>a):(b<a);return '<b style="color:'+(good?'#3b6d11':'#a33232')+'">'+a+'→'+b+'</b>';}
+  el.innerHTML='바꾸면 — 활발 '+arrow(L.active,WL.active,true)+' · 위기 '+arrow(L.risk,WL.risk,false)+' · 졸업신앙 <b>'+carryText(WL)+'</b> <span style="color:#9a8765">(점선이 바뀐 흐름, 가정값).</span>';
+}
 function renderVerdict(){
   var L=last(),n=L.n||1,ar=L.active/n,rr=L.risk/n,v;
   if(curScenario==='decline'){v='<span class="badge badge-r">주의</span> 전체 인원이 줄고 위기군이 두껍습니다. 근본적인 변화가 필요합니다. 소그룹·멘토를 늘리고, 회복형 설교로 흔들리는 학생을 먼저 붙드십시오.';}
@@ -947,8 +990,8 @@ function renderAll(){
   safe('요약',function(){var tail=SC_DEFS[curScenario]&&SC_DEFS[curScenario].isData?' · 업로드 명단에서 출발 · 앞으로 1년은 가정값 시뮬레이션':' · 가정값 시나리오 — 현실 예측 아님';document.getElementById('subtitle').textContent=sc().label+' · '+sc().desc+tail;});
   var team=!document.getElementById('view-team').hidden;
   safe('지표',renderKPI);
-  if(!team){safe('헤드라인',renderHeadline);safe('돌봄',renderCareList);safe('추이',renderTrend);safe('판정',renderVerdict);safe('계획비교',function(){comparePair('c-compare-pastor','compare-note-pastor');});}
-  else{safe('출석',renderAttendance);safe('위기군',renderCrisis);safe('신앙',renderFaith);safe('갈래',renderBranches);safe('설교',renderSermon);safe('수련회',renderRetreat);safe('계획비교',function(){comparePair('c-compare',null);});safe('비교표',renderCompareTable);safe('취약',renderVuln);safe('지렛대',renderTornado);safe('명단',renderRoster);}
+  if(!team){mnSyncIfNeeded();safe('내러티브',renderNarrative);safe('추이',renderTrend);safe('바꿔보기',function(){renderWhatIfDelta(whatIfHist?whatIfHist[whatIfHist.length-1]:null);});safe('판정',renderVerdict);safe('계획비교',function(){comparePair('c-compare-pastor','compare-note-pastor');});}
+  else{safe('돌봄',renderCareList);safe('출석',renderAttendance);safe('위기군',renderCrisis);safe('신앙',renderFaith);safe('갈래',renderBranches);safe('설교',renderSermon);safe('수련회',renderRetreat);safe('계획비교',function(){comparePair('c-compare',null);});safe('비교표',renderCompareTable);safe('취약',renderVuln);safe('지렛대',renderTornado);safe('명단',renderRoster);}
   var w=document.getElementById('render-warn');
   if(w){if(_renderErrs.length){w.hidden=false;w.textContent='⚠ 일부 카드를 그리지 못했습니다: '+_renderErrs.join(', ')+' (콘솔에서 자세히). 나머지는 정상입니다.';}else{w.hidden=true;}}
 }

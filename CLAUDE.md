@@ -10,8 +10,8 @@
 
 빌드 없는 단일 `index.html`이다. Chart.js v4(CDN)로 그린다. **라이브(주별 진행) 모드는 없다.** 시나리오마다 `simulate(cfg, 52, 6)`를 화면 없이 한 번 돌려(`buildScenario`, `SC_CACHE`에 캐시) 그 결과를 정적 차트로 보여 준다. 상단바(제목·부제 `#subtitle`, 탭 토글, 시나리오 선택 `#scenario-sel`, 명단 CSV 업로드, 샘플 양식, 인쇄)와 접이식 계획 편집기, 두 탭으로 구성된다.
 
-- **담임 요약(`#view-pastor`)** : 숫자 카드 넷(현재 활발·위기군·평균 신앙·누적 이탈, 시작 대비 증감), 활발·위기·신앙 추이 라인(`#c-trend`: 6회 변동 띠·연간 일정 음영·호버 추적기), 종합 판정 한 줄(`#verdict`), 계획 vs 기본 운영 비교(`#c-compare-pastor`).
-- **교사팀 상세(`#view-team`)** : 출석 구성, 위기군 도넛, 신앙 추이, 신앙의 갈래, 설교 결별 효과, 수련회 박수별 효과, 계획 vs 기본 상세+표, 취약 분석 표, 지렛대 민감도(토네이도), 업로드 명단 표.
+- **담임 요약(`#view-pastor`)** : 흐름 내러티브가 중심이다. 맨 위 흐름 한 문단(`#narrative`: "이 계획대로 한 해가 흐르면 활발 N·위기 N·졸업 신앙 약 X~Y%, 시작 대비 방향, 계획 vs 기본"), 그 아래 활발·위기·신앙 추이 라인(`#c-trend`: 6회 변동 띠·생태계 천장 띠·연간 일정 음영·호버 추적기), 그리고 **"이렇게 바꿔보기"**(`#whatif`) 인라인 레버 셋(소그룹·멘토·교사 `mn-sg`/`mn-mt`/`mn-tc`). 레버를 움직이면 그 계획을 한 번 더 돌려(`mnRunWhatIf`→`simulate(withOps(...),52,4)`) 바뀐 활발·위기를 같은 그래프에 점선으로 겹치고(`whatIfHist`), `#whatif-delta`에 "활발 N→M · 위기 N→M" 델타를 쓴다(현재 계획과 같아지면 겹침을 지움). 숫자 카드 넷·종합 판정(`#verdict`)·계획 vs 기본 비교(`#c-compare-pastor`)는 접이식 `#pastor-more` 뒤(기본 접힘).
+- **교사팀 상세(`#view-team`)** : 먼저 만날 아이 돌봄 명단(`#care-list`), 출석 구성, 위기군 도넛, 신앙 추이, 신앙의 갈래, 설교 결별 효과, 수련회 박수별 효과, 계획 vs 기본 상세+표, 취약 분석 표, 지렛대 민감도(토네이도), 업로드 명단 표.
 - **계획 편집기(접힘)** : 평소 사역 슬라이더(소그룹·멘토·교사·변화속도·다락방·신입)와 연간 일정 추가. "이 계획으로 보기"가 현재 명단을 시작 인구로 두고 내 계획으로 `SC_DEFS.custom`을 만들어 전체를 다시 그린다. 저장·불러오기(localStorage `woori_plan_v1`).
 
 시나리오는 다섯이다: `우리 부 데이터`(CSV/샘플 seed, 기본)·`계획`·`기본 운영만`·`쇠퇴 부`(가정 분포)·`내 계획`(편집기). 화면에 "예측"이라는 말은 쓰지 않는다(가정값·방향 참고).
@@ -50,7 +50,8 @@
 
 **시나리오·렌더**
 - `SC_DEFS`(시나리오 정의)·`buildScenario(key)`(plan·base·sermon·retreat·tornado·events를 한 번에 계산)·`sc()`(`SC_CACHE` 캐시)·`setTab`/`loadScenario`.
-- `renderAll()` : 카드마다 `safe()`로 격리한다(한 카드가 throw해도 나머지는 그리고 `#render-warn` 배너로 알린다). 탭별 렌더러는 `renderKPI`·`renderTrend`·`renderVerdict`·`comparePair`·`renderAttendance`·`renderCrisis`·`renderFaith`·`renderBranches`·`renderSermon`·`renderRetreat`·`renderCompareTable`·`renderVuln`·`renderTornado`·`renderRoster`.
+- `renderAll()` : 카드마다 `safe()`로 격리한다(한 카드가 throw해도 나머지는 그리고 `#render-warn` 배너로 알린다). 담임 요약 렌더러는 `renderNarrative`(흐름 한 문단)·`renderTrend`(추이, `whatIfHist`면 점선 겹침)·`renderWhatIfDelta`·`renderVerdict`·`comparePair`, 교사팀 렌더러는 `renderCareList`·`renderKPI`·`renderAttendance`·`renderCrisis`·`renderFaith`·`renderBranches`·`renderSermon`·`renderRetreat`·`renderCompareTable`·`renderVuln`·`renderTornado`·`renderRoster`.
+- "이렇게 바꿔보기" 인라인 레버는 `mn-*`(`mnWhatIf` 디바운스→`mnRunWhatIf`→`whatIfHist`)이고, 시나리오가 바뀌면 `mnSyncIfNeeded`가 레버를 그 계획값으로 다시 맞추고 겹침을 지운다(`_mnScenario` 추적). `mnReset`은 현재 계획으로 되돌린다. 계획 편집기(`pe-*`)와는 별개의 가벼운 즉석 비교다.
 - 차트 공통은 `mkChart`/`baseOpts`/`weeklyOpts`. 불확실성 띠는 `bandDS`(범례·툴팁에서 숨김). 호버 추적기·연간 일정은 `crosshairPlugin`/`eventBandsPlugin`/`eventsForWeek`/`weekStory`/`calendarSummary`. 비율은 `pct(a,b)`로 분모 0을 막는다.
 - 계획 편집기는 `pe-*` 슬라이더와 `peApply`/`peAddEvent`/`peReadOps`/`peSave`(→`woori_plan_v1`).
 
