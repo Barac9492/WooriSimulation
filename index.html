@@ -61,12 +61,19 @@ table.gt .num{font-family:ui-monospace,monospace;text-align:right}
       <option value="base">기본 운영만 (가정)</option>
       <option value="decline">쇠퇴 부 (가정)</option>
     </select>
+    <select id="role-sel" onchange="setRole(this.value)" title="청중에 따라 민감 정보 노출을 줄인다(보안 아님)" style="font-family:inherit;font-size:12px;border:2px solid #6b4a8a;border-radius:5px;background:#f6f0fb;color:#4a3a2a;padding:4px 8px">
+      <option value="senior">👁 담임 보기</option>
+      <option value="teacher">교사 보기</option>
+      <option value="parent">부모/공유 보기</option>
+    </select>
     <label class="btn" style="cursor:pointer" title="이름·학년·신앙배경·코어·외톨이·출석상태 열을 가진 명단 CSV">📁 명단 CSV 업로드<input id="csv-file" type="file" accept=".csv,text/csv" style="display:none" onchange="onCSV(event)"></label>
     <a class="btn" href="sample-data.csv" download style="text-decoration:none;color:#4a3a2a">⬇ 샘플 양식</a>
     <button class="btn" onclick="toggleUrlBar()" title="구글 시트를 'CSV로 웹에 게시'한 링크로 명단 불러오기">🔗 시트 링크</button>
     <button class="btn" onclick="window.print()">🖨 인쇄·PDF</button>
   </div>
 </div>
+
+<div id="role-note" class="hint" style="margin:-4px 0 12px;color:#6b4a8a"></div>
 
 <div id="url-bar" class="no-print" hidden style="margin-bottom:12px;background:#fff;border:1px solid #dcc79a;border-radius:6px;padding:8px 10px;font-size:12px">
   <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -819,11 +826,21 @@ function renderTornado(){
     html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px"><span style="width:76px;flex-shrink:0">'+r.n+'</span><div style="flex:1;height:14px;background:#efe2c4;border-radius:3px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:#3b6d11;opacity:.8"></div></div><span style="width:48px;flex-shrink:0;text-align:right;color:#6b5538">±'+r.swing+'명</span></div>';});
   document.getElementById('tornado').innerHTML=html;
 }
+/* ===================== 역할 뷰(권한) =====================
+   같은 화면을 청중에 따라 다르게 보인다. 민감한 내면화 판단("속이 빈 아이")은 담임만,
+   학생 이름 명단은 담임·교사만. 보안 경계가 아니라 기본 노출을 줄이는 예의선이다
+   (누구나 역할을 바꿀 수 있다 — 인쇄·공유 때 과노출을 막을 뿐). 목양이지 사찰 아님. */
+var ROLES={senior:{label:'담임',names:true,sensitive:true},teacher:{label:'교사',names:true,sensitive:false},parent:{label:'부모/공유',names:false,sensitive:false}};
+var role='senior';try{var _r0=localStorage.getItem('woori_role');if(_r0&&ROLES[_r0])role=_r0;}catch(e){}
+function roleCfg(){return ROLES[role]||ROLES.senior;}
+function roleNote(){return '역할: '+roleCfg().label+' — '+(role==='senior'?'민감 정보(내면화·이름) 모두 표시.':role==='teacher'?'이름 명단은 보이되 내면화 판단("속이 빈 아이")은 가린다.':'이름 명단을 가리고 집계만 보인다.')+' 보안이 아니라 공유·인쇄용 기본 노출 줄이기.';}
+function setRole(r){if(!ROLES[r])return;role=r;try{localStorage.setItem('woori_role',r);}catch(e){}renderAll();}
 function renderRoster(){
   var panel=document.getElementById('roster-panel');if(!panel)return;
   var d=SC_DEFS.data;
   if(!d||!d.seed||curScenario!=='data'){panel.hidden=true;return;}
   panel.hidden=false;
+  if(!roleCfg().names){document.getElementById('roster-count').textContent=d.seed.length;document.getElementById('roster-table').innerHTML='<span class="hint">역할상('+roleCfg().label+') 학생 이름 명단을 가렸다. 담임·교사 보기에서 표시된다.</span>';document.getElementById('roster-note').textContent='집계만 보인다. 명단 '+d.seed.length+'명.';return;}
   var R=d.seed.slice(),ord={'위기':0,'느슨':1,'활발':2};
   R.sort(function(a,b){var da=ord[a.status]!=null?ord[a.status]:1,db=ord[b.status]!=null?ord[b.status]:1;return da!==db?da-db:a.grade-b.grade;});
   var bgL={mota:'모태',none:'비신앙',normal:'일반'},badge={'위기':'badge-r','느슨':'badge-y','활발':'badge-g'};
@@ -853,6 +870,7 @@ function renderCareList(){
   var el=document.getElementById('care-list');if(!el)return;
   var d=SC_DEFS[curScenario];careRows=[];
   if(!d||!d.seed||!d.seed.length){el.innerHTML='<span class="hint">이 카드는 실제 명단이 있을 때 작동한다. 시나리오를 "우리 부 데이터"로 두거나 상단에서 명단 CSV를 올려라.</span>';return;}
+  if(!roleCfg().names){el.innerHTML='<span class="hint">역할상('+roleCfg().label+') 학생 이름 명단을 가렸다. 위 집계 카드로 전체 흐름을 본다. 명단은 담임·교사 보기에서 표시된다.</span>';return;}
   var R=d.seed;
   var risk=R.filter(function(s){return s.status==='위기';}).sort(function(a,b){return a.eng-b.eng;});
   var hollow=R.filter(function(s){return s.status!=='위기';}).map(function(s){return {s:s,f:fragility(s)};}).filter(function(x){return x.f>=0.30;}).sort(function(a,b){return b.f-a.f;}).slice(0,6).map(function(x){return x.s;});
@@ -861,8 +879,12 @@ function renderCareList(){
   var html='';
   html+='<div style="font-size:11px;color:#a33232;font-weight:600;margin:2px 0 4px">지금 위기 ('+risk.length+'명)</div>';
   html+=risk.length?risk.map(function(s){return row(s,'출석 위기');}).join(''):'<span class="hint">위기 학생 없음.</span>';
-  html+='<div style="font-size:11px;color:#7a5c38;font-weight:600;margin:10px 0 4px">잘 나오지만 속이 빈 아이 ('+hollow.length+'명) — 출석은 높고 내면화는 낮다</div>';
-  html+=hollow.length?hollow.map(function(s){return row(s,'속이 빈(출석↑ 내면↓)');}).join(''):'<span class="hint">두드러진 학생 없음.</span>';
+  if(roleCfg().sensitive){
+    html+='<div style="font-size:11px;color:#7a5c38;font-weight:600;margin:10px 0 4px">잘 나오지만 속이 빈 아이 ('+hollow.length+'명) — 출석은 높고 내면화는 낮다</div>';
+    html+=hollow.length?hollow.map(function(s){return row(s,'속이 빈(출석↑ 내면↓)');}).join(''):'<span class="hint">두드러진 학생 없음.</span>';
+  }else{
+    html+='<div class="hint" style="margin-top:10px;border-top:1px dashed #d9c9a8;padding-top:6px">내면화 기반 "속이 빈 아이" 명단은 담임 보기에서만 보인다(민감 정보).</div>';
+  }
   var done=careRows.reduce(function(n,r){return n+(((careLog[r.key]&&careLog[r.key].st)||0)>0?1:0);},0);
   html+='<div class="hint" style="margin-top:8px">명단 '+careRows.length+'명 중 <b>'+done+'명</b> 연락·완료 표시됨.</div>';
   el.innerHTML=html;
@@ -873,6 +895,7 @@ function safe(name,fn){try{fn();}catch(e){if(typeof console!=='undefined')consol
 function renderAll(){
   document.getElementById('loading').hidden=true;
   _renderErrs=[];
+  safe('역할',function(){var rs=document.getElementById('role-sel');if(rs)rs.value=role;var rn=document.getElementById('role-note');if(rn)rn.textContent=roleNote();});
   safe('요약',function(){var tail=SC_DEFS[curScenario]&&SC_DEFS[curScenario].isData?' · 업로드 명단에서 출발 · 앞으로 1년은 가정값 시뮬레이션':' · 가정값 시나리오 — 현실 예측 아님';document.getElementById('subtitle').textContent=sc().label+' · '+sc().desc+tail;});
   var team=!document.getElementById('view-team').hidden;
   safe('지표',renderKPI);
