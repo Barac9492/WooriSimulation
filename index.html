@@ -140,34 +140,41 @@ table.gt .num{font-family:ui-monospace,monospace;text-align:right}
   </div>
 </details>
 
-<!-- 담임 요약 탭 -->
+<!-- 담임 요약 탭: 첫 화면은 "먼저 만날 아이" 하나. 상태 한 줄·방향 한 줄. 나머지는 접는다. -->
 <div id="view-pastor" hidden>
-  <div class="krow">
-    <div class="kcard"><div class="kl">현재 활발</div><div class="kv" id="k-active" style="color:#3b6d11">—</div><div class="kd" id="k-active-d">명</div></div>
-    <div class="kcard"><div class="kl">위기군</div><div class="kv" id="k-risk" style="color:#a33232">—</div><div class="kd" id="k-risk-d">명</div></div>
-    <div class="kcard"><div class="kl">평균 신앙</div><div class="kv" id="k-faith" style="color:#7a5c38">—</div><div class="kd" id="k-faith-d">%</div></div>
-    <div class="kcard"><div class="kl">누적 이탈</div><div class="kv" id="k-drop" style="color:#6b5538">—</div><div class="kd" id="k-drop-d">명</div></div>
-  </div>
-  <div class="full panel">
-    <div class="sec">활발·위기·신앙 추이 (1년)</div>
-    <div class="ct-lg"><canvas id="c-trend"></canvas></div>
-    <div class="hint" id="cal-legend" style="margin-top:8px"></div>
-    <div class="hint" style="margin-top:6px;border-top:1px solid #eadfc6;padding-top:6px" id="trend-note">—</div>
-  </div>
-  <div class="panel" style="margin-bottom:12px;background:#f3e7cc">
-    <div class="sec">종합 판정 (한눈에)</div>
-    <div id="verdict" style="font-size:13px;line-height:1.8;color:#4a3a2a">—</div>
-  </div>
-  <div class="panel" style="margin-bottom:12px">
+  <div class="panel" id="status-line" style="margin-bottom:10px;background:#f3e7cc;font-size:15px;line-height:1.7;color:#4a3a2a">—</div>
+  <div class="panel" style="margin-bottom:8px">
     <div class="sec">먼저 만날 아이 · 이번 주 돌봄</div>
     <div id="care-list">—</div>
     <div class="hint" style="margin-top:8px;border-top:1px solid #e0cda0;padding-top:7px">먼저 돌볼 순서이지 평가가 아니다. 배지를 눌러 <b>안 함 → 연락함 → 완료</b>로 표시하면 이 브라우저에 저장된다(다음 방문에 그대로).</div>
   </div>
-  <div class="full panel">
-    <div class="sec">계획 vs 기본 운영 비교 — 두 선의 차이가 계획의 효과</div>
-    <div class="ct"><canvas id="c-compare-pastor"></canvas></div>
-    <div id="compare-note-pastor" class="hint" style="margin-top:8px">—</div>
-  </div>
+  <div class="hint" id="direction-line" style="margin:0 4px 12px;font-size:13px;color:#3b6d11">—</div>
+  <details class="panel no-print" id="pastor-more" ontoggle="if(this.open)pastorMoreOpen()" style="margin-bottom:12px">
+    <summary style="cursor:pointer;font-weight:600;color:#4a3a2a;list-style:none">더 자세히 (숫자·그래프) <span style="font-weight:400;color:#8a755a">▾</span></summary>
+    <div style="margin-top:10px">
+      <div class="krow">
+        <div class="kcard"><div class="kl">현재 활발</div><div class="kv" id="k-active" style="color:#3b6d11">—</div><div class="kd" id="k-active-d">명</div></div>
+        <div class="kcard"><div class="kl">위기군</div><div class="kv" id="k-risk" style="color:#a33232">—</div><div class="kd" id="k-risk-d">명</div></div>
+        <div class="kcard"><div class="kl">평균 신앙</div><div class="kv" id="k-faith" style="color:#7a5c38">—</div><div class="kd" id="k-faith-d">%</div></div>
+        <div class="kcard"><div class="kl">누적 이탈</div><div class="kv" id="k-drop" style="color:#6b5538">—</div><div class="kd" id="k-drop-d">명</div></div>
+      </div>
+      <div class="full panel">
+        <div class="sec">활발·위기·신앙 추이 (1년)</div>
+        <div class="ct-lg"><canvas id="c-trend"></canvas></div>
+        <div class="hint" id="cal-legend" style="margin-top:8px"></div>
+        <div class="hint" style="margin-top:6px;border-top:1px solid #eadfc6;padding-top:6px" id="trend-note">—</div>
+      </div>
+      <div class="panel" style="margin-bottom:12px;background:#f3e7cc">
+        <div class="sec">종합 판정 (한눈에)</div>
+        <div id="verdict" style="font-size:13px;line-height:1.8;color:#4a3a2a">—</div>
+      </div>
+      <div class="full panel">
+        <div class="sec">계획 vs 기본 운영 비교</div>
+        <div class="ct"><canvas id="c-compare-pastor"></canvas></div>
+        <div id="compare-note-pastor" class="hint" style="margin-top:8px">—</div>
+      </div>
+    </div>
+  </details>
 </div>
 
 <!-- 교사팀 상세 탭 -->
@@ -738,6 +745,20 @@ function renderTrend(){
   var cl=document.getElementById('cal-legend');if(cl)cl.innerHTML=calendarSummary(SC_DEFS[curScenario]||{})+'<br><span style="color:#6b4a8a"><b>생태계 천장</b>(연보라 띠): 가정·교회가 받치는 신앙 높이 <b>'+ceilLvl+'</b>(약 '+ceil+'%, 가정값). '+(fn>=ceil-3?'신앙선이 천장에 닿았다. 더 좋은 수련회보다 부모·본당을 함께 깨울 때다.':'아직 천장 아래 여유가 있다.')+' 부모를 점수로 보지 말고 천장 높낮이로만 읽는다.</span>';
   document.getElementById('trend-note').textContent='시작 '+F.n+'명 → 현재 '+Math.round(L.n)+'명. 활발 '+F.active+'명 → '+L.active+'명(6회 '+L.aLo+'~'+L.aHi+'명) · 위기 '+F.risk+'명 → '+L.risk+'명 · 평균 신앙 '+Math.round(F.f*100)+'% → '+fn+'%. 옅은 띠는 6회 변동 폭이다.';
 }
+// 첫 화면 두 줄: 상태 한 줄(신호등) + 방향 한 줄(계획 vs 기본). 숫자·그래프는 "더 자세히" 안으로.
+function renderHeadline(){
+  var L=last(),n=L.n||1,ar=L.active/n,rr=L.risk/n,sl;
+  if(curScenario==='decline'||rr>=0.18)sl='<span class="badge badge-r">살핌</span> 위기군이 '+Math.round(rr*100)+'%로 두껍다. 아래 \'먼저 만날 아이\'부터 챙기자.';
+  else if(ar>=0.60)sl='<span class="badge badge-g">양호</span> 활발한 아이가 '+Math.round(ar*100)+'%다. 든든하다. 그래도 먼저 만날 아이를 본다.';
+  else sl='<span class="badge badge-y">보통</span> 활발 '+Math.round(ar*100)+'% · 위기 '+Math.round(rr*100)+'%. 느슨한 아이를 소그룹으로 잇는다.';
+  var s=document.getElementById('status-line');if(s)s.innerHTML=sl;
+  var base=sc().base,Lb=base[base.length-1],diff=L.active-Lb.active,ddrop=L.drop-Lb.drop,dl;
+  if(diff>=2)dl='↑ 이 계획이 우리를 들어올린다. 특별 사역 없는 때보다 활발 +'+diff+'명'+(ddrop<0?(', 이탈 '+(-ddrop)+'명 덜'):'')+' (가정값, 방향).';
+  else if(diff<=-2)dl='↓ 이 계획이 기본 운영만 못하다(활발 '+diff+'명). 한 수를 손볼 때 (가정값).';
+  else dl='→ 이 계획과 기본 운영이 비슷하다. 더 분명한 한 수가 필요하다 (가정값).';
+  var d=document.getElementById('direction-line');if(d)d.textContent=dl;
+}
+function pastorMoreOpen(){['c-trend','c-compare-pastor'].forEach(function(id){if(charts[id]){try{charts[id].resize();}catch(e){}}});}
 function renderVerdict(){
   var L=last(),n=L.n||1,ar=L.active/n,rr=L.risk/n,v;
   if(curScenario==='decline'){v='<span class="badge badge-r">주의</span> 전체 인원이 줄고 위기군이 두껍습니다. 근본적인 변화가 필요합니다. 소그룹·멘토를 늘리고, 회복형 설교로 흔들리는 학생을 먼저 붙드십시오.';}
@@ -906,7 +927,7 @@ function renderAll(){
   safe('요약',function(){var tail=SC_DEFS[curScenario]&&SC_DEFS[curScenario].isData?' · 업로드 명단에서 출발 · 앞으로 1년은 가정값 시뮬레이션':' · 가정값 시나리오 — 현실 예측 아님';document.getElementById('subtitle').textContent=sc().label+' · '+sc().desc+tail;});
   var team=!document.getElementById('view-team').hidden;
   safe('지표',renderKPI);
-  if(!team){safe('추이',renderTrend);safe('판정',renderVerdict);safe('돌봄',renderCareList);safe('계획비교',function(){comparePair('c-compare-pastor','compare-note-pastor');});}
+  if(!team){safe('헤드라인',renderHeadline);safe('돌봄',renderCareList);safe('추이',renderTrend);safe('판정',renderVerdict);safe('계획비교',function(){comparePair('c-compare-pastor','compare-note-pastor');});}
   else{safe('출석',renderAttendance);safe('위기군',renderCrisis);safe('신앙',renderFaith);safe('갈래',renderBranches);safe('설교',renderSermon);safe('수련회',renderRetreat);safe('계획비교',function(){comparePair('c-compare',null);});safe('비교표',renderCompareTable);safe('취약',renderVuln);safe('지렛대',renderTornado);safe('명단',renderRoster);}
   var w=document.getElementById('render-warn');
   if(w){if(_renderErrs.length){w.hidden=false;w.textContent='⚠ 일부 카드를 그리지 못했습니다: '+_renderErrs.join(', ')+' (콘솔에서 자세히). 나머지는 정상입니다.';}else{w.hidden=true;}}
