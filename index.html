@@ -380,7 +380,7 @@ function simulateOnce(cfg,weeks){
     var ac=a2.filter(function(s){return s.eng>=ACTIVE_MIN;}).length,lo=a2.filter(function(s){return s.eng>=RISK_MAX&&s.eng<ACTIVE_MIN;}).length;
     var own=a2.length?Math.round(a2.reduce(function(x,s){return x+(s.owned!=null?s.owned:0);},0)/a2.length*100):0;
     var carry=(gKeep+gLapse)?Math.round(gKeep/(gKeep+gLapse)*100):null;
-    hist.push({n:a2.length,f:favg,wd:wd,hl:hl,bl:bl,active:ac,loose:lo,risk:a2.length-ac-lo,drop:drop,own:own,carry:carry,gKeep:gKeep,gLapse:gLapse});
+    hist.push({n:a2.length,f:favg,wd:wd,hl:hl,bl:bl,active:ac,loose:lo,risk:a2.length-ac-lo,drop:drop,own:own,carry:carry,gKeep:gKeep,gLapse:gLapse,cc:cc,pv:pv});
   }
   hist.seg=segStats(arr);
   return hist;
@@ -388,14 +388,14 @@ function simulateOnce(cfg,weeks){
 function simulate(cfg,weeks,runs){
   var acc=null,segAcc=null;
   for(var r=0;r<runs;r++){var h=simulateOnce(cfg,weeks);
-    if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,wd:p.wd,hl:p.hl,bl:p.bl,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop,own:p.own,gKeep:p.gKeep,gLapse:p.gLapse,aLo:p.active,aHi:p.active,rLo:p.risk,rHi:p.risk,fLo:p.f,fHi:p.f,cLo:p.carry,cHi:p.carry};});segAcc=h.seg;}
-    else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].wd+=p.wd;acc[i].hl+=p.hl;acc[i].bl+=p.bl;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;acc[i].own+=p.own;acc[i].gKeep+=p.gKeep;acc[i].gLapse+=p.gLapse;
+    if(!acc){acc=h.map(function(p){return {n:p.n,f:p.f,wd:p.wd,hl:p.hl,bl:p.bl,active:p.active,loose:p.loose,risk:p.risk,drop:p.drop,own:p.own,gKeep:p.gKeep,gLapse:p.gLapse,cc:p.cc,pv:p.pv,aLo:p.active,aHi:p.active,rLo:p.risk,rHi:p.risk,fLo:p.f,fHi:p.f,cLo:p.carry,cHi:p.carry};});segAcc=h.seg;}
+    else{h.forEach(function(p,i){acc[i].n+=p.n;acc[i].f+=p.f;acc[i].wd+=p.wd;acc[i].hl+=p.hl;acc[i].bl+=p.bl;acc[i].active+=p.active;acc[i].loose+=p.loose;acc[i].risk+=p.risk;acc[i].drop+=p.drop;acc[i].own+=p.own;acc[i].gKeep+=p.gKeep;acc[i].gLapse+=p.gLapse;acc[i].cc+=p.cc;acc[i].pv+=p.pv;
       if(p.active<acc[i].aLo)acc[i].aLo=p.active;if(p.active>acc[i].aHi)acc[i].aHi=p.active;
       if(p.risk<acc[i].rLo)acc[i].rLo=p.risk;if(p.risk>acc[i].rHi)acc[i].rHi=p.risk;
       if(p.f<acc[i].fLo)acc[i].fLo=p.f;if(p.f>acc[i].fHi)acc[i].fHi=p.f;
       if(p.carry!=null){if(acc[i].cLo==null||p.carry<acc[i].cLo)acc[i].cLo=p.carry;if(acc[i].cHi==null||p.carry>acc[i].cHi)acc[i].cHi=p.carry;}});
       for(var d in h.seg)for(var g in h.seg[d])for(var k in h.seg[d][g])segAcc[d][g][k]+=h.seg[d][g][k];}}
-  acc.forEach(function(p){p.n/=runs;p.f/=runs;p.wd/=runs;p.hl/=runs;p.bl/=runs;p.active/=runs;p.loose/=runs;p.risk/=runs;p.drop/=runs;p.own/=runs;p.gKeep/=runs;p.gLapse/=runs;p.carry=(p.gKeep+p.gLapse)?Math.round(p.gKeep/(p.gKeep+p.gLapse)*100):null;});
+  acc.forEach(function(p){p.n/=runs;p.f/=runs;p.wd/=runs;p.hl/=runs;p.bl/=runs;p.active/=runs;p.loose/=runs;p.risk/=runs;p.drop/=runs;p.own/=runs;p.gKeep/=runs;p.gLapse/=runs;p.cc/=runs;p.pv/=runs;p.carry=(p.gKeep+p.gLapse)?Math.round(p.gKeep/(p.gKeep+p.gLapse)*100):null;});
   for(var d2 in segAcc)for(var g2 in segAcc[d2])for(var k2 in segAcc[d2][g2])segAcc[d2][g2][k2]/=runs;
   acc.seg=segAcc;return acc;
 }
@@ -540,7 +540,7 @@ function eventsForWeek(d,w){
 function buildScenario(key){
   var d=SC_DEFS[key],W=WEEKS_PER_YEAR;
   var planAcc=simulate(cfgOf(d),W,6),baseAcc=simulate(baseCfg(d),W,6);
-  function toHist(acc){return acc.map(function(p,i){return {w:i+1,n:Math.round(p.n),active:Math.round(p.active),loose:Math.round(p.loose),risk:Math.round(p.risk),drop:Math.round(p.drop),f:p.f,word:p.wd,holy:p.hl,belong:p.bl,own:Math.round(p.own),carry:p.carry,cLo:p.cLo,cHi:p.cHi,aLo:Math.round(p.aLo),aHi:Math.round(p.aHi),rLo:Math.round(p.rLo),rHi:Math.round(p.rHi),fLo:p.fLo,fHi:p.fHi};});}
+  function toHist(acc){return acc.map(function(p,i){return {w:i+1,n:Math.round(p.n),active:Math.round(p.active),loose:Math.round(p.loose),risk:Math.round(p.risk),drop:Math.round(p.drop),f:p.f,word:p.wd,holy:p.hl,belong:p.bl,own:Math.round(p.own),carry:p.carry,cLo:p.cLo,cHi:p.cHi,cc:p.cc,pv:p.pv,aLo:Math.round(p.aLo),aHi:Math.round(p.aHi),rLo:Math.round(p.rLo),rHi:Math.round(p.rHi),fLo:p.fLo,fHi:p.fHi};});}
   var seg=planAcc.seg;
   function pc(b,den){return den?Math.round(b/den*100):0;}
   var vuln={loner_y:pc(seg.lon.y.dropped,seg.lon.y.tot),loner_n:pc(seg.lon.n.dropped,seg.lon.n.tot),
@@ -722,16 +722,21 @@ function renderKPI(){
   document.getElementById('t-risk').textContent=Math.round(L.risk);document.getElementById('t-risk-d').textContent='명 ('+pct(L.risk,L.n)+'%)';
 }
 function renderTrend(){
-  var h=sc().hist,ls=lbls();
+  var h=sc().hist,ls=lbls(),L=last();
+  // 생태계 천장(가정·교회가 받치는 신앙 높이). 부모 다락방·전체 교회 분위기로 높이를 잡되,
+  // 점수·소수점 없이 연한 가로 띠 하나로만. 가정값(방향), 부모 정죄 아님.
+  var E=clamp(0.5*(L.pv!=null?L.pv:0.5)+0.5*(L.cc!=null?L.cc:0.5),0,1);
+  var ceil=Math.round(50+35*E),ceilLvl=E<0.4?'낮음':E>0.6?'높음':'보통';
+  var ceilHi=h.map(function(){return ceil+3;}),ceilLo=h.map(function(){return ceil-3;});
   mkChart('c-trend','line',{labels:ls,datasets:[
     {label:'활발',data:h.map(function(x){return x.active;}),borderColor:PALETTE.active,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4},
     {label:'느슨',data:h.map(function(x){return x.loose;}),borderColor:PALETTE.loose,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4},
     {label:'위기',data:h.map(function(x){return x.risk;}),borderColor:PALETTE.risk,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4},
     {label:'신앙(%)',data:h.map(function(x){return Math.round(x.f*100);}),borderColor:PALETTE.faith,borderWidth:2,fill:false,tension:0.3,pointRadius:0,pointHoverRadius:4,borderDash:[4,3]}
-  ].concat(bandDS(h.map(function(x){return x.aHi;}),h.map(function(x){return x.aLo;}),PALETTE.active+'1f'))},weeklyOpts(),WK_PLUGINS);
-  var L=last(),F=first();
-  var cl=document.getElementById('cal-legend');if(cl)cl.innerHTML=calendarSummary(SC_DEFS[curScenario]||{});
-  document.getElementById('trend-note').textContent='시작 '+F.n+'명 → 현재 '+Math.round(L.n)+'명. 활발 '+F.active+'명 → '+L.active+'명(6회 '+L.aLo+'~'+L.aHi+'명) · 위기 '+F.risk+'명 → '+L.risk+'명 · 평균 신앙 '+Math.round(F.f*100)+'% → '+Math.round(L.f*100)+'%. 옅은 띠는 6회 변동 폭이다.';
+  ].concat(bandDS(h.map(function(x){return x.aHi;}),h.map(function(x){return x.aLo;}),PALETTE.active+'1f')).concat(bandDS(ceilHi,ceilLo,'#6b4a8a22'))},weeklyOpts(),WK_PLUGINS);
+  var F=first(),fn=Math.round(L.f*100);
+  var cl=document.getElementById('cal-legend');if(cl)cl.innerHTML=calendarSummary(SC_DEFS[curScenario]||{})+'<br><span style="color:#6b4a8a"><b>생태계 천장</b>(연보라 띠): 가정·교회가 받치는 신앙 높이 <b>'+ceilLvl+'</b>(약 '+ceil+'%, 가정값). '+(fn>=ceil-3?'신앙선이 천장에 닿았다. 더 좋은 수련회보다 부모·본당을 함께 깨울 때다.':'아직 천장 아래 여유가 있다.')+' 부모를 점수로 보지 말고 천장 높낮이로만 읽는다.</span>';
+  document.getElementById('trend-note').textContent='시작 '+F.n+'명 → 현재 '+Math.round(L.n)+'명. 활발 '+F.active+'명 → '+L.active+'명(6회 '+L.aLo+'~'+L.aHi+'명) · 위기 '+F.risk+'명 → '+L.risk+'명 · 평균 신앙 '+Math.round(F.f*100)+'% → '+fn+'%. 옅은 띠는 6회 변동 폭이다.';
 }
 function renderVerdict(){
   var L=last(),n=L.n||1,ar=L.active/n,rr=L.risk/n,v;
