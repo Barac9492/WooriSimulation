@@ -5,57 +5,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>믿음 대시보드 — 중고등부</title>
 <style>
+  /* ── 디자인 토큰: 모던 라이트 분석 대시보드(밝은 중성 배경·흰 카드·차분한 포인트) ── */
   :root{
-    --bg:#e9e1cf; --card:#f6f1e4; --panel:#efe8d6; --ink:#3a3420; --mut:#8a7f63; --line:#d8cfb5;
-    --good:#5b8c3e; --warn:#c98a2b; --bad:#b5482f; --covid:#b5482f; --stock:#7a6a3a; --act:#8a6db0;
-    --accent:#6b8e4e;
+    --bg:#f4f6f9; --card:#ffffff; --panel:#f7f9fc; --ink:#1f2533; --mut:#667085; --line:#e4e8ef;
+    --good:#15803d; --warn:#b45309; --bad:#dc2626; --covid:#dc2626; --stock:#2563eb; --act:#7c3aed;
+    --accent:#4f46e5;
+    --r-lg:16px; --r-md:12px; --r-sm:9px;
+    --sh-sm:0 1px 2px rgba(16,24,40,.05);
+    --sh-md:0 1px 2px rgba(16,24,40,.05),0 4px 16px rgba(16,24,40,.07);
   }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
-  .wrap{max-width:880px;margin:0 auto;padding:16px 16px 60px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:14px;line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:16px 16px 60px}
   .muted{color:var(--mut);font-size:13px;margin:2px 0 12px}
-  /* 상단바 */
-  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:14px;box-shadow:0 2px 6px rgba(80,60,20,.08)}
-  .brand h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.01em;color:var(--ink)}
+  :where(button,select,summary,input,label.btn):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+  /* 상단바(스티키) */
+  .topbar{position:sticky;top:10px;z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 16px;margin-bottom:14px;box-shadow:var(--sh-md)}
+  .brand h1{font-size:18px;margin:0;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
   .brand .lead{margin:2px 0 0;font-size:12.5px;color:var(--mut)}
   .controls{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .wk{font-size:13px;color:var(--mut);margin-right:2px}
+  .wk{font-size:13px;color:var(--mut);margin-right:2px;font-variant-numeric:tabular-nums}
   .wk b{color:var(--ink)}
   select.btn,select.btn:focus{appearance:none;-webkit-appearance:none}
-  .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;padding:8px 13px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600}
-  .btn:hover{background:#ece5d2;border-color:#c9bd9a}
-  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 1px rgba(107,142,78,.25),0 6px 16px rgba(107,142,78,.2)}
-  .btn.primary:hover{filter:brightness(1.08)}
+  .btn{border:1px solid #d5dbe6;background:#fff;color:var(--ink);border-radius:var(--r-sm);padding:8px 13px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600;transition:background .15s,border-color .15s,box-shadow .15s}
+  .btn:hover{background:#f6f8fb;border-color:#c2cbd9}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 1px 2px rgba(79,70,229,.35),0 4px 12px rgba(79,70,229,.18)}
+  .btn.primary:hover{filter:brightness(1.07)}
   .btn.ghost{background:transparent}
-  .btn.on{background:var(--good);border-color:var(--good);color:#04210f}
+  .btn.on{background:var(--good);border-color:var(--good);color:#fff}
   .btn.sm{padding:5px 9px;font-size:12px}
   /* 카드/섹션 */
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;box-shadow:0 6px 22px rgba(0,0,0,.30)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:14px;box-shadow:var(--sh-sm)}
   .sec-h{display:flex;align-items:center;gap:9px;margin-bottom:2px}
   .sec-h h2{font-size:15.5px;margin:0;font-weight:700}
   .dot{width:10px;height:10px;border-radius:50%;flex:none}
   .dot.covid{background:var(--covid)} .dot.stock{background:var(--stock)} .dot.act{background:var(--act)}
   /* 지표 카드(KPI 타일) */
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin:6px 0}
-  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 8px;text-align:center}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);padding:13px 8px;text-align:center}
   .stat .sv{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.05;color:var(--ink);letter-spacing:.01em}
   .stat .sl{font-size:11.5px;color:var(--mut);margin-top:4px}
   .stat.good .sv{color:var(--good)} .stat.warn .sv{color:var(--warn)} .stat.bad .sv{color:var(--bad)} .stat.idx .sv{color:var(--stock)}
-  .placeholder{border:1.5px dashed #3a4a66;border-radius:11px;padding:22px;text-align:center;color:var(--mut);font-size:13px;background:var(--panel)}
+  .placeholder{border:1.5px dashed var(--line);border-radius:11px;padding:22px;text-align:center;color:var(--mut);font-size:13px;background:var(--panel)}
   .stat .sv{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace}
   .stat .sl{text-transform:uppercase;letter-spacing:.08em}
   /* 상황도(Maven식 지도 패널) */
-  .mapbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 10px 10px;margin-top:12px;box-shadow:0 2px 6px rgba(80,60,20,.06)}
+  .mapbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);padding:9px 10px 10px;margin-top:12px}
   .maptop{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:2px 2px 9px}
-  .maptop .livedot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:pulse 1.6s infinite}
+  .maptop .livedot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.7);animation:pulse 1.6s infinite}
   .maptop .sub{margin-left:auto;text-transform:none;letter-spacing:0;color:var(--mut);font-weight:500;font-size:11px}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
   .mapbox .netcanvas{background:transparent;border:none;border-radius:0}
   .mapbox .chips{margin-bottom:8px}
   /* 설정 서랍 */
-  .drawer{position:fixed;inset:0;background:rgba(20,30,50,.35);z-index:40;display:flex;justify-content:flex-end}
-  .drawer-inner{width:340px;max-width:90vw;height:100%;overflow-y:auto;background:var(--card);padding:18px;box-shadow:-4px 0 16px rgba(0,0,0,.5)}
+  .drawer{position:fixed;inset:0;background:rgba(15,23,42,.40);z-index:40;display:flex;justify-content:flex-end}
+  .drawer-inner{width:340px;max-width:90vw;height:100%;overflow-y:auto;background:var(--card);padding:18px;box-shadow:-8px 0 28px rgba(16,24,40,.18);animation:slidein .2s ease}
+  @keyframes slidein{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}
   .drawer-h{display:flex;align-items:center;margin-bottom:6px}
   .drawer-h h3{font-size:15px;margin:0;flex:1}
   .grp{font-size:12px;font-weight:700;color:var(--mut);margin:16px 0 6px;text-transform:none}
@@ -72,111 +78,200 @@
   .rt{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
   canvas#curve{width:100%;height:auto}
   .map-h{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:600;margin:4px 0 5px;gap:8px;flex-wrap:wrap}
-  .netcanvas{width:100%;height:auto;background:#f3eede;border:1px solid var(--line);border-radius:11px;display:block}
+  .netcanvas{width:100%;height:auto;background:#fbfcfe;border:1px solid var(--line);border-radius:11px;display:block}
   .hold{font-size:12.5px;padding:5px 0;border-top:1px solid var(--line)}
-  @media(max-width:560px){.diag-grid{grid-template-columns:1fr}}
   .chips{display:flex;gap:6px;flex-wrap:wrap}
-  .chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 13px;font-size:12.5px;font-family:inherit;cursor:pointer;font-weight:600}
-  .chip:hover{background:#ece5d2}
-  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 10px rgba(107,142,78,.35)}
-  .reco{background:#eef2e3;border:1px solid #d2d9bf;border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.6}
+  .chip{border:1px solid #d5dbe6;background:#fff;color:var(--ink);border-radius:999px;padding:6px 13px;font-size:12.5px;font-family:inherit;cursor:pointer;font-weight:600;transition:background .15s,border-color .15s}
+  .chip:hover{background:#f6f8fb;border-color:#c2cbd9}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 1px 6px rgba(79,70,229,.30)}
+  .reco{background:#f4f6ff;border:1px solid #dfe4f8;border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.6}
   .plain-h{font-size:15px;font-weight:700;margin:0 0 7px;color:var(--ink)}
-  .plain-p{font-size:14.5px;line-height:1.8;color:#4a4430}
+  .plain-p{font-size:14.5px;line-height:1.8;color:#3d4659}
   .verdict{display:flex;gap:14px;align-items:flex-start}
-  .light{font-size:38px;line-height:1;flex:none;filter:drop-shadow(0 0 8px rgba(255,255,255,.15))}
-  .vtext{font-size:19px;font-weight:800;line-height:1.45;color:var(--ink)}
+  .light{font-size:38px;line-height:1;flex:none}
+  .vtext{font-size:19px;font-weight:800;line-height:1.45;color:var(--ink);letter-spacing:-.01em}
   .vsub{font-size:14px;color:var(--mut);font-weight:500;margin-top:5px;line-height:1.6}
   .visit{display:flex;gap:10px;padding:11px 0;border-top:1px solid var(--line);font-size:14.5px;line-height:1.6}
   .visit:first-child{border-top:none}
   .visit .who{font-weight:800;flex:none;min-width:66px;color:var(--ink)}
-  .callout{background:#eef2e3;border:1px solid #d2d9bf;border-radius:12px;padding:14px 16px;font-size:15.5px;line-height:1.7}
+  .callout{background:#f5f8fe;border:1px solid #dde6f5;border-radius:var(--r-md);padding:14px 16px;font-size:15.5px;line-height:1.7}
   .callout b{color:var(--stock)}
-  .summary-h{font-size:14px;font-weight:700;color:var(--mut);cursor:pointer;list-style:none}
+  .summary-h{font-size:14px;font-weight:700;color:var(--mut);cursor:pointer;list-style:none;transition:color .15s}
+  .summary-h:hover{color:var(--ink)}
   details>summary::-webkit-details-marker{display:none}
+  details[open]>*:not(summary){animation:fadein .18s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
   .tier{font-size:11px;font-weight:800;color:#fff;padding:3px 10px;border-radius:999px;display:inline-block}
   .tier.s{background:#3a4a6b}.tier.o{background:#9a5b2b}.tier.t{background:#1d6b4f}
   .tier-sub{font-size:12px;color:var(--mut);margin:6px 0 12px}
   .tier-inline{font-size:11.5px;color:var(--mut);font-weight:600;margin-left:7px}
-  .howto{margin:0 0 12px;font-size:13px;color:#5a5237;background:#efe9d8;border:1px solid var(--line);border-radius:10px;padding:9px 13px;line-height:1.6}
+  .howto{margin:0 0 12px;font-size:13px;color:#3d4659;background:#eef2fb;border:1px solid #dbe3f3;border-radius:10px;padding:9px 13px;line-height:1.6}
   .howto b{color:var(--accent)}
   .gauge{margin:9px 0}
   .gauge-top{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;margin-bottom:3px}
   .gauge-top b{font-size:15px;color:var(--ink)}
-  .gauge-bar{height:14px;border-radius:7px;background:#e2d9c0;overflow:hidden;border:1px solid var(--line)}
-  .gauge-fill{height:100%;border-radius:7px}
+  .gauge-bar{height:14px;border-radius:7px;background:#edf0f6;overflow:hidden;border:1px solid var(--line)}
+  .gauge-fill{height:100%;border-radius:7px;transition:width .35s ease}
   .gauge-fill.att{background:var(--warn)}.gauge-fill.own{background:var(--stock)}
   .gauge .hint{font-size:11.5px;margin-top:2px}
-  .northstar{display:flex;align-items:baseline;gap:10px;background:#3a3a26;color:#fff;border:1px solid var(--good);border-radius:12px;padding:13px 16px;margin:4px 0 10px;box-shadow:0 2px 8px rgba(80,60,20,.12)}
-  .northstar .ns-v{font-size:32px;font-weight:800;line-height:1;color:var(--good)}
+  .northstar{display:flex;align-items:baseline;gap:10px;background:#0f172a;color:#fff;border:1px solid #0f172a;border-radius:var(--r-md);padding:13px 16px;margin:4px 0 10px;box-shadow:var(--sh-sm)}
+  .northstar .ns-v{font-size:32px;font-weight:800;line-height:1;color:#4ade80}
   .northstar .ns-l{font-size:13px;color:#cbd5e1;line-height:1.4}
   .northstar .ns-l b{color:#fff}
   .stagebar{display:flex;height:16px;border-radius:7px;overflow:hidden;border:1px solid var(--line);margin-top:4px}
-  .stagebar .s1{background:#475569}.stagebar .s2{background:var(--warn)}.stagebar .s3{background:var(--good)}
+  .stagebar .s1{background:#64748b}.stagebar .s2{background:#d97706}.stagebar .s3{background:#16a34a}
   .stage-leg{display:flex;gap:13px;font-size:11.5px;color:var(--mut);margin-top:5px;flex-wrap:wrap}
   .stage-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:middle;margin-right:4px}
-  .stage-leg i.s1{background:#475569}.stage-leg i.s2{background:var(--warn)}.stage-leg i.s3{background:var(--good)}
+  .stage-leg i.s1{background:#64748b}.stage-leg i.s2{background:#d97706}.stage-leg i.s3{background:#16a34a}
   .ewi-chip{display:inline-block;font-size:12.5px;font-weight:600;padding:4px 11px;border-radius:999px;margin-top:8px}
   .card.ctx{padding:11px 15px;background:var(--panel)}
   .card.ctx .opline{font-size:13px;line-height:1.6}
-  .card.hero{border:1px solid #cdbf98;box-shadow:0 2px 10px rgba(80,60,20,.08)}
+  .card.hero{border:1px solid #dbe1ec;box-shadow:var(--sh-md)}
   .fbar{display:flex;height:20px;border-radius:6px;overflow:hidden;border:1px solid var(--line);margin-top:6px}
-  .fbar .seg.g{background:var(--good)}.fbar .seg.a{background:var(--warn)}.fbar .seg.r{background:var(--bad)}
+  .fbar .seg{transition:width .35s ease}
+  .fbar .seg.g{background:#16a34a}.fbar .seg.a{background:#d97706}.fbar .seg.r{background:var(--bad)}
   .fbar-leg{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
   .fbar-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:middle;margin-right:4px}
-  .fbar-leg i.g{background:var(--good)}.fbar-leg i.a{background:var(--warn)}.fbar-leg i.r{background:var(--bad)}
+  .fbar-leg i.g{background:#16a34a}.fbar-leg i.a{background:#d97706}.fbar-leg i.r{background:var(--bad)}
   .logrow{display:flex;gap:8px;font-size:13px;padding:5px 0;border-top:1px solid var(--line);line-height:1.5}
   .logwk{flex:none;min-width:42px;color:var(--mut);font-weight:700}
   .opline{font-size:14px;line-height:1.75;padding:2px 0}
   .stepn{display:flex;gap:10px;padding:9px 0;border-top:1px dashed var(--line);font-size:14px;line-height:1.55}
   .stepn:first-child{border-top:none}
   .stepn .sn{font-weight:800;color:var(--stock);flex:none;min-width:54px}
+  /* 차트 호버 툴팁 */
+  #tip{position:fixed;z-index:60;display:none;background:rgba(17,24,39,.94);color:#e7ebf2;font-size:12px;line-height:1.55;padding:7px 10px;border-radius:8px;pointer-events:none;max-width:260px;box-shadow:0 6px 18px rgba(16,24,40,.28)}
+  #tip b{color:#fff;font-variant-numeric:tabular-nums}
+  /* ── 목회 수첩(60대 기본 화면): 큰 탭·큰 글자·큰 버튼·한 열 ── */
+  .bigtabs{display:flex;gap:8px;width:100%;margin-top:12px}
+  .bigtab{flex:1;min-height:52px;font-size:17px;font-weight:700;color:var(--mut);background:var(--panel);border:1.5px solid var(--line);border-radius:var(--r-md);cursor:pointer}
+  .bigtab.on{color:#fff;background:var(--accent);border-color:var(--accent)}
+  .bigtab:not(.on):hover{background:#eef1f7}
+  .pv{max-width:720px;margin-left:auto;margin-right:auto;font-size:18px;line-height:1.7;padding:22px 24px}
+  .pv-h{font-size:19px;font-weight:800;margin:22px 0 10px;color:var(--ink)}
+  .pv-h:first-child{margin-top:0}
+  .pv .hint{font-size:14px}
+  .pv-btn{min-height:52px;font-size:17px;padding:10px 20px;border-radius:var(--r-md)}
+  .pv-chips .chip{min-height:48px;font-size:16px;padding:10px 16px;border-radius:var(--r-md)}
+  .pv-verdict{display:flex;gap:16px;align-items:center;padding:6px 0 2px}
+  .pv-verdict .light{font-size:46px;line-height:1}
+  .pv-verdict .vtext{font-size:23px;font-weight:800;line-height:1.45}
+  .pv-verdict .vsub{font-size:16px;color:var(--mut);margin-top:4px}
+  .pv-card{display:flex;gap:14px;align-items:flex-start;border:1.5px solid var(--line);border-radius:var(--r-md);padding:14px 16px;margin:8px 0;cursor:pointer;background:#fff}
+  .pv-card:hover{border-color:var(--accent)}
+  .pv-card .who{flex:none;font-weight:800;font-size:18px;min-width:84px}
+  .pv-card .what{font-size:16.5px;line-height:1.6}
+  .badge{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;vertical-align:middle;margin-left:6px}
+  .b-obs{background:#f0fdf4;color:#15803d}.b-teach{background:#eff6ff;color:#1d4ed8}.b-survey{background:#f5f3ff;color:#6d28d9}.b-model{background:#fff7ed;color:#b45309}.b-est{background:#f1f5f9;color:#64748b}
+  .model-note{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:14.5px;border-radius:var(--r-sm);padding:10px 14px;margin:0 0 14px}
+  .ten{display:flex;gap:5px;margin:10px 0 4px}
+  .ten span{width:30px;height:38px;border-radius:8px 8px 11px 11px;background:#e2e8f0;position:relative}
+  .ten span::before{content:'';position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;background:inherit}
+  .ten span.keep{background:#16a34a}
+  .ten{margin-top:18px}
+  .ob-step{display:flex;gap:14px;align-items:flex-start;margin:14px 0}
+  .ob-n{flex:none;font-size:22px;font-weight:800;color:var(--accent);line-height:1.4}
+  .simlab{border-left:4px solid var(--act)}
+  #data-badge{margin-bottom:12px}
+  /* 반응형 */
+  @media(min-width:1200px){.wrap{max-width:1020px}}
+  @media(max-width:900px){.brand .lead{display:none}}
+  @media(max-width:560px){.diag-grid{grid-template-columns:1fr}.topbar{top:6px;padding:10px 12px}.brand h1{font-size:16px}.card{padding:13px 14px}.vtext{font-size:17px}.light{font-size:30px}
+    .pv{font-size:16.5px;padding:16px 15px}.pv-verdict .vtext{font-size:20px}.pv-verdict .light{font-size:38px}.bigtab{font-size:15px;min-height:46px}.ten span{width:24px;height:32px}}
+  /* 움직임 줄이기 설정 존중 */
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+  /* 인쇄: 컨트롤 숨김·흰 배경·카드 페이지 분리 방지 */
+  @media print{
+    body{background:#fff}
+    .topbar{position:static;box-shadow:none;backdrop-filter:none}
+    .controls,.howto,.chips,.btn,.preset,.drawer,#tip,.bigtabs,#onboard{display:none!important}
+    .card{box-shadow:none;border:1px solid #d5dbe5;break-inside:avoid}
+    .netcanvas{border-color:#d5dbe5}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="topbar">
     <div class="brand">
-      <h1>중고등부 사역 분석 대시보드</h1>
-      <p class="lead">계획(인풋)을 넣고 1~3년을 예측해, 출석·신앙이 기본 운영 대비 어떻게 가는지 견준다 — 가정값 시나리오, 현실 예측 아님.</p>
+      <h1>중고등부 목회 수첩</h1>
+      <p class="lead">출석부와 교사·학부모의 눈으로 지금을 진단하고, 올해 계획의 앞날을 가늠한다(앞날은 가정값 모형).</p>
     </div>
-    <div class="controls">
+    <nav class="bigtabs" aria-label="화면 선택">
+      <button id="tab-week" class="bigtab on" data-view="week">이번 주</button>
+      <button id="tab-plan" class="bigtab" data-view="plan">올해 계획</button>
+      <button id="tab-detail" class="bigtab" data-view="detail">자세히</button>
+    </nav>
+  </header>
+
+  <!-- ① 이번 주: 지금 어떤가(실측 진단) + 누구를 만날까 + 무엇을 할까 -->
+  <section id="view-week" class="card pv">
+    <div id="onboard" hidden>
+      <h2 class="pv-h">우리 부 명단으로 시작하세요 (세 걸음)</h2>
+      <div class="ob-step"><span class="ob-n">①</span><div><button class="btn pv-btn" id="ob-template">명단 양식 받기</button><p class="hint">출석부·행정 기록(이름·학년·출석·소그룹)만으로 시작할 수 있습니다. 모르는 칸은 비워 두면 됩니다.</p></div></div>
+      <div class="ob-step"><span class="ob-n">②</span><div><label class="btn pv-btn primary" style="position:relative;overflow:hidden;cursor:pointer">채운 명단 올리기<input type="file" id="ob-file" accept=".csv,text/csv" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><p class="hint">올리면 바로 우리 아이들 이름으로 진단이 나옵니다. 출석 칸만 바꿔 다시 올리면 진단이 새로워집니다.</p></div></div>
+      <div class="ob-step"><span class="ob-n">③</span><div><span style="display:inline-flex;gap:8px;flex-wrap:wrap"><button class="btn" id="ob-sheet-teacher">교사 관찰지 인쇄</button><button class="btn" id="ob-sheet-parent">학부모 설문지 인쇄</button><button class="btn" id="ob-sheet-student">학생 설문지 인쇄</button></span><p class="hint">더 정확히 보려면: 교사는 자기 반 6명만(학기 1회), 학부모는 모임에서(학기 1회), 학생 설문은 연 1회 표본이면 충분합니다.</p></div></div>
+      <p class="hint" style="margin-top:10px"><a href="#" id="ob-sample">예시 명단으로 둘러보기</a> · <a href="#" id="ob-rough">명단 없이 대략 보기(설정)</a></p>
+    </div>
+    <div id="data-badge" class="hint"></div>
+    <div id="pv-verdict"></div>
+    <h2 class="pv-h">이번 주 만날 아이</h2>
+    <div id="pv-visit"><p class="muted">명단을 올리거나 예시로 시작하면 여기 이름이 나옵니다.</p></div>
+    <h2 class="pv-h">이번 주 한 가지</h2>
+    <div id="pv-action"><p class="muted">계획을 정하면 권하는 한 가지가 나옵니다.</p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+      <button id="btn-report" class="btn pv-btn">한 장 보고서</button>
+      <button class="btn pv-btn" data-goto="plan">올해 계획 바꾸기</button>
+    </div>
+  </section>
+
+  <!-- ② 올해 계획: 무엇을 정하면 어떻게 되나(모형 전망) -->
+  <section id="view-plan" class="card pv" hidden>
+    <p class="model-note">여기 앞날 수치는 실측이 아니라 <b>가정값 모형의 전망</b>입니다. 방향과 크기 비교로만 읽으세요.</p>
+    <h2 class="pv-h">올해 설교는 어떤 결로 할까요 <span class="hint">(하나)</span></h2>
+    <div id="sermon-pick" class="chips pv-chips"></div>
+    <div id="sermon-desc" class="hint" style="margin-top:7px"></div>
+    <h2 class="pv-h">무엇을 함께 할까요 <span class="hint">(여럿 가능)</span></h2>
+    <div id="prog-pick" class="chips pv-chips"></div>
+    <div id="pv-outcome"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+      <button id="apply-plan" class="btn pv-btn primary">이 계획으로 보기</button>
+      <button id="reco-btn" class="btn pv-btn">무엇이 가장 좋을까요?</button>
+    </div>
+    <div id="reco" style="margin-top:12px"></div>
+  </section>
+
+  <!-- ③ 자세히: 교역자·분석용(기존 대시보드 전체) + 모의 실험 -->
+  <div id="view-detail" hidden>
+  <div class="card simlab">
+    <div class="maptop" style="margin:0"><span class="livedot"></span>모의 실험<span class="sub">여기서 시간을 흘리는 건 실측이 아니라 모형 실험이다</span></div>
+    <div class="controls" style="margin-top:8px">
       <span class="wk"><b id="wk">0</b>주차 · <b id="yr">1</b>년차</span>
       <button id="btn-step" class="btn primary">다음 주 ▶</button>
       <button id="btn-play" class="btn">자동재생</button>
-      <select id="role-sel" class="btn ghost" title="역할에 따라 보이는 정보가 다릅니다(민감 정보는 담임만)"><option value="pastor">담임 화면</option><option value="teacher">교사 화면</option><option value="parent">부모 화면</option></select>
-      <button id="btn-report" class="btn ghost">보고서</button>
+      <select id="role-sel" class="btn ghost" aria-label="역할 선택" title="역할에 따라 보이는 정보가 다릅니다(민감 정보는 담임만)"><option value="pastor">담임 화면</option><option value="teacher">교사 화면</option><option value="parent">부모 화면</option></select>
       <button id="btn-settings" class="btn ghost">우리 부 설정</button>
     </div>
-  </header>
+  </div>
 
   <!-- 어떻게 보나 (한 줄 안내) -->
-  <p class="howto">이 화면은 <b>올해 계획</b>입니다 — 설교·시험·수련회·수능을 한 줄로 보고, 아래 칩으로 <b>바꾸면 효과가 바뀝니다</b>. 그 아래는 이번 주 실행, 더 아래 "디테일"에 아이들 사이의 흐름이 있습니다.</p>
+  <p class="howto">이 화면은 <b>분석용</b>입니다 — 올해 계획을 한 줄로 보고, 그래프·지도·모의 실험으로 깊이 봅니다.</p>
 
-  <!-- 이번 주 (주인공) — 목사용 세 가지만: 지금 어떤가 / 누구를 / 무엇을. 나머지 숫자는 접음 -->
+  <!-- 분석 본체 (옛 메인) -->
   <section class="card hero" id="verdict-card">
     <div id="verdict" class="verdict"><div class="light">⏳</div><div><div class="vtext">한 주를 넘기면 지금 상태가 나옵니다.</div><div class="vsub">위 "다음 주 ▶"를 눌러 보세요.</div></div></div>
     <div id="kpi" class="stats" style="margin-top:14px"></div>
-    <div class="mini-h" style="margin-top:16px">활발·위기·신앙 추이 (전체 기간) &nbsp;<span class="hint" style="font-weight:500"><span style="color:#5b8c3e">●</span>활발 <span style="color:#c98a2b">●</span>느슨 <span style="color:#b5482f">●</span>위기 <span style="color:#7a6a3a">┈</span>신앙</span></div>
-    <canvas id="trend" width="600" height="180" class="netcanvas"></canvas>
+    <div class="mini-h" style="margin-top:16px">활발·위기·신앙 추이 (전체 기간) &nbsp;<span class="hint" style="font-weight:500"><span style="color:#16a34a">●</span>활발 <span style="color:#d97706">●</span>느슨 <span style="color:#dc2626">●</span>위기 <span style="color:#2563eb">┈</span>신앙</span></div>
+    <canvas id="trend" width="600" height="180" class="netcanvas" role="img" aria-label="활발·느슨·위기 인원과 믿음 지수의 주차별 추이 그래프"></canvas>
     <div id="trend-sum" class="hint" style="margin-top:6px"></div>
-    <div class="mini-h" style="margin-top:16px">계획 vs 기본 운영 (활발 인원) &nbsp;<span class="hint" style="font-weight:500"><span style="color:#5b8c3e">●</span>이 계획 <span style="color:#a08e6a">┈</span>아무것도 안 할 때</span></div>
-    <canvas id="compare" width="600" height="150" class="netcanvas"></canvas>
+    <div class="mini-h" style="margin-top:16px">계획 vs 기본 운영 (활발 인원) &nbsp;<span class="hint" style="font-weight:500"><span style="color:#16a34a">●</span>이 계획 <span style="color:#98a2b3">┈</span>아무것도 안 할 때</span></div>
+    <canvas id="compare" width="600" height="150" class="netcanvas" role="img" aria-label="이 계획과 기본 운영의 활발 인원 비교 그래프"></canvas>
     <div class="hint" style="margin-top:4px">두 선의 차이가 곧 이 계획의 효과다(가정값 시나리오, 예측 아님).</div>
 
-    <!-- 올해 계획(의사결정 중심) — 무엇을 언제 + 칩으로 바꾸면 효과가 바뀐다 -->
-    <div class="maptop" style="margin-top:18px"><span class="livedot"></span>올해 계획 · 무엇을 언제<span class="sub">막대를 보고, 아래 칩으로 바꿔 보세요</span></div>
-    <canvas id="yearplan" width="600" height="148" class="netcanvas"></canvas>
+    <!-- 올해 계획 한 줄(보기 전용 — 결정은 "올해 계획" 탭에서) -->
+    <div class="maptop" style="margin-top:18px"><span class="livedot"></span>올해 계획 · 무엇을 언제<span class="sub">바꾸려면 "올해 계획" 탭</span></div>
+    <canvas id="yearplan" width="600" height="148" class="netcanvas" role="img" aria-label="올해 사역 일정 캘린더 막대 그래프"></canvas>
     <div id="plan-effect" class="plain-p" style="font-size:13.5px;margin-top:9px"></div>
-    <div class="mini-h" style="margin-top:14px">설교 결 — 올해 어떻게 설교할까 (하나)</div>
-    <div id="sermon-pick" class="chips"></div>
-    <div id="sermon-desc" class="hint" style="margin-top:5px"></div>
-    <div class="mini-h" style="margin-top:12px">프로그램 (여럿 가능)</div>
-    <div id="prog-pick" class="chips"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-      <button id="apply-plan" class="btn primary">이 계획으로 보기</button>
-      <button id="reco-btn" class="btn">다른 수도 견줘 보기</button>
-    </div>
-    <div id="reco" style="margin-top:10px"></div>
 
     <!-- 이번 주 실행 -->
     <h2 class="plain-h" style="margin-top:20px">① 먼저 만날 아이</h2>
@@ -191,7 +286,7 @@
         <div class="mapbox">
           <div class="maptop"><span class="livedot"></span>우리 부 상황도 · LIVE<span class="sub">점=아이, 색=상태, 눌러 보기</span></div>
           <div id="room-ctrl" class="chips"></div>
-          <canvas id="room" width="600" height="180" class="netcanvas" style="cursor:pointer"></canvas>
+          <canvas id="room" width="600" height="180" class="netcanvas" style="cursor:pointer" role="img" aria-label="우리 부 상황도. 점은 아이, 색은 상태. 눌러서 한 아이를 본다"></canvas>
           <div id="room-leg" class="hint" style="margin-top:6px"></div>
         </div>
         <div id="stud-card"></div>
@@ -222,7 +317,7 @@
     <div id="care-log" style="margin-top:10px"></div>
   </details>
 
-  <p style="text-align:center;color:#9aa3b2;font-size:12px;margin:24px 0 8px;border-top:1px dashed var(--line);padding-top:12px">── 여기까지만 보셔도 됩니다. 아래는 더 알고 싶을 때만 ──</p>
+  <p style="text-align:center;color:var(--mut);font-size:12px;margin:24px 0 8px;border-top:1px dashed var(--line);padding-top:12px">── 여기까지만 보셔도 됩니다. 아래는 더 알고 싶을 때만 ──</p>
 
   <!-- 상황 요약: 전략(올해)·작전(이번 시즌) 접힘 -->
   <details class="card ctx">
@@ -274,17 +369,17 @@
           </div>
           <div class="mini">
             <div class="mini-h">주마다 흔들리는 아이</div>
-            <canvas id="curve" width="300" height="90"></canvas>
+            <canvas id="curve" width="300" height="90" role="img" aria-label="주마다 새로 흔들리는 아이 수 곡선"></canvas>
           </div>
         </div>
         <div class="map-h"><span>관계 지도 — 점은 아이, 선은 친구, 색은 상태</span><span id="map-leg" class="hint"></span></div>
-        <canvas id="net" width="600" height="300" class="netcanvas"></canvas>
+        <canvas id="net" width="600" height="300" class="netcanvas" role="img" aria-label="관계 지도. 점은 아이, 선은 친구, 색은 상태. 눌러서 한 아이를 본다"></canvas>
         <div id="hold-list"></div>
       </div>
       <div class="sec-h" style="margin-top:18px"><span class="dot stock"></span><h2>믿음 지수</h2></div>
       <div id="proj-body">
         <div class="map-h"><span>믿음 지수 — 이대로 가면(0~100, 높을수록 든든)</span><span id="idx-now" class="hint"></span></div>
-        <canvas id="idxchart" width="600" height="150" class="netcanvas"></canvas>
+        <canvas id="idxchart" width="600" height="150" class="netcanvas" role="img" aria-label="믿음 지수 앞날 그래프. 이대로 가면 3년, 내면화는 보라 점선"></canvas>
         <div class="diag-grid" style="margin-top:12px">
           <div class="mini"><div class="mini-h">무엇이 믿음을 움직이나(이번 주)</div><div id="attr-bars"></div></div>
           <div class="mini"><div class="mini-h">위험 — 나쁜 쪽이면</div><div id="risk-box" class="hint"></div></div>
@@ -308,7 +403,8 @@
     </div>
   </details>
 
-  <p class="hint" style="margin-top:14px">이 도구의 1년은 <b>52주</b>(실제 달력)다. "다음 주 ▶"는 실제 한 주를 넘기고, 1주차는 대략 3월 신학기다. 효과 수치는 그럴듯하게 넣어 본 값이지 확인된 사실이 아니다. 현실을 맞히는 도구가 아니라, 방향과 크기를 가늠하는 사유 도구다.</p>
+  <p class="hint" style="margin-top:14px">이 도구의 1년은 <b>52주</b>(실제 달력)다. "다음 주 ▶"는 모형의 한 주를 넘기고, 1주차는 대략 3월 신학기다. 효과 수치는 그럴듯하게 넣어 본 값이지 확인된 사실이 아니다. 현실을 맞히는 도구가 아니라, 방향과 크기를 가늠하는 사유 도구다.</p>
+  </div><!-- /#view-detail -->
 </div>
 
 <div id="settings" class="drawer" hidden>
@@ -323,14 +419,23 @@
       <button class="btn sm" id="csv-sample">예시 명단 불러오기</button>
       <label class="btn sm" style="position:relative;overflow:hidden;cursor:pointer">CSV 불러오기<input type="file" id="csv-file" accept=".csv,text/csv" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>
     </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+      <button class="btn sm" id="sheet-teacher">교사 관찰지 인쇄</button>
+      <button class="btn sm" id="sheet-parent">학부모 설문지 인쇄</button>
+      <button class="btn sm" id="sheet-student">학생 설문지 인쇄</button>
+    </div>
     <div id="roster-status" class="hint" style="margin-bottom:6px"></div>
     <details style="margin-bottom:8px"><summary class="summary-h" style="font-size:12.5px">엑셀 칸에 뭘 적나 ▾</summary>
       <div class="hint" style="line-height:1.7;margin-top:6px">
-      <b>학년</b> 중1~고3 · <b>부모신앙</b> 1 안 믿음·2 보통·3 신실/모태 · <b>형제신앙</b> 동일 1~3 · <b>교회친구수</b> 마음 나누는 또래 수 0~6 · <b>소그룹·멘토·봉사역할</b> 있으면 Y 없으면 N · <b>출석4주</b> 최근 4주 중 나온 횟수 0~4 · <b>QT</b> 혼자 말씀·기도 1 거의 안 함~5 매일 · <b>학업압박</b> 1 적음~5 심함 · <b>신앙주인의식</b> 1 부모 따라서~5 내 믿음 · <b>가정예배</b> 1 안 함~5 자주 · <b>챙기는어른</b> 이름 알고 챙기는 어른 수 0~5 · <b>소속감</b> 1 겉돎~5 깊이 속함 · <b>의심나눔</b> 1 못 함~5 편히 함 · <b>내면화점수</b>(선택) 교사가 보는 한 줄: 1 빌려온 믿음(부모 따라서)~5 자기 믿음(자기 말로 표현·시키지 않아도 신앙생활). 검증 설문(RCI-A·FMS)을 연 1회 돌렸다면 그 평균을 넣어도 된다. 넣으면 이 값으로 '속(내면화)'을 잡고, 비우면 다른 칸으로 추정.
-      <br>다 못 채워도 된다. 교사가 아는 칸만, 모르면 보통(3). 학생 설문이 아니라 교사 관찰이 기본이다. 연 1회 표본 검증 문항은 SURVEY.md 참고.
+      모든 칸이 <b>관찰하거나 기록에서 옮길 수 있는 것</b>이다. 속마음을 짐작해 적는 칸은 없다.<br>
+      <b>행정 기록에서</b> — <b>학년</b> 중1~고3 · <b>출석4주</b> 최근 4주 중 나온 횟수 0~4 · <b>소그룹·멘토·봉사역할</b> 있으면 Y · <b>부모출석</b> 본 교회 출석하는 부모 수 0~2 · <b>형제등록</b> 형제가 교회학교·중고등부 명단에 있으면 Y · <b>다락방</b> 부모가 다락방(부모 모임) 출석부에 있으면 Y(있으면 부모 모임 슬라이더를 실측 참여율로 맞춘다).<br>
+      <b>교사가 본 행동</b> — <b>친구이름</b> 주로 함께 다니는 친구 이름 1~3명(공백·가운뎃점 구분, 쉼표 금지 — 넣으면 전염 진단·먼저 만날 아이가 실제 관계망으로 계산된다) · <b>자기말표현</b> 나눔·기도에서 자기 말로 신앙을 표현하는 걸 봄 0 없음·1 가끔·2 자주 · <b>의심질문</b> 신앙 질문·의심을 어른에게 꺼낸 적 있으면 Y · <b>예배후머묾</b> 모임 후 남아 어울림 0~2 · <b>챙기는어른</b> 이름을 댈 수 있는 어른 수 0~5.<br>
+      <b>학부모 설문에서</b> — <b>신앙대화</b> 지난 한 주 부모·자녀 신앙 대화 횟수 0~7 · <b>가정예배</b> 1 안 함~5 자주.<br>
+      <b>학생 설문에서(연 1회)</b> — <b>내면화점수</b> 6문항 평균 1~5(있으면 이 값으로 '속'을 잡는다) · <b>부모관계</b> 자녀가 답한 온기 1~5.<br>
+      못 본 칸은 비워 두라(빈 칸=모름으로 기본값 처리, 추측보다 낫다). 옛 양식의 열 이름(부모신앙·교회친구수·신앙주인의식·소속감·의심나눔 등)도 그대로 읽힌다. 문항 근거는 SURVEY.md.
       </div>
     </details>
-    <div class="grp">또는 분포로 (명단 없이)</div>
+    <div class="grp">또는 대략 추정으로 (명단 없을 때) <small style="font-weight:400;color:var(--mut)">아래 값은 관찰이 아니라 짐작이다. 화면에 "추정"으로 표시된다.</small></div>
     <div class="preset">
       <button class="btn sm" id="pre-decline">쇠퇴 중</button>
       <button class="btn sm" id="pre-flat">정체</button>
@@ -652,6 +757,22 @@
   churchSchedule.push({id:ceid++,type:'senior',start:2,weeks:10,repeat:52});               // 담임 말씀 시리즈
   churchSchedule.push({id:ceid++,type:'allretreat',start:28,repeat:52});                   // 전교인 수련회(여름)
 
+  // ── 차트 공통: 팔레트 + DPR(레티나) 선명화 + 호버 툴팁 ──
+  var PAL={good:'#16a34a',warn:'#d97706',bad:'#dc2626',stock:'#2563eb',act:'#7c3aed',accent:'#4f46e5',base:'#98a2b3',grid:'#e8ecf3',txt:'#667085',ink:'#334155',blueSoft:'#93c5fd'};
+  // 캔버스를 기기 픽셀 비율로 키우고 좌표계는 논리 크기로 유지한다(그리기 코드 무변경). 클릭 판정용으로 논리 크기를 dataset에 둔다.
+  function sharpCanvas(c,LW,LH){var dpr=window.devicePixelRatio||1;c.width=Math.round(LW*dpr);c.height=Math.round(LH*dpr);c.dataset.lw=LW;c.dataset.lh=LH;var g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,LW,LH);return g;}
+  // 닫힌 details 안 캔버스는 clientWidth가 0이라 기본값으로 돌아간다.
+  function cssW(c,def){var w=c.clientWidth;return (w&&w>40)?w:def;}
+  var tipEl=null;
+  function tipShow(html,x,y){if(!tipEl){tipEl=document.createElement('div');tipEl.id='tip';document.body.appendChild(tipEl);}tipEl.innerHTML=html;tipEl.style.display='block';var vw=window.innerWidth;tipEl.style.left=Math.min(x+14,vw-270)+'px';tipEl.style.top=(y+14)+'px';}
+  function tipHide(){if(tipEl)tipEl.style.display='none';}
+  // 차트에 호버 툴팁을 단다. fn(fr)은 가로 진행률 0~1을 받아 HTML(없으면 falsy)을 돌려준다.
+  function bindTip(id,padL,padR,fn){var c=document.getElementById(id);if(!c||c._tip)return;c._tip=1;
+    c.addEventListener('mousemove',function(e){var r=c.getBoundingClientRect();var lw=+c.dataset.lw||r.width;
+      var x=(e.clientX-r.left)/r.width*lw;var fr=(x-padL)/Math.max(1,lw-padL-padR);if(fr<0)fr=0;if(fr>1)fr=1;
+      var h=fn(fr);if(h)tipShow(h,e.clientX,e.clientY);else tipHide();});
+    c.addEventListener('mouseleave',tipHide);}
+
   // ── 라이브 1주 + 생성 + 렌더(새 대시보드용) ──
   function startSim(){weekInc=0;layoutNet();runProjection();runReco();render();}
   function generate(){
@@ -662,7 +783,11 @@
   }
   // ── 명단(CSV) 가져오기 ── 아이별 데이터로 진단. 지금은 예시 명단(placeholder).
   var roster=null;
-  var CSV_COLS=['이름','학년','부모신앙','형제신앙','교회친구수','소그룹','멘토','봉사역할','출석4주','QT','학업압박','신앙주인의식','가정예배','챙기는어른','소속감','의심나눔','부모관계','내면화점수'];
+  // 파싱이 받아들이는 전체 열(새 관찰 열 + 옛 열 별칭 호환). 새 열이 있으면 새 열 우선.
+  var CSV_COLS=['이름','학년','부모신앙','형제신앙','교회친구수','소그룹','멘토','봉사역할','출석4주','QT','학업압박','신앙주인의식','가정예배','챙기는어른','소속감','의심나눔','부모관계','내면화점수','신앙대화','다락방','친구이름','부모출석','형제등록','자기말표현','의심질문','예배후머묾'];
+  // 양식이 권하는 열: 관찰·기록 가능한 것만(행정 → 교사 행동 관찰 → 학부모 사실 → 학생 내면).
+  var TEMPLATE_COLS=['이름','학년','출석4주','소그룹','멘토','봉사역할','부모출석','형제등록','다락방','친구이름','자기말표현','의심질문','예배후머묾','챙기는어른','신앙대화','가정예배','부모관계','내면화점수'];
+  var rosterCols=[]; // 명단에 실제로 들어온 열(데이터 충실도·출처 배지용)
   var GMAP={'중1':1,'중2':2,'중3':3,'고1':4,'고2':5,'고3':6};
   function yn(v){v=(v||'').toString().trim().toLowerCase();return v==='y'||v==='예'||v==='o'||v==='1'||v==='true';}
   function num(v,d){var n=parseFloat(v);return isNaN(n)?d:n;}
@@ -671,21 +796,40 @@
     var lines=text.replace(/\r/g,'').split('\n').filter(function(l){return l.trim().length;});
     if(!lines.length)return [];
     var head=lines[0].split(',').map(function(h){return h.trim();});
-    var idx={};head.forEach(function(h,i){CSV_COLS.forEach(function(c){if(h.indexOf(c)>=0)idx[c]=i;});});
+    // 헤더 매칭: 부분 일치를 허용하되 가장 긴 열 이름이 이긴다('친구이름' 헤더가 '이름' 열을 가로채지 않게).
+    var idx={};head.forEach(function(h,i){
+      var best=null;CSV_COLS.forEach(function(c){if(h.indexOf(c)>=0&&(!best||c.length>best.length))best=c;});
+      if(best&&idx[best]==null)idx[best]=i;});
     var rows=[];
+    // 관찰 열(0~2 행동 빈도)을 옛 1~5 척도 자리로 환산하는 셔임 — makeFromRow 공식은 그대로 쓴다.
+    var L2=[2,3.5,4.5];
     for(var li=1;li<lines.length;li++){var c=lines[li].split(',');var g=function(k){return idx[k]!=null?(c[idx[k]]||'').trim():'';};
+      var has=function(k){return idx[k]!=null&&g(k)!=='';};
       var gr=g('학년');var grade=GMAP[gr]||num(gr,1);
-      rows.push({name:g('이름')||('학생'+li),grade:clampn(Math.round(grade),1,6),parentFaith:clampn(num(g('부모신앙'),2),1,3),
-        sibFaith:clampn(num(g('형제신앙'),2),1,3),friendN:clampn(num(g('교회친구수'),2),0,6),sg:yn(g('소그룹')),mentor:yn(g('멘토')),
-        serve:yn(g('봉사역할')),att4:clampn(num(g('출석4주'),3),0,4),qt:clampn(num(g('QT'),3),1,5),acad:clampn(num(g('학업압박'),3),1,5),own:clampn(num(g('신앙주인의식'),3),1,5),
-        hw:clampn(num(g('가정예배'),3),1,5),adults:clampn(num(g('챙기는어른'),1),0,5),belongQ:clampn(num(g('소속감'),3),1,5),doubt:clampn(num(g('의심나눔'),3),1,5),
-        warmth:clampn(num(g('부모관계'),3),1,5),intern:clampn(num(g('내면화점수'),0),0,5)});}
+      var fNames=has('친구이름')?g('친구이름').split(/[·;/\s]+/).filter(Boolean):null; // 주로 함께 다니는 친구 이름(공백·가운뎃점 구분)
+      rows.push({name:g('이름')||('학생'+li),grade:clampn(Math.round(grade),1,6),
+        parentFaith:has('부모출석')?clampn(Math.round(num(g('부모출석'),1)),0,2)+1:clampn(num(g('부모신앙'),2),1,3),   // 행정: 본 교회 출석 부모 수
+        sibFaith:has('형제등록')?(yn(g('형제등록'))?3:2):clampn(num(g('형제신앙'),2),1,3),                              // 행정: 형제가 명단에 있는가
+        fNames:fNames,
+        friendN:fNames?clampn(fNames.length,0,6):clampn(num(g('교회친구수'),2),0,6),
+        sg:yn(g('소그룹')),mentor:yn(g('멘토')),
+        serve:yn(g('봉사역할')),att4:clampn(num(g('출석4주'),3),0,4),qt:clampn(num(g('QT'),3),1,5),acad:clampn(num(g('학업압박'),3),1,5),
+        own:has('자기말표현')?L2[clampn(Math.round(num(g('자기말표현'),1)),0,2)]:clampn(num(g('신앙주인의식'),3),1,5),  // 관찰: 자기 말로 신앙을 표현한 것을 봄
+        hw:clampn(num(g('가정예배'),3),1,5),adults:clampn(num(g('챙기는어른'),1),0,5),
+        belongQ:has('예배후머묾')?L2[clampn(Math.round(num(g('예배후머묾'),1)),0,2)]:clampn(num(g('소속감'),3),1,5),    // 관찰: 모임 후 남아 어울림
+        doubt:has('의심질문')?(yn(g('의심질문'))?4:2.5):clampn(num(g('의심나눔'),3),1,5),                               // 관찰: 의심·질문을 꺼낸 사건
+        warmth:clampn(num(g('부모관계'),3),1,5),intern:clampn(num(g('내면화점수'),0),0,5),
+        talk:has('신앙대화')?clampn(num(g('신앙대화'),2),0,7):null,  // 학부모 설문: 주간 신앙 대화 횟수(없으면 null=기존 계산)
+        dara:has('다락방')?yn(g('다락방')):null});}                   // 행정(다락방 출석부) 또는 학부모 설문
+    rows._cols=Object.keys(idx);
     return rows;
   }
   function makeFromRow(r){
     var pf=r.parentFaith,bg=pf>=3?'mota':pf<=1?'none':'normal';
     // 가정 신앙: 부모 신앙 + 형제 + 가정예배·신앙대화 빈도(연구상 부모의 평소 신앙대화가 가장 강한 예측 요인이다).
-    var fam=clampn(0.15+(pf-1)*0.35+(r.sibFaith-2)*0.05+(r.hw-3)*0.05,0,1);
+    // 신앙대화(학부모 설문, 주 횟수 0~7)는 있을 때만 더한다 — 없으면 기존 계산과 동일(하위 호환). 크기는 가정값.
+    var talkAdd=r.talk!=null?0.05*(Math.min(r.talk,5)-2):0;
+    var fam=clampn(0.15+(pf-1)*0.35+(r.sibFaith-2)*0.05+(r.hw-3)*0.05+talkAdd,0,1);
     var att=r.att4/4,commit=clampn(0.20+0.50*att+0.06*(r.own-3)+0.03*(r.qt-3)-0.03*(r.acad-3),0.02,0.98);
     var faith=clampn(0.20+0.40*att+0.12*(r.qt-3)+0.10*(r.own-3)+0.10*(pf-2),0.02,0.98);
     var loner=r.friendN<=1;
@@ -694,7 +838,7 @@
       owned:(r.intern>0?clampn((r.intern-1)/4,0,1):clampn(0.18+0.12*(r.own-3)+0.06*(r.qt-3)+0.06*(r.doubt-3)+0.28*faith,0,1)),doubtSpace:clampn(0.40+0.12*(r.doubt-3),0,1),adults:r.adults,
       warmth:clampn(0.2+0.15*(r.warmth-1),0,1),doubt:clampn(0.20+0.05*r.grade,0,1),
       rSg:r.sg?0:1,rMt:r.mentor?0:1,sermonAcc:0,retreatGlow:0,examPress:0,absent:0,left:false,dropped:false,
-      sg:!!r.sg,mentor:!!r.mentor,friends:[],phase:Math.random()*6.28,seat:freeSeat(),mx:Math.random(),my:Math.random(),_friendN:r.friendN,name:r.name,id:++sid};
+      sg:!!r.sg,mentor:!!r.mentor,friends:[],phase:Math.random()*6.28,seat:freeSeat(),mx:Math.random(),my:Math.random(),_friendN:r.friendN,_fNames:r.fNames||null,name:r.name,id:++sid};
   }
   function syncSlidersFromRoster(rows){
     var n=rows.length||1,a=0,rk=0,mid=0,mota=0,none=0,core=0,lon=0;
@@ -704,35 +848,69 @@
     setSlider('p-mid',Math.round(mid/n*100));setSlider('p-high',100-Math.round(mid/n*100));
     setSlider('p-mota',Math.round(mota/n*100));setSlider('p-none',Math.round(none/n*100));
     setSlider('p-core',Math.round(core/n*100));setSlider('p-loner',Math.round(lon/n*100));
+    // 학부모 설문의 다락방 참여(Y/N)가 오면 참여율로 부모 모임 슬라이더를 실측에 맞춘다.
+    var dN=0,dY=0;rows.forEach(function(r){if(r.dara!=null){dN++;if(r.dara)dY++;}});
+    if(dN>0)setSlider('s-daracbang',Math.round(dY/dN*100));
   }
+  function saveRoster(){try{localStorage.setItem('woori_roster_v1',JSON.stringify({rows:roster,cols:rosterCols}));}catch(err){}}
+  function loadRoster(){try{var raw=localStorage.getItem('woori_roster_v1');if(!raw)return false;var o=JSON.parse(raw);
+    if(o&&o.rows&&o.rows.length){roster=o.rows;rosterCols=o.cols||[];return true;}}catch(err){}return false;}
   function buildFromRoster(){
     if(!roster||!roster.length)return;
+    rosterCols=roster._cols||rosterCols||[];
     syncSlidersFromRoster(roster); // 전망·추천이 실제 명단을 닮도록 슬라이더 보정
     seats.forEach(function(s){s.taken=false;});students=[];week=0;dropouts=0;gradKeep=0;gradLapse=0;hist=[];eventLog=[];churchClimate=0.5;parentVitality=0.5;
     roster.forEach(function(r){students.push(makeFromRow(r));});
-    students.forEach(function(s){var t=s._friendN||0;if(t>0)linkIn(s,students,students,Math.max(0,t-1),t);});
-    document.getElementById('roster-status').innerHTML='✅ 명단 <b>'+roster.length+'명</b>으로 진단 중.';
+    // 친구이름(교사 관찰)이 있으면 실제 친구망으로 잇는다. 무작위 연결은 관찰이 없는 아이에게만(추정).
+    var byName={};students.forEach(function(s,i){if(s.name)byName[s.name.replace(/\s+/g,'')]=i;});
+    students.forEach(function(s,i){if(!s._fNames)return;
+      s._fNames.forEach(function(nm){var j=byName[nm.replace(/\s+/g,'')];
+        if(j==null||j===i)return;
+        if(s.friends.indexOf(j)<0)s.friends.push(j);
+        if(students[j].friends.indexOf(i)<0)students[j].friends.push(i);});});
+    students.forEach(function(s){if(s._fNames)return;var t=s._friendN||0;if(t>0)linkIn(s,students,students,Math.max(0,t-1),t);});
+    var rs=document.getElementById('roster-status');if(rs)rs.innerHTML='✅ 명단 <b>'+roster.length+'명</b>으로 진단 중.';
+    saveRoster();
     startSim();
   }
   function placeholderRoster(){
-    var rows=[],G=['중1','중2','중3','고1','고2','고3'];
-    for(var i=0;i<28;i++){var pf=1+Math.floor(Math.random()*3),att=Math.floor(Math.random()*5),fn=Math.floor(Math.random()*5);
-      rows.push({name:'학생'+(i+1),grade:1+Math.floor(Math.random()*6),parentFaith:pf,sibFaith:pf,friendN:fn,
-        sg:Math.random()<0.5,mentor:Math.random()<0.35,serve:Math.random()<0.25,att4:att,qt:1+Math.floor(Math.random()*5),
-        acad:1+Math.floor(Math.random()*5),own:1+Math.floor(Math.random()*5),
-        hw:1+Math.floor(Math.random()*5),adults:Math.floor(Math.random()*4),belongQ:1+Math.floor(Math.random()*5),doubt:1+Math.floor(Math.random()*5),
-        warmth:1+Math.floor(Math.random()*5),intern:0});}
+    // 예시 명단: 새 관찰 도구로 모은 모양 그대로 — 행정 기록 + 교사 행동 관찰(친구이름 포함). 학부모·학생 설문은 아직 없음.
+    var rows=[],L2=[2,3.5,4.5];
+    for(var i=0;i<28;i++){var pf=1+Math.floor(Math.random()*3),att=Math.floor(Math.random()*5);
+      rows.push({name:'학생'+(i+1),grade:1+Math.floor(Math.random()*6),parentFaith:pf,sibFaith:Math.random()<0.4?3:2,friendN:0,fNames:null,
+        sg:Math.random()<0.5,mentor:Math.random()<0.35,serve:Math.random()<0.25,att4:att,qt:3,
+        acad:3,own:L2[Math.floor(Math.random()*3)],
+        hw:3,adults:Math.floor(Math.random()*4),belongQ:L2[Math.floor(Math.random()*3)],doubt:Math.random()<0.35?4:2.5,
+        warmth:3,intern:0,talk:null,dara:Math.random()<0.5});}
+    rows.forEach(function(r,i){ // 친구이름 관찰: 7할은 1~3명을 적어 냈다(실제 친구망). 못 적어 낸 아이는 추정 연결.
+      if(Math.random()<0.7){var k=1+Math.floor(Math.random()*3),names=[];
+        for(var t=0;t<k;t++){var j=Math.floor(Math.random()*rows.length);if(j!==i&&names.indexOf(rows[j].name)<0)names.push(rows[j].name);}
+        if(names.length){r.fNames=names;r.friendN=names.length;}}
+      if(!r.fNames)r.friendN=Math.floor(Math.random()*5);});
+    rows._cols=['이름','학년','출석4주','소그룹','멘토','봉사역할','부모출석','형제등록','다락방','친구이름','자기말표현','의심질문','예배후머묾','챙기는어른'];
     return rows;
   }
   function downloadCSV(){
-    var head=CSV_COLS.join(',');
-    var ex=['김민수,중3,3,3,4,Y,Y,N,4,4,3,5,4,3,4,4,4,4','이서연,고1,1,1,1,N,N,N,1,2,4,2,1,0,2,1,2,','박지훈,고2,2,2,3,Y,N,Y,3,3,3,3,3,2,3,3,3,3'];
+    // 양식은 관찰·기록 가능한 열만 권한다(옛 열 이름으로 된 파일도 계속 읽힌다).
+    // 이름,학년,출석4주,소그룹,멘토,봉사역할,부모출석,형제등록,다락방,친구이름,자기말표현,의심질문,예배후머묾,챙기는어른,신앙대화,가정예배,부모관계,내면화점수
+    var head=TEMPLATE_COLS.join(',');
+    var ex=['김민수,중3,4,Y,Y,N,2,Y,Y,박지훈 이서연,2,Y,2,3,3,4,4,4','이서연,고1,1,N,N,N,0,N,N,,0,N,0,0,,,,','박지훈,고2,3,Y,N,Y,1,N,Y,김민수,1,N,1,2,1,3,3,'];
     var blob=new Blob(['﻿'+head+'\n'+ex.join('\n')+'\n'],{type:'text/csv;charset=utf-8'});
     var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='우리부_명단_양식.csv';a.click();URL.revokeObjectURL(url);
   }
+  function loadSampleRoster(){roster=placeholderRoster();document.getElementById('settings').hidden=true;buildFromRoster();}
+  function handleCSVFile(f){if(!f)return;var rd=new FileReader();rd.onload=function(){try{var r=parseCSV(rd.result);if(!r.length){document.getElementById('roster-status').textContent='빈 명단이거나 형식이 맞지 않습니다.';return;}roster=r;document.getElementById('settings').hidden=true;buildFromRoster();}catch(err){document.getElementById('roster-status').textContent='읽기 실패: '+err.message;alert('명단을 읽지 못했습니다: '+err.message);}};rd.readAsText(f,'utf-8');}
   document.getElementById('csv-template').addEventListener('click',downloadCSV);
-  document.getElementById('csv-sample').addEventListener('click',function(){roster=placeholderRoster();document.getElementById('settings').hidden=true;buildFromRoster();});
-  document.getElementById('csv-file').addEventListener('change',function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var r=parseCSV(rd.result);if(!r.length){document.getElementById('roster-status').textContent='빈 명단이거나 형식이 맞지 않습니다.';return;}roster=r;document.getElementById('settings').hidden=true;buildFromRoster();}catch(err){document.getElementById('roster-status').textContent='읽기 실패: '+err.message;}};rd.readAsText(f,'utf-8');});
+  document.getElementById('csv-sample').addEventListener('click',loadSampleRoster);
+  document.getElementById('csv-file').addEventListener('change',function(e){handleCSVFile(e.target.files&&e.target.files[0]);});
+  // 온보딩(이번 주 탭) 쪽 같은 동작
+  var obF=document.getElementById('ob-file');if(obF)obF.addEventListener('change',function(e){handleCSVFile(e.target.files&&e.target.files[0]);});
+  var obT=document.getElementById('ob-template');if(obT)obT.addEventListener('click',downloadCSV);
+  var obS=document.getElementById('ob-sample');if(obS)obS.addEventListener('click',function(e){e.preventDefault();loadSampleRoster();});
+  var obR=document.getElementById('ob-rough');if(obR)obR.addEventListener('click',function(e){e.preventDefault();document.getElementById('settings').hidden=false;});
+  // 인쇄 설문지(온보딩·설정 서랍 양쪽)
+  [['ob-sheet-teacher','teacher'],['ob-sheet-parent','parent'],['ob-sheet-student','student'],['sheet-teacher','teacher'],['sheet-parent','parent'],['sheet-student','student']].forEach(function(p){
+    var el=document.getElementById(p[0]);if(el)el.addEventListener('click',function(){printSurveySheets(p[1]);});});
   var eventLog=[];
   function logEv(t,warn){eventLog.push({wk:week,t:t,warn:!!warn});if(eventLog.length>80)eventLog.shift();}
   function step(){
@@ -795,6 +973,7 @@
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
     updateVerdict();updateKpi();drawTrend();drawCompare();drawYearPlan();planEffect();drawRoom();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateStudCard();updateWhy();updateWar();updateReadouts();updateRecap();renderCareLog();
     updateDiag();updateProj();
+    renderPastor();renderOutcome();updateOnboard();
   }
   // 출석은 좋지만(eng 높음) 속이 빈(취약도 높음) 아이 — 출석 기반 대시보드엔 안 보이는 위험. 전환기에 무너진다.
   function updateHiddenRisk(){
@@ -819,10 +998,10 @@
     function bar(label,v,cls,hint){return '<div class="gauge"><div class="gauge-top"><span>'+label+'</span><b>'+v+'%</b></div><div class="gauge-bar"><div class="gauge-fill '+cls+'" style="width:'+v+'%"></div></div><div class="hint">'+hint+'</div></div>';}
     var rem=week%WEEKS_PER_YEAR,toY=rem===0?WEEKS_PER_YEAR:WEEKS_PER_YEAR-rem;
     var g3=a.filter(function(s){return s.grade===3;}),g3risk=g3.filter(function(s){return cliffProb(s)>=0.35;}).length;
-    var sand=frag>=30?'<div class="callout" style="margin-top:8px;font-size:14px;background:#f4e6df;border-color:#e0b3a3"><b style="color:var(--bad)">모래 위에 지은 집(마 7:26).</b> 지금 출석의 약 <b>'+frag+'%</b>는 믿음이 아니라 외부(부모·또래·습관)가 떠받치는 몫입니다. 전환기에 비가 내리고 창수가 나면(진학·졸업) 그 받침이 사라져 무너질 수 있습니다.</div>'
+    var sand=frag>=30?'<div class="callout" style="margin-top:8px;font-size:14px;background:#fef2f2;border-color:#fecaca"><b style="color:var(--bad)">모래 위에 지은 집(마 7:26).</b> 지금 출석의 약 <b>'+frag+'%</b>는 믿음이 아니라 외부(부모·또래·습관)가 떠받치는 몫입니다. 전환기에 비가 내리고 창수가 나면(진학·졸업) 그 받침이 사라져 무너질 수 있습니다.</div>'
       :gap>=12?'<div class="callout" style="margin-top:8px;font-size:14px">겉은 든든하나, 믿음이 아직 자기 것이 안 된 아이가 있습니다(출석의 '+frag+'%가 외부 의존). 한 걸음 더 깊이 세우세요.</div>'
       :'<div class="callout" style="margin-top:8px;font-size:14px">출석과 속이 함께 갑니다. 든든합니다.</div>';
-    var ewc=ewi>=35?'background:#f4e6df;color:var(--bad)':ewi>=22?'background:#f6efd9;color:var(--warn)':'background:#e7f0df;color:var(--good)';
+    var ewc=ewi>=35?'background:#fef2f2;color:var(--bad)':ewi>=22?'background:#fffbeb;color:var(--warn)':'background:#f0fdf4;color:var(--good)';
     var trans='<div class="hint" style="margin-top:8px">⏳ 다음 진급(중3→고1 전환·고3 졸업)까지 약 <b>'+toY+'주</b>. 지금이면 중3 '+g3.length+'명 중 <b>'+g3risk+'명</b>이 전환에서 흔들릴 수 있습니다.</div>'+
       '<span class="ewi-chip" style="'+ewc+'">조기경보 '+ewi+' — 출석이 무너지기 전, 속에서 자라는 위험</span>';
     el.innerHTML=bar('겉 — 출석으로 든든한 아이',actR,'att','매주 잘 나오는 아이의 비율')+
@@ -858,9 +1037,9 @@
     h+=tile('누적 이탈',dropouts,'',s0&&s0.n?Math.round(dropouts/s0.n*100)+'% 시작 대비':'명');
     el.innerHTML=h;
   }
-  // ── 평이한 문장 진단서 (목사용 기본 화면) ──
-  function updateVerdict(){
-    var a=students.filter(function(s){return !s.left;});if(!a.length)return;
+  // ── 평이한 문장 진단서: 신호등 계산(순수) — 기본 화면과 자세히가 공유 ──
+  function verdictState(){
+    var a=students.filter(function(s){return !s.left;});if(!a.length)return null;
     var ri=a.filter(function(s){return s.eng<0.3;}).length,share=ri/a.length,trend=0;
     if(hist.length>=5){var p=hist[hist.length-5];trend=ri-(p.risk||0);}
     var frag=fragIndex(a),ewi=earlyWarn(a);
@@ -872,8 +1051,12 @@
     else{light='🟡';col='var(--warn)';txt='조금씩 흔들립니다. 지금 손써야 합니다.';}
     var dir=trend>=3?'지난달보다 늘었습니다':trend<=-3?'지난달보다 줄었습니다':'지난달과 비슷합니다';
     var sub='지금 '+a.length+'명 중 <b>'+ri+'명</b>이 흔들립니다. '+dir+'.';
-    document.getElementById('verdict').innerHTML='<div class="light">'+light+'</div><div><div class="vtext">'+txt+'</div><div class="vsub">'+sub+'</div></div>';
-    document.getElementById('verdict-card').style.borderLeft='5px solid '+col;
+    return {light:light,col:col,txt:txt,sub:sub,n:a.length,risk:ri};
+  }
+  function updateVerdict(){
+    var v=verdictState();if(!v)return;
+    document.getElementById('verdict').innerHTML='<div class="light">'+v.light+'</div><div><div class="vtext">'+v.txt+'</div><div class="vsub">'+v.sub+'</div></div>';
+    document.getElementById('verdict-card').style.borderLeft='5px solid '+v.col;
   }
   function updateRecap(){
     var sum=document.getElementById('recap-sum'),lg=document.getElementById('recap-log');if(!sum)return;
@@ -907,15 +1090,15 @@
   }
   // ── 올해 계획(의사결정 중심): 1년 일정을 트랙별 막대로. 무엇을 언제 + 지금 주차 표시 ──
   function drawYearPlan(){
-    var cv=document.getElementById('yearplan');if(!cv)return;var g=cv.getContext('2d');
-    var W=600,L=66,rows=[['sermon','설교'],['exam','시험기간'],['retreat','수련회·전도'],['sooneung','수능']];
-    var rowH=27,top=22,H=top+rows.length*rowH+6;cv.width=W;cv.height=H;g.clearRect(0,0,W,H);
+    var cv=document.getElementById('yearplan');if(!cv)return;
+    var W=cssW(cv,600),L=66,rows=[['sermon','설교'],['exam','시험기간'],['retreat','수련회·전도'],['sooneung','수능']];
+    var rowH=27,top=22,H=top+rows.length*rowH+6;var g=sharpCanvas(cv,W,H);
     var months=['3','4','5','6','7','8','9','10','11','12','1','2'];
     g.textAlign='center';g.font='9px sans-serif';
-    for(var mo=0;mo<12;mo++){var mx=L+mo/12*(W-L-6);g.strokeStyle='rgba(90,150,230,.09)';g.beginPath();g.moveTo(mx,top-2);g.lineTo(mx,H-4);g.stroke();g.fillStyle='#7e8aa3';g.fillText(months[mo],mx+(W-L-6)/24,top-7);}
+    for(var mo=0;mo<12;mo++){var mx=L+mo/12*(W-L-6);g.strokeStyle='rgba(15,23,42,.06)';g.beginPath();g.moveTo(mx,top-2);g.lineTo(mx,H-4);g.stroke();g.fillStyle=PAL.txt;g.fillText(months[mo],mx+(W-L-6)/24,top-7);}
     function xOf(w){return L+(w-1)/52*(W-L-6);}
-    rows.forEach(function(rw,ri){var y=top+ri*rowH;g.fillStyle='#9aa8c2';g.font='10px sans-serif';g.textAlign='left';g.fillText(rw[1],4,y+rowH/2+3);
-      g.strokeStyle='rgba(255,255,255,.05)';g.beginPath();g.moveTo(L,y+rowH/2);g.lineTo(W-6,y+rowH/2);g.stroke();});
+    rows.forEach(function(rw,ri){var y=top+ri*rowH;g.fillStyle=PAL.txt;g.font='10px sans-serif';g.textAlign='left';g.fillText(rw[1],4,y+rowH/2+3);
+      g.strokeStyle='rgba(15,23,42,.08)';g.beginPath();g.moveTo(L,y+rowH/2);g.lineTo(W-6,y+rowH/2);g.stroke();});
     var rowOf={sermon:0,exam:1,retreat:2,outreach:2,smallgroup:2,service:2,sooneung:3};
     schedule.forEach(function(ev){var ri=rowOf[ev.type];if(ri==null)return;
       var col=ev.type==='sermon'?SERMON_FOCUS[ev.focus].color:(EVENTS[ev.type]?EVENTS[ev.type].color:'#888');
@@ -923,8 +1106,8 @@
       occ.forEach(function(w){if(w>52)return;var y=top+ri*rowH+6,x=xOf(w),bw=Math.max(7,dur/52*(W-L-6));if(x+bw>W-6)bw=W-6-x;
         g.fillStyle=col;g.globalAlpha=.9;g.fillRect(x,y,bw,rowH-13);g.globalAlpha=1;
         if(ev.type==='sermon'&&bw>30){g.fillStyle='#fff';g.font='9px sans-serif';g.textAlign='left';g.fillText(SERMON_FOCUS[ev.focus].label.replace('형',''),x+3,y+rowH-16);}});});
-    var nx=xOf(((week%WEEKS_PER_YEAR)||WEEKS_PER_YEAR));g.strokeStyle='#fff';g.lineWidth=1.6;g.beginPath();g.moveTo(nx,top-2);g.lineTo(nx,H-4);g.stroke();
-    g.fillStyle='#fff';g.font='9px sans-serif';g.textAlign='left';g.fillText('지금',Math.min(nx+2,W-26),top-7);
+    var nx=xOf(((week%WEEKS_PER_YEAR)||WEEKS_PER_YEAR));g.strokeStyle='#334155';g.lineWidth=1.6;g.beginPath();g.moveTo(nx,top-2);g.lineTo(nx,H-4);g.stroke();
+    g.fillStyle='#334155';g.font='9px sans-serif';g.textAlign='left';g.fillText('지금',Math.min(nx+2,W-26),top-7);
   }
   function planEffect(){
     var el=document.getElementById('plan-effect');if(!el)return;
@@ -939,27 +1122,27 @@
   }
   // ── 추이 차트(주식 렌즈): 활발/느슨/위기/신앙을 전체 기간 선으로 ──
   function drawTrend(){
-    var cv=document.getElementById('trend');if(!cv)return;var g=cv.getContext('2d');var W=600,H=180,L=30,R=8,T=8,B=20;cv.width=W;cv.height=H;g.clearRect(0,0,W,H);
+    var cv=document.getElementById('trend');if(!cv)return;var W=cssW(cv,600),H=180,L=30,R=8,T=8,B=20;var g=sharpCanvas(cv,W,H);
     if(hist.length<2){return;}var n=hist.length,ymax=0;hist.forEach(function(p){ymax=Math.max(ymax,p.active,p.loose,p.risk,p.idx||0);});ymax=Math.ceil(ymax/20)*20||80;
-    g.strokeStyle='rgba(120,100,50,.13)';g.fillStyle='#8a7f63';g.font='9px sans-serif';g.textAlign='right';
+    g.strokeStyle=PAL.grid;g.fillStyle=PAL.txt;g.font='9px sans-serif';g.textAlign='right';
     for(var v=0;v<=ymax;v+=20){var y=H-B-(v/ymax)*(H-T-B);g.beginPath();g.moveTo(L,y);g.lineTo(W-R,y);g.stroke();g.fillText(v,L-3,y+3);}
     function plot(key,col,dash){g.strokeStyle=col;g.lineWidth=2;g.setLineDash(dash||[]);g.beginPath();hist.forEach(function(p,i){var x=L+(n>1?i/(n-1):0)*(W-L-R),y=H-B-((p[key]||0)/ymax)*(H-T-B);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();g.setLineDash([]);}
-    plot('active','#5b8c3e');plot('loose','#c98a2b');plot('risk','#b5482f');plot('idx','#7a6a3a',[4,3]);
-    g.textAlign='center';g.fillStyle='#8a7f63';[0,Math.floor(n/4),Math.floor(n/2),Math.floor(3*n/4),n-1].forEach(function(i){if(i<0)return;var x=L+(n>1?i/(n-1):0)*(W-L-R);g.fillText((i+1)+'주',x,H-6);});
+    plot('active',PAL.good);plot('loose',PAL.warn);plot('risk',PAL.bad);plot('idx',PAL.stock,[4,3]);
+    g.textAlign='center';g.fillStyle=PAL.txt;[0,Math.floor(n/4),Math.floor(n/2),Math.floor(3*n/4),n-1].forEach(function(i){if(i<0)return;var x=L+(n>1?i/(n-1):0)*(W-L-R);g.fillText((i+1)+'주',x,H-6);});
     var sum=document.getElementById('trend-sum'),a=hist[0],b=hist[n-1];
     if(sum)sum.innerHTML='시작 '+a.n+'명 → 현재 '+b.n+'명 · 활발 '+a.active+'→<b>'+b.active+'</b> · 위기 '+a.risk+'→<b>'+b.risk+'</b> · 평균 신앙 '+Math.round(a.f*100)+'%→<b>'+Math.round(b.f*100)+'%</b> · 내면화 <b>'+(b.own||0)+'</b>';
   }
   // ── 계획 vs 기본 운영 비교(백테스트 렌즈): 같은 시작에서 이 계획 vs 아무 사역 없음 ──
   function drawCompare(){
-    var cv=document.getElementById('compare');if(!cv||!projData||!baseProj)return;var g=cv.getContext('2d');var W=600,H=150,L=30,R=8,T=8,B=20;cv.width=W;cv.height=H;g.clearRect(0,0,W,H);
+    var cv=document.getElementById('compare');if(!cv||!projData||!baseProj)return;var W=cssW(cv,600),H=150,L=30,R=8,T=8,B=20;var g=sharpCanvas(cv,W,H);
     var n=Math.min(projData.length,baseProj.length),ymax=0;for(var i=0;i<n;i++){ymax=Math.max(ymax,projData[i].active,baseProj[i].active);}ymax=Math.ceil(ymax/20)*20||80;
-    g.strokeStyle='rgba(120,100,50,.13)';g.fillStyle='#8a7f63';g.font='9px sans-serif';g.textAlign='right';
+    g.strokeStyle=PAL.grid;g.fillStyle=PAL.txt;g.font='9px sans-serif';g.textAlign='right';
     for(var v=0;v<=ymax;v+=20){var y=H-B-(v/ymax)*(H-T-B);g.beginPath();g.moveTo(L,y);g.lineTo(W-R,y);g.stroke();g.fillText(v,L-3,y+3);}
     function plot(arr,col,dash,w){g.strokeStyle=col;g.lineWidth=w;g.setLineDash(dash||[]);g.beginPath();for(var i=0;i<n;i++){var x=L+i/(n-1)*(W-L-R),y=H-B-(arr[i].active/ymax)*(H-T-B);i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();g.setLineDash([]);}
-    plot(baseProj,'#a08e6a',[5,4],2);plot(projData,'#5b8c3e',[],2.6);
-    g.textAlign='center';g.fillStyle='#8a7f63';for(var yr=0;yr<=3;yr++){var ix=Math.min(n-1,yr*52);var x=L+ix/(n-1)*(W-L-R);g.fillText(yr+'년',x,H-6);}
+    plot(baseProj,PAL.base,[5,4],2);plot(projData,PAL.good,[],2.6);
+    g.textAlign='center';g.fillStyle=PAL.txt;for(var yr=0;yr<=3;yr++){var ix=Math.min(n-1,yr*52);var x=L+ix/(n-1)*(W-L-R);g.fillText(yr+'년',x,H-6);}
   }
-  function colByEng(e){return e>=0.55?'#22c55e':e>=0.3?'#fbbf24':'#f87171';}
+  function colByEng(e){return e>=0.55?'#16a34a':e>=0.3?'#d97706':'#dc2626';}
   function cloneStudents(){return students.map(function(s){var o={};for(var k in s)o[k]=s[k];o.friends=(s.friends||[]).slice();return o;});}
   function leverOpts(l){
     if(l==='mentor')return {mt:Math.min(1,val('s-mt')/100+0.2)};
@@ -990,47 +1173,47 @@
   function expLost(fc){var n=0;students.filter(function(s){return !s.left;}).forEach(function(s){if(fc[s.id])n+=fc[s.id].lostP;});return n;}
   function coaLost(weeks,lever){return Math.round(expLost(forecastRoomAvg(weeks,leverOpts(lever),4)));}
   function drawRoom(){
-    var cv=document.getElementById('room');if(!cv)return;var g=cv.getContext('2d');
-    var a=students.filter(function(s){return !s.left;}),W=600,pos={};roomDots=[];
+    var cv=document.getElementById('room');if(!cv)return;var g;
+    var a=students.filter(function(s){return !s.left;}),W=cssW(cv,600),pos={};roomDots=[];
     var fc=roomWhen>0?forecastRoomAvg(roomWhen,leverOpts(roomLever),3):null;
     var shaken=a.filter(function(s){return s.eng<0.3;}).sort(function(x,y){return spreadScore(y,students)-spreadScore(x,students)||x.eng-y.eng;});
     var first={};if(!fc)shaken.slice(0,3).forEach(function(s){first[s.id]=1;});
     var H,RAD,list;
     function frame(){ // 지도 격자 + 모서리 조준 표식(전술 디스플레이 느낌)
-      g.strokeStyle='rgba(90,150,230,.08)';g.lineWidth=1;
+      g.strokeStyle='rgba(15,23,42,.05)';g.lineWidth=1;
       for(var gx=40;gx<W;gx+=40){g.beginPath();g.moveTo(gx,0);g.lineTo(gx,H);g.stroke();}
       for(var gy=24;gy<H;gy+=24){g.beginPath();g.moveTo(0,gy);g.lineTo(W,gy);g.stroke();}
-      g.strokeStyle='rgba(127,178,255,.5)';g.lineWidth=1.5;var t=11;
+      g.strokeStyle='rgba(79,70,229,.40)';g.lineWidth=1.5;var t=11;
       [[0,0,1,1],[W,0,-1,1],[0,H,1,-1],[W,H,-1,-1]].forEach(function(c){g.beginPath();g.moveTo(c[0],c[1]+c[3]*t);g.lineTo(c[0],c[1]);g.lineTo(c[0]+c[2]*t,c[1]);g.stroke();});
     }
     if(roomZoom){
       list=a.filter(function(s){return s.grade===roomZoom;});
       var perRow=8,rowH=30,top=24;RAD=7;
-      var rows=Math.max(1,Math.ceil(list.length/perRow));H=top+rows*rowH+14;cv.width=W;cv.height=H;
-      g.clearRect(0,0,W,H);frame();g.fillStyle='#cbd5e1';g.font='bold 12px sans-serif';g.textAlign='left';g.fillText(GRADE_LABELS[roomZoom]+' '+list.length+'명',8,15);
+      var rows=Math.max(1,Math.ceil(list.length/perRow));H=top+rows*rowH+14;g=sharpCanvas(cv,W,H);
+      frame();g.fillStyle='#475569';g.font='bold 12px sans-serif';g.textAlign='left';g.fillText(GRADE_LABELS[roomZoom]+' '+list.length+'명',8,15);
       list.forEach(function(s,i){var r=Math.floor(i/perRow),c=i%perRow;var x=24+c*((W-48)/(perRow-1)),y=top+r*rowH;pos[s.id]={x:x,y:y};roomDots.push({s:s,x:x,y:y});});
     }else{
       var colW=W/6,perRow2=4,rowH2=15,top2=24;
       var byG=[[],[],[],[],[],[]];a.forEach(function(s){if(s.grade>=1&&s.grade<=6)byG[s.grade-1].push(s);});
       var maxRows=1;byG.forEach(function(l){maxRows=Math.max(maxRows,Math.ceil(l.length/perRow2));});
-      H=top2+maxRows*rowH2+10;RAD=4.3;cv.width=W;cv.height=H;g.clearRect(0,0,W,H);frame();
-      for(var gi=0;gi<6;gi++){var x0=gi*colW;g.fillStyle='#9aa3b2';g.font='11px sans-serif';g.textAlign='center';g.fillText(GRADE_LABELS[gi+1]+' '+byG[gi].length,x0+colW/2,14);
-        if(gi>0){g.strokeStyle='rgba(255,255,255,.07)';g.beginPath();g.moveTo(x0,18);g.lineTo(x0,H-4);g.stroke();}
+      H=top2+maxRows*rowH2+10;RAD=4.3;g=sharpCanvas(cv,W,H);frame();
+      for(var gi=0;gi<6;gi++){var x0=gi*colW;g.fillStyle='#667085';g.font='11px sans-serif';g.textAlign='center';g.fillText(GRADE_LABELS[gi+1]+' '+byG[gi].length,x0+colW/2,14);
+        if(gi>0){g.strokeStyle='rgba(15,23,42,.07)';g.beginPath();g.moveTo(x0,18);g.lineTo(x0,H-4);g.stroke();}
         byG[gi].forEach(function(s,i){var r=Math.floor(i/perRow2),c=i%perRow2;var x=x0+14+c*((colW-26)/Math.max(1,perRow2-1)),y=top2+r*rowH2;pos[s.id]={x:x,y:y};roomDots.push({s:s,x:x,y:y});});}
     }
     function line(ax,ay,bx,by,col,w){g.strokeStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(ax,ay);g.lineTo(bx,by);g.stroke();}
-    if(roomZoom&&list){list.forEach(function(s){(s.friends||[]).forEach(function(j){var o=students[j];if(o&&pos[o.id]&&s.id<o.id)line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'rgba(255,255,255,.13)',1);});});}
-    else{a.forEach(function(s){(s.friends||[]).forEach(function(j){var o=students[j];if(o&&pos[o.id]&&pos[s.id]&&s.id<o.id)line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'rgba(120,170,240,.07)',1);});});}
-    if(roomSpread){a.forEach(function(s){if(s.eng>=0.3)return;(s.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&o.eng>=0.55&&pos[s.id]&&pos[o.id])line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'#f87171',1.3);});});}
+    if(roomZoom&&list){list.forEach(function(s){(s.friends||[]).forEach(function(j){var o=students[j];if(o&&pos[o.id]&&s.id<o.id)line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'rgba(15,23,42,.12)',1);});});}
+    else{a.forEach(function(s){(s.friends||[]).forEach(function(j){var o=students[j];if(o&&pos[o.id]&&pos[s.id]&&s.id<o.id)line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'rgba(37,99,235,.10)',1);});});}
+    if(roomSpread){a.forEach(function(s){if(s.eng>=0.3)return;(s.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&o.eng>=0.55&&pos[s.id]&&pos[o.id])line(pos[s.id].x,pos[s.id].y,pos[o.id].x,pos[o.id].y,'#ef4444',1.3);});});}
     var ripple=0;
-    if(selStudent&&pos[selStudent.id]){(selStudent.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&pos[o.id]){ripple++;line(pos[selStudent.id].x,pos[selStudent.id].y,pos[o.id].x,pos[o.id].y,'#60a5fa',1.4);}});}
+    if(selStudent&&pos[selStudent.id]){(selStudent.friends||[]).forEach(function(j){var o=students[j];if(o&&!o.left&&pos[o.id]){ripple++;line(pos[selStudent.id].x,pos[selStudent.id].y,pos[o.id].x,pos[o.id].y,'#3b82f6',1.4);}});}
     roomDots.forEach(function(d){var s=d.s,m=fc?fc[s.id]:null;
       if(m&&m.lostP>=0.5){ // 미래에 이탈 가능성 높은 아이: 회색 ×
-        g.fillStyle='#3a4a63';g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();g.strokeStyle='#7787a3';g.lineWidth=1.2;g.beginPath();g.moveTo(d.x-RAD,d.y-RAD);g.lineTo(d.x+RAD,d.y+RAD);g.stroke();return;}
-      if(m&&m.gradP>=0.5){g.strokeStyle='#3a4a63';g.lineWidth=1.4;g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.stroke();return;}
-      var dc=colByEng(m?m.eng:s.eng);g.fillStyle=dc;g.shadowColor=dc;g.shadowBlur=8;g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();g.shadowBlur=0;
-      if(first[s.id]){g.strokeStyle='#2a2614';g.lineWidth=1.8;g.beginPath();g.arc(d.x,d.y,RAD+2.3,0,6.2832);g.stroke();}
-      if(selStudent&&selStudent.id===s.id){g.strokeStyle='#60a5fa';g.lineWidth=2.4;g.beginPath();g.arc(d.x,d.y,RAD+3.6,0,6.2832);g.stroke();
+        g.fillStyle='#cbd5e1';g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();g.strokeStyle='#64748b';g.lineWidth=1.2;g.beginPath();g.moveTo(d.x-RAD,d.y-RAD);g.lineTo(d.x+RAD,d.y+RAD);g.stroke();return;}
+      if(m&&m.gradP>=0.5){g.strokeStyle='#94a3b8';g.lineWidth=1.4;g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.stroke();return;}
+      var dc=colByEng(m?m.eng:s.eng);g.fillStyle=dc;g.shadowColor=dc;g.shadowBlur=6;g.beginPath();g.arc(d.x,d.y,RAD,0,6.2832);g.fill();g.shadowBlur=0;
+      if(first[s.id]){g.strokeStyle='#111827';g.lineWidth=1.8;g.beginPath();g.arc(d.x,d.y,RAD+2.3,0,6.2832);g.stroke();}
+      if(selStudent&&selStudent.id===s.id){g.strokeStyle='#2563eb';g.lineWidth=2.4;g.beginPath();g.arc(d.x,d.y,RAD+3.6,0,6.2832);g.stroke();
         g.lineWidth=1;var cr=RAD+9;g.beginPath();g.moveTo(d.x-cr,d.y);g.lineTo(d.x-RAD-2,d.y);g.moveTo(d.x+RAD+2,d.y);g.lineTo(d.x+cr,d.y);g.moveTo(d.x,d.y-cr);g.lineTo(d.x,d.y-RAD-2);g.moveTo(d.x,d.y+RAD+2);g.lineTo(d.x,d.y+cr);g.stroke();}});
     if(roomZoom&&list){g.fillStyle='#64748b';g.font='9px sans-serif';g.textAlign='center';list.forEach(function(s){if(s.name)g.fillText(s.name.slice(0,4),pos[s.id].x,pos[s.id].y+RAD+9);});}
     g.textAlign='left';
@@ -1041,7 +1224,7 @@
         base='<b>이대로 '+yrs+'년 뒤</b>'+(lv?'('+lv+' 하면)':'')+' — <span style="color:#94a3b8">●</span> 이탈 위험 약 '+lost+'명, 졸업 '+grd+'명, <span style="color:#dc2626">●</span> 흔들림 '+shy+'명. 회색 ×=떠날 위험 큰 아이. "지금"으로 돌아가기.';
         if(lv){var baseLost=coaLost(roomWhen,'plan'),save=baseLost-lost;
           base+='<br><b style="color:#16a34a">'+lv+'</b>: 그대로면 약 '+baseLost+'명 잃는데 약 '+lost+'명으로 — '+(save>=1?'<b style="color:#16a34a">'+save+'명쯤 더 건집니다.</b>':save<=-1?'오히려 '+(-save)+'명쯤 더 잃습니다.':'큰 차이는 없습니다(다른 손길과 배합이 필요).');}}
-      else{base='<span style="color:#16a34a">●</span> 잘 나옴 <span style="color:#d08a1a">●</span> 뜸함 <span style="color:#dc2626">●</span> 흔들림 · 검은 테=먼저 만날 아이.';
+      else{base='<span style="color:#16a34a">●</span> 잘 나옴 <span style="color:#d97706">●</span> 뜸함 <span style="color:#dc2626">●</span> 흔들림 · 검은 테=먼저 만날 아이.';
         if(roomZoom)base+=' <b>'+GRADE_LABELS[roomZoom]+'</b>만 크게(회색 선=친구 사이). "전체"로 돌아가기.';
         if(selStudent&&ripple)base+=' <br><b style="color:#1d4ed8">선택한 아이와 이어진 친구 '+ripple+'명</b> — 이 아이가 흔들리면 함께 흔들리기 쉽고, 든든하면 함께 끌어올립니다.';
         if(roomSpread)base+=' <br><b style="color:#dc2626">붉은 선</b> = 흔들리는 아이에서 건강한 친구로 번질 수 있는 길.';}
@@ -1049,7 +1232,8 @@
     renderRoomCtrl();
   }
   function roomClick(e){var cv=document.getElementById('room');if(!cv||!roomDots.length)return;var r=cv.getBoundingClientRect();
-    var x=(e.clientX-r.left)/r.width*cv.width,y=(e.clientY-r.top)/r.height*cv.height,best=null,bd=roomZoom?900:400;
+    var lw=+cv.dataset.lw||cv.width,lh=+cv.dataset.lh||cv.height;
+    var x=(e.clientX-r.left)/r.width*lw,y=(e.clientY-r.top)/r.height*lh,best=null,bd=roomZoom?900:400;
     roomDots.forEach(function(d){var dx=d.x-x,dy=d.y-y,dd=dx*dx+dy*dy;if(dd<bd&&(!best||dd<best.d))best={s:d.s,d:dd};});
     if(best){selStudent=best.s;updateStudCard();drawRoom();var c=document.getElementById('stud-card');if(c)c.scrollIntoView({block:'nearest'});}}
   // 명단(CSV)을 넣었으면 이름을, 아니면 '중3 한 명'을 보인다.
@@ -1083,7 +1267,7 @@
     actBtns+='<button class="btn sm" data-action="visit" data-sid="'+s.id+'" style="margin-top:10px">📞 심방 기록</button> '+
              '<button class="btn sm" data-action="talk" data-sid="'+s.id+'" style="margin-top:10px">💬 대화 기록</button>';
     if(role==='parent')actBtns=''; // 부모 화면은 읽기 전용
-    el.innerHTML='<div class="callout" style="margin-top:8px;background:#e7e0cb;border-color:#d2d9bf">'+
+    el.innerHTML='<div class="callout" style="margin-top:8px;background:#f8fafc;border-color:#e2e8f0">'+
       '<div style="font-weight:800;font-size:15px;margin-bottom:6px">'+studName(s)+stageL+'</div>'+
       '<div class="hint" style="line-height:1.8">'+line+(s.bg==='none'?' · 혼자 다니는 아이':s.bg==='mota'?' · 믿는 가정':'')+(s.core?' · 헌신된 제자':'')+'</div>'+
       '<div style="margin-top:8px;font-size:14px">필요한 한 가지 → <b>'+need+'</b></div>'+
@@ -1113,18 +1297,25 @@
       '<p class="hint" style="margin-top:8px">행동만 기록한다(누구에게·무엇을·그 뒤 효과). 점수로 사람을 평가·서열화하지 않는다.</p>'+
       '<button class="btn sm ghost" id="care-clear" style="margin-top:4px;font-size:11px">일지 비우기</button>';
   }
-  function updateVisitList(){
-    var el=document.getElementById('visit-list');var shaken=students.filter(function(s){return !s.left&&s.eng<0.3;});
-    if(!shaken.length){el.innerHTML='<p class="muted" style="color:var(--good)">지금 무너지는 아이가 없습니다. 든든한 아이들을 한 걸음 더 깊이 세우세요.</p>';return;}
+  // 먼저 만날 아이 고르기(순수): 흔들리는 아이를 번짐 위험 순으로 + 이유·할 일 문장. 두 화면이 공유.
+  function visitPick(){
+    var shaken=students.filter(function(s){return !s.left&&s.eng<0.3;});
     shaken.sort(function(a,b){return spreadScore(b,students)-spreadScore(a,students)||a.eng-b.eng;});
-    el.innerHTML=shaken.slice(0,3).map(function(s){
+    return {total:shaken.length,top:shaken.slice(0,3).map(function(s){
       var frN=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length,why=[],what;
       if(s.loner||frN<=1){why.push('친구가 거의 없고');what='또래·소그룹에 이어 주기';}
       if(s.bg==='none')why.push('믿는 가정이 아니고');
       why.push('요즘 출석이 흔들립니다');
       if(!what)what='이번 주 안부 전화 한 번';
-      return '<div class="visit" data-si="'+students.indexOf(s)+'" style="cursor:pointer"><span class="who">'+studName(s)+'</span><span>'+why.join(' ')+' → <b>'+what+'</b></span></div>';
-    }).join('')+(shaken.length>3?'<p class="hint" style="margin-top:6px">외 '+(shaken.length-3)+'명 더 있습니다(자세히에서 전체).</p>':'');
+      return {s:s,si:students.indexOf(s),why:why.join(' '),what:what};
+    })};
+  }
+  function updateVisitList(){
+    var el=document.getElementById('visit-list');var v=visitPick();
+    if(!v.total){el.innerHTML='<p class="muted" style="color:var(--good)">지금 무너지는 아이가 없습니다. 든든한 아이들을 한 걸음 더 깊이 세우세요.</p>';return;}
+    el.innerHTML=v.top.map(function(o){
+      return '<div class="visit" data-si="'+o.si+'" style="cursor:pointer"><span class="who">'+studName(o.s)+'</span><span>'+o.why+' → <b>'+o.what+'</b></span></div>';
+    }).join('')+(v.total>3?'<p class="hint" style="margin-top:6px">외 '+(v.total-3)+'명 더 있습니다(자세히에서 전체).</p>':'');
   }
   function updateWhy(){
     var el=document.getElementById('why');if(!el)return;var k=attribution();
@@ -1153,7 +1344,7 @@
     var c3=cloneCfg(plan);c3.ops.daracbang=Math.min(1,(c3.ops.daracbang!=null?c3.ops.daracbang:0.5)+0.2);cands.push({label:'부모 다락방 강화',sim:c3});
     // 후보는 출석이 아니라 북극성(내면화+졸업 신앙 잔존)으로 견준다. 출석만 올리는 한 수는 모래성일 수 있다.
     var best=null;cands.forEach(function(cd){var h=simulate(cd.sim,W,R);var L=h[h.length-1];var g=(L.own-P.own)+0.5*((L.carry||0)-(P.carry||0));if(!best||g>best.g)best={label:cd.label,g:g};});
-    var action=best&&best.g>=1.2?'📣 가장 큰 한 수: <b>'+best.label+'</b>. 출석이 아니라 <b>내면화(자기 믿음)</b>를 가장 많이 끌어올린다. 아래 칩을 그렇게 맞추고 "이 계획으로 보기".':'📣 지금 계획이 이미 단단하다. 흔들리는 아이를 꾸준히 붙들고, 속(내면화)을 한 단계 더 깊이 세우는 데 집중하라.';
+    var action=best&&best.g>=1.2?'📣 가장 큰 한 수: <b>'+best.label+'</b>. 출석이 아니라 <b>내면화(자기 믿음)</b>를 가장 많이 끌어올립니다. "올해 계획" 탭에서 그렇게 바꾸고 "이 계획으로 보기"를 누르세요.':'📣 지금 계획이 이미 단단합니다. 흔들리는 아이를 꾸준히 붙들고, 속(내면화)을 한 단계 더 깊이 세우는 데 집중하세요.';
     recoState={effect:effect,forecast:forecast,action:action};updateReadouts();
   }
   function updateReadouts(){
@@ -1161,6 +1352,110 @@
     var ao=document.getElementById('action-one');if(ao)ao.innerHTML='<div class="callout">'+recoState.action+'</div>';
     var ef=document.getElementById('effect');if(ef)ef.innerHTML=recoState.effect;
     var fc=document.getElementById('forecast');if(fc)fc.innerHTML=recoState.forecast;
+  }
+
+  // ── 목회 수첩(기본 화면): 출처 배지·데이터 충실도·큰 진단·만날 아이·픽토그램 ──
+  var SRC_LABEL={obs:'출석부·행정',teach:'교사 관찰',survey:'설문',model:'모형 전망',est:'추정'};
+  function badge(src){return '<span class="badge b-'+src+'">'+SRC_LABEL[src]+'</span>';}
+  function hasCol(c){return rosterCols.indexOf(c)>=0;}
+  // 어떤 데이터까지 들어왔나 한 줄 — 무엇이 실측이고 무엇이 추정인지 정직하게.
+  function anyCol(){for(var i=0;i<arguments.length;i++)if(hasCol(arguments[i]))return true;return false;}
+  function fidelityLine(){
+    if(!roster||!roster.length)return '지금은 명단 없이 슬라이더로 잡은 <b>추정</b>입니다'+badge('est')+' 명단을 올리면 우리 아이들 이름으로 진단합니다.';
+    // 개념 단위로 센다(새 관찰 열과 옛 열 별칭을 함께 인정).
+    var t1=[anyCol('친구이름','교회친구수'),anyCol('자기말표현','신앙주인의식'),anyCol('의심질문','의심나눔'),anyCol('예배후머묾','소속감'),anyCol('챙기는어른')].filter(Boolean).length;
+    var t2=[anyCol('신앙대화'),anyCol('가정예배')].filter(Boolean).length;
+    var t3=hasCol('내면화점수');
+    var parts=['명단 '+roster.length+'명'+badge('obs')];
+    parts.push(hasCol('친구이름')?'친구망 실측'+badge('teach'):'친구망 추정'+badge('est'));
+    parts.push(t1>0?'교사 관찰 '+t1+'/5'+badge('teach'):'교사 관찰 전'+badge('est'));
+    parts.push(t2>0?'학부모 설문 '+t2+'/2'+badge('survey'):'학부모 설문 전'+badge('est'));
+    parts.push(t3?'속(내면화) 실측'+badge('survey'):'속(내면화)은 추정'+badge('est'));
+    return parts.join(' · ');
+  }
+  function updateOnboard(){var ob=document.getElementById('onboard');if(ob)ob.hidden=!!(roster&&roster.length);}
+  var N_TEN=['','하나','둘','셋','넷','다섯','여섯','일곱','여덟','아홉','열'];
+  function renderPastor(){
+    var pv=document.getElementById('pv-verdict');if(!pv)return;
+    var db=document.getElementById('data-badge');if(db)db.innerHTML=fidelityLine();
+    var v=verdictState();
+    if(!v)pv.innerHTML='<p class="muted">명단을 올리거나 예시로 시작하면 지금 상태가 나옵니다.</p>';
+    else pv.innerHTML='<div class="pv-verdict"><div class="light">'+v.light+'</div><div><div class="vtext">'+v.txt+'</div><div class="vsub">'+v.sub+' '+badge(roster&&roster.length?'obs':'est')+'</div></div></div>';
+    var pvv=document.getElementById('pv-visit');
+    if(pvv){var vp=visitPick();
+      if(!students.length)pvv.innerHTML='<p class="muted">명단을 올리거나 예시로 시작하면 여기 이름이 나옵니다.</p>';
+      else if(!vp.total)pvv.innerHTML='<p class="muted" style="color:var(--good)">지금 무너지는 아이가 없습니다. 든든한 아이들을 한 걸음 더 깊이 세우세요.</p>';
+      else pvv.innerHTML=vp.top.map(function(o){return '<div class="pv-card" data-si="'+o.si+'"><span class="who">'+studName(o.s)+'</span><span class="what">'+o.why+' → <b>'+o.what+'</b></span></div>';}).join('')
+        +(vp.total>3?'<p class="hint" style="margin-top:6px">외 '+(vp.total-3)+'명 더 있습니다("자세히"에 전체).</p>':'')
+        +'<p class="hint" style="margin-top:6px">만날 순서는 친구 관계로 가늠했습니다'+badge(hasCol('친구이름')?'teach':'est')+'</p>';}
+    var pa=document.getElementById('pv-action');
+    if(pa&&recoState)pa.innerHTML='<div class="callout" style="font-size:16.5px;line-height:1.65">'+recoState.action+'</div>';
+  }
+  // 올해 계획의 결론: 졸업 신앙 잔존을 자연빈도(열 명 중 N)와 픽토그램으로.
+  function renderOutcome(){
+    var el=document.getElementById('pv-outcome');if(!el)return;
+    if(!projData||!projData.length){el.innerHTML='';return;}
+    var c=projData[projData.length-1].carry;if(c==null){el.innerHTML='';return;}
+    var b=(baseProj&&baseProj.length&&baseProj[baseProj.length-1].carry!=null)?baseProj[baseProj.length-1].carry:null;
+    var k=clamp(Math.round(c/10),0,10),kb=b!=null?clamp(Math.round(b/10),0,10):null;
+    var dots='';for(var i=0;i<10;i++)dots+='<span class="'+(i<k?'keep':'')+'"></span>';
+    var line=k>0?'이 계획대로 가면, 졸업하는 아이 <b>열 명 중 '+N_TEN[k]+'</b>이 믿음을 지니고 나갑니다':'이 계획대로면, 믿음을 지니고 졸업하는 아이가 거의 없습니다';
+    var base=kb!=null?(kb===k?' 아무것도 안 해도 비슷합니다(이 계획의 힘이 약하다는 뜻).':' 아무것도 안 하면 열 명 중 '+(kb>0?N_TEN[kb]:'거의 없음')+'입니다.'):'';
+    el.innerHTML='<div class="ten">'+dots+'</div>'
+      +'<p style="font-size:17.5px;line-height:1.65;margin:10px 0 0">'+line+'.'+base+' '+badge('model')+'</p>'
+      +'<p class="hint" style="margin-top:6px">3년을 여러 번 굴린 평균입니다. 출석 수가 아니라 이 숫자가 진짜 성적표입니다.</p>';
+  }
+  // ── 인쇄 설문지 3종(교사 관찰지·학부모 설문지·학생 설문지) — 종이로 모아 명단 CSV에 옮긴다 ──
+  function printSurveySheets(kind){
+    var css='<style>body{font-family:system-ui,"Malgun Gothic",sans-serif;max-width:760px;margin:26px auto;color:#1a2233;line-height:1.65;padding:0 16px;font-size:14px}'+
+      'h1{font-size:20px;border-bottom:2px solid #1a2233;padding-bottom:8px}h2{font-size:15px;margin-top:18px}'+
+      'table{border-collapse:collapse;width:100%;margin-top:10px}th,td{border:1px solid #94a3b8;padding:7px 8px;font-size:13px;text-align:center}th{background:#f1f5f9}td.nm{min-width:70px}'+
+      '.note{color:#555;font-size:12.5px}.q{margin:10px 0;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px}.q b{display:block;margin-bottom:3px}'+
+      '@media print{body{margin:0}}</style>';
+    var body='';
+    if(kind==='teacher'){
+      var rows='';for(var i=0;i<6;i++)rows+='<tr><td class="nm"></td><td style="min-width:130px"></td><td></td><td></td><td></td><td></td></tr>';
+      body='<h1>교사 관찰지 — 내가 맡은 아이들 (본 것만)</h1>'+
+        '<p class="note">교사·소그룹장이 <b>자기가 맡은 6명쯤만</b>, 학기 1회 적습니다. 전부 <b>실제로 본 행동</b>입니다 — 아이의 속마음을 짐작해 적지 마세요. 못 봤으면 비워 둡니다(빈 칸은 "모름"으로 처리되며, 추측보다 낫습니다). 다 쓰면 명단 엑셀(CSV)의 같은 이름 칸에 옮깁니다.</p>'+
+        '<table><tr><th>이름</th><th>친구이름<br>주로 함께 다니는 아이 1~3명<br>(공백으로 구분, 쉼표 금지)</th><th>자기말표현<br>나눔·기도에서 자기 말로<br>신앙을 표현하는 걸 봄<br>0 없음·1 가끔·2 자주</th><th>의심질문<br>신앙 질문·의심을<br>어른에게 꺼낸 적 있음<br>Y/N</th><th>예배후머묾<br>모임 후 바로 가지 않고<br>남아 어울림<br>0 없음·1 가끔·2 자주</th><th>챙기는어른<br>이름을 댈 수 있는<br>어른 수 0~5</th></tr>'+rows+'</table>'+
+        '<p class="note">왜 행동만 묻나: 혼자 기도하는지, 믿음이 자기 것인지 같은 속마음은 교사가 볼 수 없는 영역이라 묻지 않습니다(그건 연 1회 학생 설문이 잽니다). 친구이름은 전염 진단과 "먼저 만날 아이" 순서를 실제 관계망으로 계산하게 해 주는 가장 값진 관찰입니다.</p>';
+    }else if(kind==='parent'){
+      body='<h1>학부모 설문지 — 가정의 신앙 (사실만 두 가지)</h1>'+
+        '<p class="note">자녀 이름: ______________ · 학기 1회, 학부모 모임에서 적습니다. 연구마다 자녀 신앙의 가장 강한 예측은 프로그램이 아니라 <b>가정의 평소 신앙 대화</b>였습니다. 지난 한 주를 떠올려 사실대로 적어 주세요.</p>'+
+        '<div class="q"><b>1. 지난 한 주, 자녀와 신앙·삶의 고민을 이야기한 횟수는?</b> 주 ______회 <span class="note">(명단의 "신앙대화" 칸, 0~7)</span></div>'+
+        '<div class="q"><b>2. 지난 한 달, 가정예배나 함께 기도하는 시간을 가진 빈도는?</b> 1 안 함 · 2 · 3 가끔 · 4 · 5 자주 <span class="note">(명단의 "가정예배" 칸)</span></div>'+
+        '<p class="note">다락방(부모 모임) 참여는 모임 출석부(행정 기록)로 잡으므로 여기서 묻지 않습니다. 부모·자녀 관계의 온기는 자녀가 더 정직하게 답할 수 있어 학생 설문에서 잽니다. 응답은 평가가 아니라 도울 곳을 찾는 나침반입니다.</p>';
+    }else{
+      body='<h1>학생 설문지 — 내 믿음은 어디쯤 (연 1회)</h1>'+
+        '<p class="note">이름: ______________ · 수련회처럼 다 모인 자리에서 연 1회면 충분합니다. 각 문항에 1(전혀 아니다)~5(매우 그렇다)로 답합니다. 여기 묻는 것은 <b>나만 아는 것</b>(속마음)입니다 — 그래서 교사나 부모가 아니라 본인에게 묻습니다.</p>'+
+        '<h2>가. 내 믿음 (검증 척도 RCI-A·FMS·CRIS에서 추린 6문항)</h2>'+
+        '<div class="q"><b>1. 내 신앙은 부모나 교회의 기대 때문이 아니라 나 자신의 것이다.</b> ____</div>'+
+        '<div class="q"><b>2. 나는 시키지 않아도 혼자 성경을 읽거나 기도한다.</b> ____</div>'+
+        '<div class="q"><b>3. 내 믿음을 내 언어로 친구에게 설명할 수 있다.</b> ____</div>'+
+        '<div class="q"><b>4. 신앙은 내 평소 생각과 행동을 빚는다.</b> ____</div>'+
+        '<div class="q"><b>5. 나는 신앙생활을 내가 진심으로 원해서 한다.</b> ____</div>'+
+        '<div class="q"><b>6. 안 하면 죄책감이 들어서 신앙생활을 한다.</b> ____ <span class="note">(역채점: 6에서 응답을 뺀 값으로 계산)</span></div>'+
+        '<h2>나. 부모님과 나 (각 1~5, 평균을 "부모관계" 칸에)</h2>'+
+        '<div class="q"><b>7. 부모님은 나를 있는 그대로 받아 주신다고 느낀다.</b> ____</div>'+
+        '<div class="q"><b>8. 신앙 문제로 의견이 달라도 부모님의 사랑이 변하지 않는다고 느낀다.</b> ____</div>'+
+        '<h2>점수 내는 법</h2><p class="note">가: 1~5번 응답 + (6 − 6번 응답)을 더해 6으로 나눈 평균(1~5)을 명단의 <b>내면화점수</b> 칸에. 나: 7·8번 평균을 <b>부모관계</b> 칸에. 점수가 높을수록 빌려온 믿음이 아니라 자기 믿음입니다. 근거는 SURVEY.md.</p>';
+    }
+    var w=window.open('','_blank');if(!w){alert('팝업이 막혀 있습니다. 팝업을 허용해 주세요.');return;}
+    w.document.write('<html><head><meta charset="utf-8"><title>설문지</title>'+css+'</head><body>'+body+'</body></html>');
+    w.document.close();w.focus();setTimeout(function(){w.print();},300);
+  }
+  // ── 화면 전환(이번 주·올해 계획·자세히) ──
+  var curView='week';
+  function setView(v){
+    if(!{week:1,plan:1,detail:1}[v])v='week';
+    curView=v;
+    [['week','view-week'],['plan','view-plan'],['detail','view-detail']].forEach(function(p){
+      var el=document.getElementById(p[1]);if(el)el.hidden=(p[0]!==v);
+      var tb=document.getElementById('tab-'+p[0]);if(tb)tb.classList.toggle('on',p[0]===v);});
+    if(v==='detail')setTimeout(function(){if(typeof redrawAll==='function')redrawAll();},30);
+    if(v==='week')renderPastor();
+    if(v==='plan')renderOutcome();
+    if(typeof saveUI==='function')saveUI();
   }
   // ── 전쟁 위계(전략·작전·전술) 채우기 — 매주, 가벼운 계산 ──
   function sermonProg(){var s=null;schedule.forEach(function(ev){if(ev.type==='sermon'&&periodActive(ev,week))s=ev;});return s?{focus:s.focus,x:week-s.start+1,y:s.weeks}:null;}
@@ -1203,23 +1498,24 @@
   }
   // 번짐세(재생산지수 비슷): 최근 2주 새로 흔들린 아이 / 그 앞 2주. 1 넘으면 번지는 중(코로나 Rₜ 비유).
   function rtCalc(){var h=hist,n=h.length;if(n<9)return null;var a=0,b=0;for(var i=1;i<=4;i++)a+=(h[n-i].inc||0);for(var j=5;j<=8;j++)b+=(h[n-j].inc||0);if(b<1)return a<1?0:2.5;return Math.min(3,a/b);}
-  function drawCurve(){var cv=document.getElementById('curve');if(!cv)return;var g=cv.getContext('2d');g.clearRect(0,0,300,90);if(hist.length<2)return;var mx=1;hist.forEach(function(h){if(h.risk>mx)mx=h.risk;});
-    g.strokeStyle='#e0584a';g.lineWidth=2;g.beginPath();hist.forEach(function(h,i){var x=i/(hist.length-1)*296+2,y=86-(h.risk/mx)*78;i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();}
-  function drawNet(c){var cv=document.getElementById('net');if(!cv)return;var g=cv.getContext('2d'),W=600,H=300;g.clearRect(0,0,W,H);
+  function drawCurve(){var cv=document.getElementById('curve');if(!cv)return;var w=cssW(cv,300);var g=sharpCanvas(cv,w,90);if(hist.length<2)return;var mx=1;hist.forEach(function(h){if(h.risk>mx)mx=h.risk;});
+    g.strokeStyle=PAL.bad;g.lineWidth=2;g.beginPath();hist.forEach(function(h,i){var x=i/(hist.length-1)*(w-4)+2,y=86-(h.risk/mx)*78;i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();}
+  function drawNet(c){var cv=document.getElementById('net');if(!cv)return;var W=cssW(cv,600),H=Math.round(W/2);var g=sharpCanvas(cv,W,H);
     var a=students.filter(function(s){return !s.left&&s.mx!=null;});
     g.strokeStyle='rgba(120,130,150,0.13)';g.lineWidth=1;
     a.forEach(function(s){friendObjs(s,students).forEach(function(q){if(q.mx==null)return;g.beginPath();g.moveTo(s.mx*W,s.my*H);g.lineTo(q.mx*W,q.my*H);g.stroke();});});
     g.strokeStyle='rgba(220,38,38,0.45)';
     a.forEach(function(s){if(s.eng>=0.3)return;friendObjs(s,students).forEach(function(q){if(q.mx==null||q.eng<0.3)return;g.beginPath();g.moveTo(s.mx*W,s.my*H);g.lineTo(q.mx*W,q.my*H);g.stroke();});});
-    a.forEach(function(s){g.fillStyle=s.eng>=0.55?'#16a34a':s.eng>=0.3?'#d08a1a':'#dc2626';g.beginPath();g.arc(s.mx*W,s.my*H,3.2,0,6.2832);g.fill();});
+    a.forEach(function(s){g.fillStyle=s.eng>=0.55?'#16a34a':s.eng>=0.3?'#d97706':'#dc2626';g.beginPath();g.arc(s.mx*W,s.my*H,3.2,0,6.2832);g.fill();});
     if(c){g.lineWidth=2;c.spread.forEach(function(x){if(x.s.mx==null)return;g.strokeStyle='#991b1b';g.beginPath();g.arc(x.s.mx*W,x.s.my*H,6,0,6.2832);g.stroke();});
       c.anchor.forEach(function(x){if(x.s.mx==null)return;g.strokeStyle='#15803d';g.beginPath();g.arc(x.s.mx*W,x.s.my*H,6,0,6.2832);g.stroke();});}
     if(selStudent&&!selStudent.left&&selStudent.mx!=null){g.strokeStyle='#1d4ed8';g.lineWidth=2.5;g.beginPath();g.arc(selStudent.mx*W,selStudent.my*H,8,0,6.2832);g.stroke();}}
   // 관계 지도에서 점(아이)을 누르면 그 아이를 자세히
   function netClick(e){var cv=document.getElementById('net');if(!cv)return;var r=cv.getBoundingClientRect();
-    var x=(e.clientX-r.left)/r.width*600,y=(e.clientY-r.top)/r.height*300;
+    var lw=+cv.dataset.lw||600,lh=+cv.dataset.lh||300;
+    var x=(e.clientX-r.left)/r.width*lw,y=(e.clientY-r.top)/r.height*lh;
     var a=students.filter(function(s){return !s.left&&s.mx!=null;}),best=null,bd=400;
-    a.forEach(function(s){var dx=s.mx*600-x,dy=s.my*300-y,d=dx*dx+dy*dy;if(d<bd&&(!best||d<best.d))best={s:s,d:d};});
+    a.forEach(function(s){var dx=s.mx*lw-x,dy=s.my*lh-y,d=dx*dx+dy*dy;if(d<bd&&(!best||d<best.d))best={s:s,d:d};});
     if(best){selStudent=best.s;updateStudCard();updateDiag();var c=document.getElementById('stud-card');if(c)c.scrollIntoView({block:'nearest'});}}
   function updateDiag(){
     var c=contagion();
@@ -1244,9 +1540,9 @@
     projSamples=[];for(var s=0;s<4;s++)projSamples.push(simulateOnce(plan,3*WEEKS_PER_YEAR));
     drawIdx();updateRisk();}
   function drawIdx(){
-    var cv=document.getElementById('idxchart');if(!cv||!projData)return;var g=cv.getContext('2d'),W=600,H=150;g.clearRect(0,0,W,H);
+    var cv=document.getElementById('idxchart');if(!cv||!projData)return;var W=cssW(cv,600),H=150;var g=sharpCanvas(cv,W,H);
     // 0~100 격자
-    g.strokeStyle='#eef1f5';g.lineWidth=1;[0,25,50,75,100].forEach(function(v){var y=H-8-(v/100)*(H-22);g.beginPath();g.moveTo(34,y);g.lineTo(W-6,y);g.stroke();g.fillStyle='#9aa3b2';g.font='9px sans-serif';g.fillText(v,12,y+3);});
+    g.strokeStyle=PAL.grid;g.lineWidth=1;[0,25,50,75,100].forEach(function(v){var y=H-8-(v/100)*(H-22);g.beginPath();g.moveTo(34,y);g.lineTo(W-6,y);g.stroke();g.fillStyle=PAL.txt;g.font='9px sans-serif';g.fillText(v,12,y+3);});
     // 사역 이벤트 표시(설교·수련회 시작)
     var n=projData.length;
     schedule.forEach(function(ev){if(ev.start>n)return;var x=34+((ev.start-1)/(n-1))*(W-40);var col=ev.type==='sermon'?'#2563eb':ev.type==='retreat'?'#16a34a':null;if(!col)return;g.strokeStyle=col;g.globalAlpha=0.25;g.beginPath();g.moveTo(x,8);g.lineTo(x,H-8);g.stroke();g.globalAlpha=1;});
@@ -1298,6 +1594,7 @@
     document.getElementById('prog-pick').innerHTML=PROGS.map(function(p){return '<button class="chip'+(DEC.prog[p.k]?' on':'')+'" data-p="'+p.k+'">'+p.n+'</button>';}).join('');
     Array.prototype.forEach.call(document.querySelectorAll('#sermon-pick .chip'),function(b){b.addEventListener('click',function(){DEC.focus=this.dataset.f;renderDecide();});});
     Array.prototype.forEach.call(document.querySelectorAll('#prog-pick .chip'),function(b){b.addEventListener('click',function(){DEC.prog[this.dataset.p]=!DEC.prog[this.dataset.p];renderDecide();});});
+    saveUI();
   }
   // 결정 → 일정/운영으로 옮기고 처음부터 다시 본다
   function decToSchedule(){
@@ -1316,7 +1613,7 @@
     setSlider('s-sg',DEC.prog.sg?70:55);
     // 부모 세우기: 부모 모임(다락방) 참여를 끌어올린다. 40년 현장이 첫 지렛대로 꼽는 것.
     if(DEC.prog.parent)setSlider('s-daracbang',Math.min(100,(+document.getElementById('s-daracbang').value)+25));
-    generate();
+    if(roster&&roster.length)buildFromRoster();else generate(); // 명단이 있으면 실측 진단을 유지한 채 계획만 바꾼다
   }
   function recommend(){
     var box=document.getElementById('reco');box.innerHTML='<span class="hint">지렛대 분석 중... 어느 한 수가 북극성(졸업 신앙 잔존)을 가장 끌어올리는지 견준다.</span>';
@@ -1335,10 +1632,12 @@
         var sandFlag=(s.act>=2&&s.carry<1)?' <span class="hint" style="color:var(--bad)">(출석만↑·모래성)</span>':'';
         return '<div class="logrow"><span class="logwk">'+(i+1)+'위</span><span><b>'+s.label+'</b> — 내면화 '+sg(s.own)+' · 졸업 잔존 '+sg(s.carry)+'%p · 출석 '+sg(s.act)+'명'+sandFlag+'</span></div>';}).join('');
       var top=scored[0];
-      var head=(top&&top.score>=1)?'<div class="reco"><b>가장 큰 한 수: '+top.label+'</b> — 출석이 아니라 <b>내면화</b>를 가장 많이 끌어올린다.</div>':'<div class="reco">단일 변화로 북극성을 크게 올리는 한 수는 안 보인다. 여러 손길의 배합이 필요하다.</div>';
+      var head=(top&&top.score>=1)?'<div class="reco" style="font-size:17px;line-height:1.6"><b>'+top.label+'</b>이 가장 큽니다. 출석이 아니라 <b>내면화(자기 믿음)</b>를 가장 많이 끌어올립니다. '+badge('model')+'</div>':'<div class="reco" style="font-size:17px;line-height:1.6">한 가지만 바꿔서 크게 좋아지는 수는 안 보입니다. 여러 손길의 배합이 필요합니다. '+badge('model')+'</div>';
       var evid='<div class="mini-h" style="margin-top:12px">근거가 강한 레버 vs 약한 레버 (해외 연구)</div>'+
         '<div class="hint" style="line-height:1.7">근거 <b>강함</b>: 부모 신앙×관계 온기(최강 예측), 세대 통합 어른, 의심을 말할 안전한 자리.<br>근거 <b>약함·저효율</b>: <b>단기선교·봉사여행</b>(친교·시민성엔 좋아도 신앙 잔존 증거는 약함), 고비용 이벤트·"은혜의 고조"(몇 주면 식음). 큰 예산을 여기 몰지 말 것.<br><span style="color:var(--mut)">근거: Smith NSYR, Bengtson, Fuller Youth Institute, Beyerlein 2011.</span></div>';
-      box.innerHTML=head+'<div class="mini-h" style="margin-top:10px">지렛대 순위 (북극성 기준, 이 모형)</div>'+rows+evid+'<p class="hint" style="margin-top:6px">출석만 오르고 졸업 잔존은 그대로면 모래성이다. 모형 수치는 가정값이라 방향으로만 읽으라.</p>';
+      box.innerHTML=head+'<details style="margin-top:10px"><summary class="summary-h" style="font-size:14px">순위와 근거 자세히 ▾</summary>'+
+        '<div class="mini-h" style="margin-top:10px">지렛대 순위 (북극성 기준, 이 모형)</div>'+rows+evid+
+        '<p class="hint" style="margin-top:6px">출석만 오르고 졸업 잔존은 그대로면 모래성이다. 모형 수치는 가정값이라 방향으로만 읽으라.</p></details>';
     },30);
   }
   document.getElementById('apply-plan').addEventListener('click',applyDecision);
@@ -1360,7 +1659,7 @@
   // ── 설정 서랍 ──
   var UNITS={'p-n':'명','p-active':'%','p-risk':'%','p-mid':'%','p-high':'%','p-mota':'%','p-none':'%','p-core':'%','p-loner':'%','s-sg':'%','s-mt':'%','s-tc':'명','s-in':'명','s-speed':'%','s-daracbang':'%'};
   Object.keys(UNITS).forEach(function(id){var el=document.getElementById(id),out=document.getElementById('v-'+id);
-    var sync=function(){if(id==='s-speed'){var v=+el.value;out.textContent=v<=35?'천천히':v<=60?'보통':'빠르게';}else out.textContent=el.value+UNITS[id];if(id==='p-active'||id==='p-risk')segHint();};el.addEventListener('input',sync);sync();});
+    var sync=function(){if(id==='s-speed'){var v=+el.value;out.textContent=v<=35?'천천히':v<=60?'보통':'빠르게';}else out.textContent=el.value+UNITS[id];if(id==='p-active'||id==='p-risk')segHint();saveUI();};el.addEventListener('input',sync);sync();});
   function segHint(){var h=document.getElementById('seg-hint');if(!h)return;var a=+document.getElementById('p-active').value,r=+document.getElementById('p-risk').value,mid=Math.max(0,100-a-r);
     h.textContent='→ 나머지 '+mid+'%는 그저 그런(느슨한) 아이. 활발+흔들림+느슨 = 100%.'+(a+r>100?' ※ 활발+흔들림이 100%를 넘습니다. 줄이세요.':'');}
   segHint();
@@ -1406,20 +1705,66 @@
   document.getElementById('btn-report').addEventListener('click',buildReport);
   document.getElementById('set-close').addEventListener('click',function(){drawer.hidden=true;});
   drawer.addEventListener('click',function(e){if(e.target===drawer)drawer.hidden=true;});
-  document.getElementById('set-apply').addEventListener('click',function(){drawer.hidden=true;roster=null;document.getElementById('roster-status').textContent='';generate();});
+  document.getElementById('set-apply').addEventListener('click',function(){drawer.hidden=true;roster=null;rosterCols=[];try{localStorage.removeItem('woori_roster_v1');}catch(err){}document.getElementById('roster-status').textContent='';generate();updateOnboard();});
 
   // ── 주 진행 컨트롤 ──
   var playing2=false,last=0;
   function setPlay(on){playing2=on;var b=document.getElementById('btn-play');b.classList.toggle('on',on);b.textContent=on?'⏸ 자동재생 중':'자동재생';}
   document.getElementById('btn-step').addEventListener('click',function(){if(playing2)setPlay(false);step();});
   document.getElementById('btn-play').addEventListener('click',function(){setPlay(!playing2);});
-  document.addEventListener('keydown',function(e){var t=(e.target&&e.target.tagName||'').toLowerCase();if(t==='input'||t==='select'||t==='textarea')return;
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&!drawer.hidden){drawer.hidden=true;return;}
+    var t=(e.target&&e.target.tagName||'').toLowerCase();if(t==='input'||t==='select'||t==='textarea')return;
+    if(curView!=='detail')return; // 모의 실험(주 진행)은 자세히 탭에서만
     if(e.key==='ArrowRight'){e.preventDefault();if(playing2)setPlay(false);step();}else if(e.key===' '){e.preventDefault();setPlay(!playing2);}});
+  // 큰 탭 + 화면 건너가기 버튼
+  Array.prototype.forEach.call(document.querySelectorAll('.bigtab'),function(b){b.addEventListener('click',function(){setView(this.dataset.view);});});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-goto]'),function(b){b.addEventListener('click',function(){setView(this.dataset.goto);});});
+  // 이번 주 탭의 만날 아이 카드 → 자세히 탭에서 그 아이를 본다
+  var pvv2=document.getElementById('pv-visit');if(pvv2)pvv2.addEventListener('click',function(e){
+    var row=e.target.closest('[data-si]');if(!row)return;var s=students[+row.dataset.si];if(!s)return;
+    selStudent=s;setView('detail');updateStudCard();
+    var c=document.getElementById('stud-card');if(c)c.scrollIntoView({block:'center'});});
   function loop(t){if(playing2&&t-last>=650){step();last=t;}requestAnimationFrame(loop);}
   requestAnimationFrame(loop);
 
-  // ── 시작 ──
-  renderDecide();applyDecision();
+  // ── 화면 상태 저장(슬라이더·결정 칩) — localStorage, 엔진과 무관 ──
+  var uiReady=false; // loadUI 전에 초기 sync가 돌며 저장값을 덮어쓰지 않게 막는다
+  var pendingView=null;
+  function saveUI(){if(!uiReady)return;try{var o={s:{},dec:{focus:DEC.focus,prog:DEC.prog},view:curView};
+    Object.keys(UNITS).forEach(function(id){var el=document.getElementById(id);if(el)o.s[id]=el.value;});
+    localStorage.setItem('woori_ui_v1',JSON.stringify(o));}catch(err){}}
+  function loadUI(){try{var raw=localStorage.getItem('woori_ui_v1');
+    if(raw){var o=JSON.parse(raw);
+      if(o.s)Object.keys(o.s).forEach(function(id){var el=document.getElementById(id);if(el&&UNITS[id]!=null){el.value=o.s[id];el.dispatchEvent(new Event('input'));}});
+      if(o.dec){if(o.dec.focus&&SERMON_FOCUS[o.dec.focus])DEC.focus=o.dec.focus;
+        if(o.dec.prog)Object.keys(DEC.prog).forEach(function(k){if(typeof o.dec.prog[k]==='boolean')DEC.prog[k]=o.dec.prog[k];});}
+      if(o.view)pendingView=o.view;}
+    }catch(err){}uiReady=true;}
+
+  // ── 리사이즈·접힘 펼침 때 차트만 다시 그린다(render와 분리 — hist에 안 쌓임) ──
+  function redrawAll(){if(!students.length)return;drawTrend();drawCompare();drawYearPlan();drawRoom();drawIdx();updateDiag();}
+  var rsTimer=null;
+  window.addEventListener('resize',function(){clearTimeout(rsTimer);rsTimer=setTimeout(redrawAll,150);});
+  Array.prototype.forEach.call(document.querySelectorAll('details'),function(d){d.addEventListener('toggle',function(){if(d.open)redrawAll();});});
+
+  // ── 차트 호버 툴팁(주차·값). 읽기만 한다 ──
+  bindTip('trend',30,8,function(fr){if(hist.length<2)return null;var i=Math.round(fr*(hist.length-1)),p=hist[i];if(!p)return null;
+    return '<b>'+(i+1)+'주</b><br>활발 '+p.active+'명 · 느슨 '+p.loose+'명 · 위기 '+p.risk+'명<br>믿음 지수 '+Math.round(p.idx||0);});
+  bindTip('compare',30,8,function(fr){if(!projData||!baseProj)return null;var n=Math.min(projData.length,baseProj.length);if(n<2)return null;var i=Math.round(fr*(n-1));
+    return '<b>'+(i+1)+'주</b><br>이 계획 '+Math.round(projData[i].active)+'명 · 기본 운영 '+Math.round(baseProj[i].active)+'명';});
+  bindTip('idxchart',34,6,function(fr){if(!projData||projData.length<2)return null;var i=Math.round(fr*(projData.length-1)),p=projData[i];if(!p)return null;
+    return '<b>'+(i+1)+'주</b><br>믿음 지수 '+Math.round(p.idx)+(p.own!=null?' · 내면화 '+Math.round(p.own):'');});
+  bindTip('curve',2,2,function(fr){if(hist.length<2)return null;var i=Math.round(fr*(hist.length-1)),p=hist[i];if(!p)return null;
+    return '<b>'+(i+1)+'주</b><br>흔들리는 아이 '+p.risk+'명';});
+  bindTip('yearplan',66,6,function(fr){var w=Math.max(1,Math.min(52,Math.round(fr*51)+1)),L=[];
+    schedule.forEach(function(ev){var on=ev.weeks?periodActive(ev,w):fires(ev,w);if(!on)return;
+      L.push(ev.type==='sermon'?(SERMON_FOCUS[ev.focus].label+' 설교'):(EVENTS[ev.type]?EVENTS[ev.type].label:ev.type));});
+    return '<b>'+w+'주차</b><br>'+(L.length?L.join(' · '):'예정 없음');});
+
+  // ── 시작 ── 명단(실측)이 저장돼 있으면 그것으로, 없으면 슬라이더 추정으로.
+  loadUI();loadRoster();renderDecide();applyDecision();
+  setView(pendingView||'week');
 })();
 </script>
 </body>
