@@ -812,10 +812,10 @@
   // 분당우리교회 실측 연간 리듬으로 보정(홈페이지 확인, 2026-06). week 1 ≈ 3월 첫 주.
   schedule.push({id:eid++,type:'sermon',start:3,focus:'nurture',weeks:8,repeat:0});      // 봄 양육 시리즈(3~4월)
   schedule.push({id:eid++,type:'sermon',start:27,focus:'evangel',weeks:6,repeat:0});      // 가을 시리즈(9~10월)
-  schedule.push({id:eid++,type:'retreat',start:20,nights:2,attendRate:0.7,intensity:0.6,repeat:52}); // 여름수련회(7월 중순, 보통 2박3일)
-  schedule.push({id:eid++,type:'retreat',start:46,nights:2,attendRate:0.6,intensity:0.6,repeat:52}); // 겨울수련회(1월, 숙박)
+  schedule.push({id:eid++,type:'retreat',start:21,nights:2,attendRate:0.7,intensity:0.6,repeat:52}); // 여름수련회(7월 말, 올해 7/24 · 2박3일 · 매년)
+  schedule.push({id:eid++,type:'retreat',start:48,nights:2,attendRate:0.6,intensity:0.6,repeat:52}); // 겨울수련회(1월 마지막 주 · 2박3일 · 매년)
   schedule.push({id:eid++,type:'exam',start:9,weeks:3,repeat:13});                         // 중간·기말 연 4회
-  schedule.push({id:eid++,type:'sooneung',start:33,weeks:6,repeat:52});                    // 수능 시즌(10월~11월 중순, 고3)
+  schedule.push({id:eid++,type:'sooneung',start:33,weeks:6,repeat:52});                    // 수능 시즌(압박 6주, 매년 11월 셋째 목요일=38주차에 종료)
   churchSchedule.push({id:ceid++,type:'senior',start:2,weeks:10,repeat:52});               // 담임 말씀 시리즈
   churchSchedule.push({id:ceid++,type:'revival',start:4,weeks:1,repeat:52});               // 고난주간 특별부흥회(3월 말)
   churchSchedule.push({id:ceid++,type:'revival',start:30,weeks:1,repeat:52});              // 가을특새(9월 말)
@@ -1829,9 +1829,9 @@
     sc.push({id:eid++,type:'sermon',start:3,focus:DEC.focus,weeks:10,repeat:0});
     if(DEC.prog.outreach)sc.push({id:eid++,type:'outreach',start:31,repeat:52}); // 새생명축제 시즌(9~10월)
     if(DEC.prog.sg)sc.push({id:eid++,type:'smallgroup',start:6,repeat:13});      // 반모임 집중
-    // 수련회는 실측대로 연 2회: 여름(7월 중순, 보통 2박3일) + 겨울(1월). "수련회 강화"는 여름을 3박·참여 끌어올림.
-    sc.push(DEC.prog.retreat?{id:eid++,type:'retreat',start:20,nights:3,attendRate:0.82,intensity:0.78,repeat:52}:{id:eid++,type:'retreat',start:20,nights:2,attendRate:0.7,intensity:0.6,repeat:52});
-    sc.push({id:eid++,type:'retreat',start:46,nights:2,attendRate:0.6,intensity:0.6,repeat:52});
+    // 수련회는 실측대로 연 2회: 여름(7월 말, 올해 7/24) + 겨울(1월 마지막 주), 각 2박3일. "수련회 강화"는 여름을 3박·참여 끌어올림.
+    sc.push(DEC.prog.retreat?{id:eid++,type:'retreat',start:21,nights:3,attendRate:0.82,intensity:0.78,repeat:52}:{id:eid++,type:'retreat',start:21,nights:2,attendRate:0.7,intensity:0.6,repeat:52});
+    sc.push({id:eid++,type:'retreat',start:48,nights:2,attendRate:0.6,intensity:0.6,repeat:52});
     sc.push({id:eid++,type:'exam',start:9,weeks:3,repeat:13});
     sc.push({id:eid++,type:'sooneung',start:33,weeks:6,repeat:52});
     return sc;
