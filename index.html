@@ -171,6 +171,19 @@
   .ten{margin-top:18px}
   .ob-step{display:flex;gap:14px;align-items:flex-start;margin:14px 0}
   .ob-n{flex:none;font-size:22px;font-weight:800;color:var(--accent);line-height:1.4}
+  .sample-banner{background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:15px;border-radius:var(--r-sm);padding:10px 14px;margin-bottom:12px}
+  .sample-banner a{color:#92400e;font-weight:800}
+  .wk-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .wk-chips span{display:inline-flex;align-items:center;font-size:14px;font-weight:600;color:#475569;background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:6px 13px}
+  .wk-chips span.hot{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
+  .pv-north{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:#0f172a;color:#e2e8f0;border-radius:var(--r-md);padding:14px 18px;margin-top:20px}
+  .pv-north .ten{margin:0}
+  .ten.mini span{width:15px;height:20px;border-radius:4px 4px 6px 6px}
+  .ten.mini span::before{width:9px;height:9px;top:-6px}
+  .ten.mini span.keep{background:#4ade80}
+  .ten.mini span:not(.keep){background:#334155}
+  .pv-north .nx{flex:1;min-width:200px;font-size:15.5px;line-height:1.55}
+  .pv-north .btn{background:#1e293b;color:#e2e8f0;border-color:#334155}
   .simlab{border-left:4px solid var(--act)}
   #data-badge{margin-bottom:12px}
   /* 반응형 */
@@ -216,12 +229,18 @@
       <div class="ob-step"><span class="ob-n">③</span><div><span style="display:inline-flex;gap:8px;flex-wrap:wrap"><button class="btn" id="ob-sheet-teacher">교사 관찰지 인쇄</button><button class="btn" id="ob-sheet-parent">학부모 설문지 인쇄</button><button class="btn" id="ob-sheet-student">학생 설문지 인쇄</button></span><p class="hint">더 정확히 보려면: 교사는 자기 반 6명만(학기 1회), 학부모는 모임에서(학기 1회), 학생 설문은 연 1회 표본이면 충분합니다.</p></div></div>
       <p class="hint" style="margin-top:10px"><a href="#" id="ob-sample">예시 명단으로 둘러보기</a> · <a href="#" id="ob-rough">명단 없이 대략 보기(설정)</a></p>
     </div>
+    <div id="sample-banner" class="sample-banner" hidden>지금 보는 것은 <b>예시 명단</b>(가상의 28명)입니다. 둘러본 뒤 <a href="#" id="banner-open">우리 부 명단 넣기</a>를 누르세요.</div>
     <div id="data-badge" class="hint"></div>
     <div id="pv-verdict"></div>
+    <div class="mini-h" style="margin-top:16px">우리 아이들 한눈에 <span class="hint" style="font-weight:500">점 하나가 아이 한 명 · <span style="color:#16a34a">●</span>잘 나옴 <span style="color:#d97706">●</span>뜸함 <span style="color:#dc2626">●</span>흔들림 · 눌러서 한 아이 보기</span></div>
+    <canvas id="flock" width="600" height="170" class="netcanvas" style="cursor:pointer" role="img" aria-label="우리 아이들 점 지도. 점은 아이, 색은 상태. 눌러서 한 아이를 본다"></canvas>
+    <div id="pv-stud"></div>
+    <div id="pv-chips" class="wk-chips"></div>
     <h2 class="pv-h">이번 주 만날 아이</h2>
     <div id="pv-visit"><p class="muted">명단을 올리거나 예시로 시작하면 여기 이름이 나옵니다.</p></div>
     <h2 class="pv-h">이번 주 한 가지</h2>
     <div id="pv-action"><p class="muted">계획을 정하면 권하는 한 가지가 나옵니다.</p></div>
+    <div id="pv-north"></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
       <button id="btn-report" class="btn pv-btn">한 장 보고서</button>
       <button class="btn pv-btn" data-goto="plan">올해 계획 바꾸기</button>
@@ -883,9 +902,9 @@
     var dN=0,dY=0;rows.forEach(function(r){if(r.dara!=null){dN++;if(r.dara)dY++;}});
     if(dN>0)setSlider('s-daracbang',Math.round(dY/dN*100));
   }
-  function saveRoster(){try{localStorage.setItem('woori_roster_v1',JSON.stringify({rows:roster,cols:rosterCols}));}catch(err){}}
+  function saveRoster(){try{localStorage.setItem('woori_roster_v1',JSON.stringify({rows:roster,cols:rosterCols,sample:!!(roster&&roster._sample)}));}catch(err){}}
   function loadRoster(){try{var raw=localStorage.getItem('woori_roster_v1');if(!raw)return false;var o=JSON.parse(raw);
-    if(o&&o.rows&&o.rows.length){roster=o.rows;rosterCols=o.cols||[];return true;}}catch(err){}return false;}
+    if(o&&o.rows&&o.rows.length){roster=o.rows;rosterCols=o.cols||[];if(o.sample)roster._sample=true;return true;}}catch(err){}return false;}
   function buildFromRoster(){
     if(!roster||!roster.length)return;
     rosterCols=roster._cols||rosterCols||[];
@@ -919,6 +938,7 @@
         if(names.length){r.fNames=names;r.friendN=names.length;}}
       if(!r.fNames)r.friendN=Math.floor(Math.random()*5);});
     rows._cols=['이름','학년','출석4주','소그룹','멘토','봉사역할','부모출석','형제등록','다락방','친구이름','자기말표현','의심질문','예배후머묾','챙기는어른'];
+    rows._sample=true; // 예시 명단 표시(랜딩 배너용)
     return rows;
   }
   function downloadCSV(){
@@ -1036,7 +1056,7 @@
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
     updateVerdict();updateKpi();drawTrend();drawCompare();drawYearPlan();planEffect();drawRoom();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateStudCard();updateWhy();updateWar();updateReadouts();updateRecap();renderCareLog();
     updateDiag();updateProj();
-    renderPastor();renderOutcome();updateOnboard();
+    renderPastor();drawFlock();renderWeekChips();renderNorthMini();renderOutcome();updateOnboard();
   }
   // 출석은 좋지만(eng 높음) 속이 빈(취약도 높음) 아이 — 출석 기반 대시보드엔 안 보이는 위험. 전환기에 무너진다.
   function updateHiddenRisk(){
@@ -1313,7 +1333,9 @@
   }
   // 한 아이 자세히: 겉(출석)·속(내면화 단계)·의심·부모 관계·친구를 사람 단위로 보고, 필요한 한 가지를 짚는다.
   function updateStudCard(){
-    var el=document.getElementById('stud-card');if(!el)return;
+    // 같은 카드를 자세히(#stud-card)와 랜딩 양떼 지도 아래(#pv-stud)에 함께 그린다(역할 가림 한 곳).
+    var els=['stud-card','pv-stud'].map(function(id){return document.getElementById(id);}).filter(Boolean);
+    if(!els.length)return;var el={set innerHTML(h){els.forEach(function(e){e.innerHTML=h;});}};
     var s=selStudent;if(!s||s.left){el.innerHTML='';return;}
     var pct=function(v){return Math.round((v||0)*100);};
     var fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
@@ -1436,7 +1458,12 @@
     parts.push(t3?'속(내면화) 실측'+badge('survey'):hasCol('내면화')?'속(내면화) 교사 추정'+badge('est'):'속(내면화)은 추정'+badge('est'));
     return parts.join(' · ');
   }
-  function updateOnboard(){var ob=document.getElementById('onboard');if(ob)ob.hidden=!!(roster&&roster.length);}
+  function updateOnboard(){
+    var hasReal=!!(roster&&roster.length&&!roster._sample),isSample=!!(roster&&roster.length&&roster._sample);
+    var ob=document.getElementById('onboard');if(ob)ob.hidden=hasReal||(isSample&&!onboardOpen);
+    var bn=document.getElementById('sample-banner');if(bn)bn.hidden=!isSample;
+  }
+  var onboardOpen=false; // 예시 배너에서 "우리 부 명단 넣기"를 누르면 3걸음을 펼친다
   var N_TEN=['','하나','둘','셋','넷','다섯','여섯','일곱','여덟','아홉','열'];
   function renderPastor(){
     var pv=document.getElementById('pv-verdict');if(!pv)return;
@@ -1454,23 +1481,75 @@
     var pa=document.getElementById('pv-action');
     if(pa&&recoState)pa.innerHTML='<div class="callout" style="font-size:16.5px;line-height:1.65">'+recoState.action+'</div>';
   }
-  // 올해 계획의 결론: 졸업 신앙 잔존을 자연빈도(열 명 중 N)와 픽토그램으로.
-  function renderOutcome(){
-    var el=document.getElementById('pv-outcome');if(!el)return;
-    if(!projData||!projData.length){el.innerHTML='';return;}
-    var c=projData[projData.length-1].carry;if(c==null){el.innerHTML='';return;}
+  // 졸업 신앙 잔존(carry)을 자연빈도 묶음으로: {k(이 계획), kb(기본), band(변동 폭 문장), dots(픽토그램 HTML)}
+  function carryTen(){
+    if(!projData||!projData.length)return null;
+    var c=projData[projData.length-1].carry;if(c==null)return null;
     var b=(baseProj&&baseProj.length&&baseProj[baseProj.length-1].carry!=null)?baseProj[baseProj.length-1].carry:null;
     var k=clamp(Math.round(c/10),0,10),kb=b!=null?clamp(Math.round(b/10),0,10):null;
     var dots='';for(var i=0;i<10;i++)dots+='<span class="'+(i<k?'keep':'')+'"></span>';
-    var line=k>0?'이 계획대로 가면, 졸업하는 아이 <b>열 명 중 '+N_TEN[k]+'</b>이 믿음을 지니고 나갑니다':'이 계획대로면, 믿음을 지니고 졸업하는 아이가 거의 없습니다';
-    var base=kb!=null?(kb===k?' 아무것도 안 해도 비슷합니다(이 계획의 힘이 약하다는 뜻).':' 아무것도 안 하면 열 명 중 '+(kb>0?N_TEN[kb]:'거의 없음')+'입니다.'):'';
     // 변동 띠(main PR #14 이식): 단일 숫자 과신을 막는다 — 돌릴 때마다 흔들리는 폭을 자연빈도로.
     var band='',rg=projData.range&&projData.range.carry;
     if(rg&&isFinite(rg[0])&&isFinite(rg[1])){var kLo=clamp(Math.round(rg[0]/10),0,10),kHi=clamp(Math.round(rg[1]/10),0,10);
       if(kLo!==kHi)band=' 돌릴 때마다 열 명 중 '+(kLo>0?N_TEN[kLo]:'없음')+'에서 '+N_TEN[kHi]+' 사이로 흔들립니다.';}
-    el.innerHTML='<div class="ten">'+dots+'</div>'
+    return {k:k,kb:kb,band:band,dots:dots};
+  }
+  // 올해 계획의 결론: 졸업 신앙 잔존을 자연빈도(열 명 중 N)와 픽토그램으로.
+  function renderOutcome(){
+    var el=document.getElementById('pv-outcome');if(!el)return;
+    var ct=carryTen();if(!ct){el.innerHTML='';return;}
+    var line=ct.k>0?'이 계획대로 가면, 졸업하는 아이 <b>열 명 중 '+N_TEN[ct.k]+'</b>이 믿음을 지니고 나갑니다':'이 계획대로면, 믿음을 지니고 졸업하는 아이가 거의 없습니다';
+    var base=ct.kb!=null?(ct.kb===ct.k?' 아무것도 안 해도 비슷합니다(이 계획의 힘이 약하다는 뜻).':' 아무것도 안 하면 열 명 중 '+(ct.kb>0?N_TEN[ct.kb]:'거의 없음')+'입니다.'):'';
+    el.innerHTML='<div class="ten">'+ct.dots+'</div>'
       +'<p style="font-size:17.5px;line-height:1.65;margin:10px 0 0">'+line+'.'+base+' '+badge('model')+'</p>'
-      +'<p class="hint" style="margin-top:6px">3년을 여러 번 굴린 평균입니다.'+band+' 출석 수가 아니라 이 숫자가 진짜 성적표입니다.</p>';
+      +'<p class="hint" style="margin-top:6px">3년을 여러 번 굴린 평균입니다.'+ct.band+' 출석 수가 아니라 이 숫자가 진짜 성적표입니다.</p>';
+  }
+  // 랜딩의 북극성 미니 띠: 같은 carry를 한 줄로, 올해 계획 탭으로 이끈다.
+  function renderNorthMini(){
+    var el=document.getElementById('pv-north');if(!el)return;
+    var ct=carryTen();if(!ct){el.innerHTML='';el.style.display='none';return;}
+    el.style.display='';el.className='pv-north';
+    el.innerHTML='<div class="ten mini">'+ct.dots+'</div>'
+      +'<div class="nx">이대로면 졸업하는 아이 <b>열 명 중 '+(ct.k>0?N_TEN[ct.k]:'거의 없음')+'</b>이 믿음을 지니고 나갑니다 <span style="opacity:.7;font-size:12.5px">(가정값 모형의 전망)</span></div>'
+      +'<button class="btn" data-goto="plan">올해 계획 바꾸기</button>';
+  }
+  // ── 양떼 지도(랜딩 중심): 모든 아이를 상태색 점으로. 누르면 그 아이 요약이 바로 아래 펼쳐진다 ──
+  var flockDots=[];
+  function drawFlock(){
+    var cv=document.getElementById('flock');if(!cv)return;
+    var a=students.filter(function(s){return !s.left;});flockDots=[];
+    var W=cssW(cv,600),colW=W/6,perRow=4,rowH=16,top=24;
+    var byG=[[],[],[],[],[],[]];a.forEach(function(s){if(s.grade>=1&&s.grade<=6)byG[s.grade-1].push(s);});
+    var maxRows=1;byG.forEach(function(l){maxRows=Math.max(maxRows,Math.ceil(l.length/perRow));});
+    var H=top+maxRows*rowH+12,RAD=4.6,g=sharpCanvas(cv,W,H);
+    for(var gi=0;gi<6;gi++){var x0=gi*colW;
+      g.fillStyle='#667085';g.font='11px sans-serif';g.textAlign='center';g.fillText(GRADE_LABELS[gi+1]+' '+byG[gi].length,x0+colW/2,14);
+      if(gi>0){g.strokeStyle='rgba(15,23,42,.07)';g.beginPath();g.moveTo(x0,18);g.lineTo(x0,H-4);g.stroke();}
+      byG[gi].forEach(function(s,i){var r=Math.floor(i/perRow),c=i%perRow;
+        var x=x0+14+c*((colW-26)/Math.max(1,perRow-1)),y=top+r*rowH;
+        flockDots.push({s:s,x:x,y:y});
+        var dc=colByEng(s.eng);g.fillStyle=dc;g.shadowColor=dc;g.shadowBlur=5;g.beginPath();g.arc(x,y,RAD,0,6.2832);g.fill();g.shadowBlur=0;
+        if(selStudent&&selStudent.id===s.id){g.strokeStyle='#2563eb';g.lineWidth=2.2;g.beginPath();g.arc(x,y,RAD+2.8,0,6.2832);g.stroke();}});}
+    g.textAlign='left';
+  }
+  function flockClick(e){var cv=document.getElementById('flock');if(!cv||!flockDots.length)return;var r=cv.getBoundingClientRect();
+    var lw=+cv.dataset.lw||cv.width,lh=+cv.dataset.lh||cv.height;
+    var x=(e.clientX-r.left)/r.width*lw,y=(e.clientY-r.top)/r.height*lh,best=null;
+    flockDots.forEach(function(d){var dx=d.x-x,dy=d.y-y,dd=dx*dx+dy*dy;if(dd<400&&(!best||dd<best.d))best={s:d.s,d:dd};});
+    if(best){selStudent=best.s;updateStudCard();drawFlock();var c=document.getElementById('pv-stud');if(c)c.scrollIntoView({block:'nearest'});}}
+  // ── 이번 주 흐름 칩: 설교 진행·다가오는 큰 일·시험기간 — 연간 계획에서 읽는다 ──
+  function renderWeekChips(){
+    var el=document.getElementById('pv-chips');if(!el)return;
+    var chips=[],w=Math.max(1,week);
+    var sp=sermonProg();if(sp)chips.push('<span>📖 '+SERMON_FOCUS[sp.focus].label+' 설교 '+Math.max(1,sp.x)+'/'+sp.y+'주차</span>');
+    var examOn=schedule.some(function(ev){return ev.type==='exam'&&periodActive(ev,w);});
+    var snOn=schedule.some(function(ev){return ev.type==='sooneung'&&periodActive(ev,w);});
+    if(examOn)chips.push('<span class="hot">📝 시험기간 — 출석이 눌리는 때</span>');
+    if(snOn)chips.push('<span class="hot">🎯 수능 시즌 — 고3이 깊게 눌리는 때</span>');
+    var op=nextBigOp();if(op&&op.d>0)chips.push('<span>⏰ '+op.label+'까지 '+op.d+'주</span>');
+    else if(op&&op.d===0&&!examOn&&!snOn)chips.push('<span class="hot">⏰ 이번 주 '+op.label+'</span>');
+    if(chips.length)el.innerHTML=chips.join('')+'<span style="background:transparent;border:none;color:var(--mut);font-weight:500">올해 계획 기준 '+w+'주차</span>';
+    else el.innerHTML='';
   }
   // ── 인쇄 설문지 3종(교사 관찰지·학부모 설문지·학생 설문지) — 종이로 모아 명단 CSV에 옮긴다 ──
   function printSurveySheets(kind){
@@ -1793,11 +1872,19 @@
   // 큰 탭 + 화면 건너가기 버튼
   Array.prototype.forEach.call(document.querySelectorAll('.bigtab'),function(b){b.addEventListener('click',function(){setView(this.dataset.view);});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-goto]'),function(b){b.addEventListener('click',function(){setView(this.dataset.goto);});});
-  // 이번 주 탭의 만날 아이 카드 → 자세히 탭에서 그 아이를 본다
+  // 이번 주 탭의 만날 아이 카드 → 그 아이 요약을 양떼 지도 아래 인라인으로
   var pvv2=document.getElementById('pv-visit');if(pvv2)pvv2.addEventListener('click',function(e){
     var row=e.target.closest('[data-si]');if(!row)return;var s=students[+row.dataset.si];if(!s)return;
-    selStudent=s;setView('detail');updateStudCard();
-    var c=document.getElementById('stud-card');if(c)c.scrollIntoView({block:'center'});});
+    selStudent=s;updateStudCard();drawFlock();
+    var c=document.getElementById('pv-stud');if(c)c.scrollIntoView({block:'center'});});
+  // 양떼 지도: 점을 누르면 그 아이
+  var flockEl=document.getElementById('flock');if(flockEl)flockEl.addEventListener('click',flockClick);
+  // 랜딩의 학생 카드 행동 버튼(돌봄 맡기기 등)도 동작하게
+  var pvStud=document.getElementById('pv-stud');if(pvStud)pvStud.addEventListener('click',function(e){
+    var act=e.target.closest('[data-action]');if(!act)return;
+    var sa=students.filter(function(x){return x.id===+act.dataset.sid;})[0];if(sa)runAction(act.dataset.action,sa);});
+  // 예시 배너 → 온보딩 3걸음 펼치기
+  var bnOpen=document.getElementById('banner-open');if(bnOpen)bnOpen.addEventListener('click',function(e){e.preventDefault();onboardOpen=true;updateOnboard();var ob=document.getElementById('onboard');if(ob)ob.scrollIntoView({block:'start'});});
   function loop(t){if(playing2&&t-last>=650){step();last=t;}requestAnimationFrame(loop);}
   requestAnimationFrame(loop);
 
@@ -1816,7 +1903,7 @@
     }catch(err){}uiReady=true;}
 
   // ── 리사이즈·접힘 펼침 때 차트만 다시 그린다(render와 분리 — hist에 안 쌓임) ──
-  function redrawAll(){if(!students.length)return;drawTrend();drawCompare();drawYearPlan();drawRoom();drawIdx();updateDiag();}
+  function redrawAll(){if(!students.length)return;drawTrend();drawCompare();drawYearPlan();drawRoom();drawIdx();updateDiag();drawFlock();}
   var rsTimer=null;
   window.addEventListener('resize',function(){clearTimeout(rsTimer);rsTimer=setTimeout(redrawAll,150);});
   Array.prototype.forEach.call(document.querySelectorAll('details'),function(d){d.addEventListener('toggle',function(){if(d.open)redrawAll();});});
@@ -1835,8 +1922,11 @@
       L.push(ev.type==='sermon'?(SERMON_FOCUS[ev.focus].label+' 설교'):(EVENTS[ev.type]?EVENTS[ev.type].label:ev.type));});
     return '<b>'+w+'주차</b><br>'+(L.length?L.join(' · '):'예정 없음');});
 
-  // ── 시작 ── 명단(실측)이 저장돼 있으면 그것으로, 없으면 슬라이더 추정으로.
-  loadUI();loadRoster();renderDecide();applyDecision();
+  // ── 시작 ── 명단(실측)이 저장돼 있으면 그것으로. 첫 방문이면 예시 명단을 자동으로 보여 준다(빈 화면 금지).
+  var firstVisit=false;try{firstVisit=!localStorage.getItem('woori_ui_v1');}catch(err){}
+  loadUI();loadRoster();
+  if((!roster||!roster.length)&&firstVisit)roster=placeholderRoster();
+  renderDecide();applyDecision();
   setView(pendingView||'week');
   if(savedRosterUrl())loadFromUrl(savedRosterUrl(),true); // 시트 자동 급식: 저장된 링크가 있으면 조용히 최신 명단으로 갱신
 })();

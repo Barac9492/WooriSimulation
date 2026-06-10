@@ -24,14 +24,32 @@ async function freshPage(page) {
   await page.reload();
 }
 
-test('부팅: 이번 주 탭이 기본이고 온보딩이 보인다', async ({ page }) => {
+test('부팅(첫 방문): 예시 명단이 자동 로드되고 배너·진단·양떼 지도가 보인다', async ({ page }) => {
   const errors = [];
   collectErrors(page, errors);
   await freshPage(page);
   await expect(page.locator('#view-week')).toBeVisible();
   await expect(page.locator('#view-plan')).toBeHidden();
   await expect(page.locator('#view-detail')).toBeHidden();
+  // 빈 화면 대신 예시 명단 브리핑 + 배너
+  await expect(page.locator('#sample-banner')).toBeVisible();
+  await expect(page.locator('#pv-verdict .vtext')).toHaveText(/.+/);
+  const lw = await page.locator('#flock').getAttribute('data-lw');
+  expect(Number(lw)).toBeGreaterThan(100);
+  // 배너를 누르면 온보딩 3걸음이 펼쳐진다
+  await expect(page.locator('#onboard')).toBeHidden();
+  await page.locator('#banner-open').click();
   await expect(page.locator('#onboard')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('양떼 지도: 점을 누르면 그 아이 요약이 인라인으로 펼쳐진다', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  await freshPage(page);
+  const box = await page.locator('#flock').boundingBox();
+  await page.mouse.click(box.x + 30, box.y + 40);
+  await expect(page.locator('#pv-stud')).toContainText('필요한 한 가지');
   expect(errors).toEqual([]);
 });
 
@@ -39,7 +57,7 @@ test('예시 명단: 진단 문장·만날 아이·충실도 배지가 나온다
   const errors = [];
   collectErrors(page, errors);
   await freshPage(page);
-  await page.locator('#ob-sample').click();
+
   await expect(page.locator('#onboard')).toBeHidden();
   await expect(page.locator('#pv-verdict .vtext')).toHaveText(/.+/);
   await expect(page.locator('#data-badge')).toContainText('명단');
@@ -51,7 +69,7 @@ test('올해 계획 탭: 설교 칩과 픽토그램(열 명 중 N)이 그려진�
   const errors = [];
   collectErrors(page, errors);
   await freshPage(page);
-  await page.locator('#ob-sample').click();
+
   await page.locator('#tab-plan').click();
   await expect(page.locator('#view-plan')).toBeVisible();
   await expect(page.locator('#sermon-pick .chip')).toHaveCount(6);
@@ -68,7 +86,7 @@ test('자세히 탭: 모의 실험(다음 주 ▶)이 주차를 올리고 차트
   const errors = [];
   collectErrors(page, errors);
   await freshPage(page);
-  await page.locator('#ob-sample').click();
+
   await page.locator('#tab-detail').click();
   await expect(page.locator('#view-detail')).toBeVisible();
   const wk0 = await page.locator('#wk').textContent();
@@ -104,7 +122,7 @@ test('새로고침 복원: 명단과 탭이 유지된다', async ({ page }) => {
   const errors = [];
   collectErrors(page, errors);
   await freshPage(page);
-  await page.locator('#ob-sample').click();
+
   await page.locator('#tab-plan').click();
   await page.reload();
   await expect(page.locator('#view-plan')).toBeVisible();
