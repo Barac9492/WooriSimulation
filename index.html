@@ -193,12 +193,22 @@
   .pv-north .nx{flex:1;min-width:200px;font-size:15.5px;line-height:1.55}
   .pv-north .btn{background:#1e293b;color:#e2e8f0;border-color:#334155}
   .simlab{border-left:4px solid var(--act)}
+  .simbar{height:8px;background:var(--panel);border:1px solid var(--line);border-radius:99px;overflow:hidden;margin-top:10px}
+  #sim-progress{height:100%;width:0;background:var(--act);transition:width .3s ease}
+  .topbar{position:sticky}
+  .hdr-tools{position:absolute;top:14px;right:16px}
+  .hdr-tools select{font-size:12.5px}
   #data-badge{margin-bottom:12px}
   /* 반응형 */
   @media(min-width:1200px){.wrap{max-width:1020px}}
   @media(max-width:900px){.brand .lead{display:none}}
   @media(max-width:560px){.diag-grid{grid-template-columns:1fr}.topbar{top:6px;padding:10px 12px}.brand h1{font-size:16px}.card{padding:13px 14px}.vtext{font-size:17px}.light{font-size:30px}
-    .pv{font-size:16.5px;padding:16px 15px}.pv-verdict .vtext{font-size:20px}.pv-verdict .light{font-size:38px}.bigtab{font-size:15px;min-height:46px}.ten span{width:24px;height:32px}}
+    .pv{font-size:16.5px;padding:16px 15px}.pv-verdict .vtext{font-size:20px}.pv-verdict .light{font-size:38px}.ten span{width:24px;height:32px}
+    /* 주일 현장(스마트폰): 탭을 엄지 닿는 하단 고정 바로 */
+    .bigtabs{position:fixed;left:10px;right:10px;bottom:10px;z-index:45;margin:0;padding:6px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh-md)}
+    .bigtab{font-size:14.5px;min-height:46px}
+    body{padding-bottom:80px}
+    .hdr-tools{position:static;margin-top:8px;text-align:right}}
   /* 움직임 줄이기 설정 존중 */
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
   /* 인쇄: 컨트롤 숨김·흰 배경·카드 페이지 분리 방지 */
@@ -218,6 +228,7 @@
       <h1>서현 고등부 목회 수첩</h1>
       <p class="lead">출석부와 교사·학부모의 눈으로 지금을 진단하고, 올해 계획의 앞날을 가늠한다(앞날은 가정값 모형).</p>
     </div>
+    <div class="hdr-tools"><select id="role-sel" class="btn ghost sm" aria-label="역할 선택" title="보는 사람에 따라 화면이 다릅니다 — 담임: 모두 표시 · 교사: 민감 정보 가림 · 부모: 읽기 전용 집계"><option value="pastor">담임 화면</option><option value="teacher">교사 화면</option><option value="parent">부모 화면</option></select></div>
     <nav class="bigtabs" aria-label="화면 선택">
       <button id="tab-week" class="bigtab on" data-view="week">이번 주</button>
       <button id="tab-plan" class="bigtab" data-view="plan">올해 계획</button>
@@ -299,9 +310,9 @@
       <span class="wk"><b id="wk">0</b>주차 · <b id="yr">1</b>년차</span>
       <button id="btn-step" class="btn primary">다음 주 ▶</button>
       <button id="btn-play" class="btn">자동재생</button>
-      <select id="role-sel" class="btn ghost" aria-label="역할 선택" title="역할에 따라 보이는 정보가 다릅니다(민감 정보는 담임만)"><option value="pastor">담임 화면</option><option value="teacher">교사 화면</option><option value="parent">부모 화면</option></select>
       <button id="btn-settings" class="btn ghost">우리 부 설정</button>
     </div>
+    <div class="simbar" title="올해 진행(52주 기준)"><div id="sim-progress"></div></div>
   </div>
 
   <!-- 어떻게 보나 (한 줄 안내) -->
@@ -316,18 +327,13 @@
     <div id="trend-sum" class="hint" style="margin-top:6px"></div>
     <div class="mini-h" style="margin-top:16px">계획 vs 기본 운영 (활발 인원) &nbsp;<span class="hint" style="font-weight:500"><span style="color:#16a34a">●</span>이 계획 <span style="color:#98a2b3">┈</span>아무것도 안 할 때</span></div>
     <canvas id="compare" width="600" height="150" class="netcanvas" role="img" aria-label="이 계획과 기본 운영의 활발 인원 비교 그래프"></canvas>
-    <div class="hint" style="margin-top:4px">두 선의 차이가 곧 이 계획의 효과다(가정값 시나리오, 예측 아님).</div>
+    <div class="hint" style="margin-top:4px">두 선의 차이가 곧 이 계획의 효과다 <span class="badge b-model">모형 전망</span></div>
 
     <!-- 올해 계획 한 줄(보기 전용 — 결정은 "올해 계획" 탭에서) -->
     <div class="maptop" style="margin-top:18px"><span class="livedot"></span>올해 계획 · 무엇을 언제<span class="sub">바꾸려면 "올해 계획" 탭</span></div>
     <canvas id="yearplan" width="600" height="148" class="netcanvas" role="img" aria-label="올해 사역 일정 캘린더 막대 그래프"></canvas>
     <div id="plan-effect" class="plain-p" style="font-size:13.5px;margin-top:9px"></div>
 
-    <!-- 이번 주 실행 -->
-    <h2 class="plain-h" style="margin-top:20px">① 먼저 만날 아이</h2>
-    <div id="visit-list"><p class="muted">한 주가 흐르면, 가장 먼저 만날 아이가 여기 모입니다.</p></div>
-    <h2 class="plain-h" style="margin-top:18px">② 이번 주 한 가지</h2>
-    <div id="action-one"><p class="muted">계획을 정하면 할 일이 나옵니다.</p></div>
 
     <!-- 디테일: 아이들 사이의 흐름(상황도) -->
     <details style="margin-top:18px">
@@ -355,8 +361,6 @@
         <div id="stage-box"></div>
         <h2 class="plain-h" style="margin-top:16px">잘 나오지만 속이 빈 아이</h2>
         <div id="hidden-list"><p class="muted">출석은 좋은데 믿음이 아직 자기 것이 안 된 아이. 전환기에 무너질 아이들입니다.</p></div>
-        <div class="mini-h" style="margin-top:14px">이번 주 할 일(차례대로)</div>
-        <div id="step-list"></div>
       </div>
     </details>
   </section>
@@ -369,23 +373,16 @@
 
   <p style="text-align:center;color:var(--mut);font-size:12px;margin:24px 0 8px;border-top:1px dashed var(--line);padding-top:12px">── 여기까지만 보셔도 됩니다. 아래는 더 알고 싶을 때만 ──</p>
 
-  <!-- 상황 요약: 전략(올해)·작전(이번 시즌) 접힘 -->
+  <!-- 흐름과 까닭: 큰 그림(올해·이번 시즌) + 왜·효과·앞날 -->
   <details class="card ctx">
-    <summary class="summary-h">올해 큰 그림 — 지금 어디로 가고 있나 ▾</summary>
+    <summary class="summary-h">흐름과 까닭 — 올해 큰 그림 · 왜 흔들리나 · 효과 · 앞날 ▾</summary>
     <div style="margin-top:12px">
       <div class="tier-sub" style="margin:0 0 4px"><span class="tier s">올해 큰 그림</span></div>
       <div id="war-index" class="opline"></div>
       <div class="tier-sub" style="margin:10px 0 4px"><span class="tier o">이번 시즌</span></div>
       <div id="op-series" class="opline"></div>
       <div id="op-force" class="opline"></div>
-    </div>
-  </details>
-
-  <!-- 더 보기: 왜·효과·앞날 (평이한 문장) -->
-  <details class="card">
-    <summary class="summary-h">더 보기 — 왜 흔들리나 · 내가 한 게 효과 있었나 · 이대로면 앞날 ▾</summary>
-    <div style="margin-top:14px">
-      <h3 class="plain-h">왜 흔들리나</h3>
+      <h3 class="plain-h" style="margin-top:16px">왜 흔들리나</h3>
       <div id="why" class="plain-p"></div>
       <h3 class="plain-h" style="margin-top:16px">내가 한 게 효과 있었나</h3>
       <div id="effect" class="plain-p"></div>
@@ -960,6 +957,7 @@
         if(students[j].friends.indexOf(i)<0)students[j].friends.push(i);});});
     students.forEach(function(s){if(s._fNames)return;var t=s._friendN||0;if(t>0)linkIn(s,students,students,Math.max(0,t-1),t);});
     var rs=document.getElementById('roster-status');if(rs)rs.innerHTML='✅ 명단 <b>'+roster.length+'명</b>으로 진단 중.';
+    try{localStorage.removeItem('woori_mode');}catch(err){}
     saveRoster();
     startSim();
   }
@@ -1092,6 +1090,7 @@
     hist.push({n:a.length,active:ac,loose:lo,risk:ri,f:f,idx:idx,own:own,frag:fragIndex(a),ewi:earlyWarn(a),carry:carryLive,inc:weekInc});if(hist.length>240)hist.shift();
     document.getElementById('wk').textContent=week;
     document.getElementById('yr').textContent=Math.floor(week/WEEKS_PER_YEAR)+1;
+    var spb=document.getElementById('sim-progress');if(spb)spb.style.width=Math.round(((week%WEEKS_PER_YEAR))/WEEKS_PER_YEAR*100)+'%';
     document.getElementById('stat-row').innerHTML=
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
     updateVerdict();updateKpi();drawTrend();drawCompare();drawYearPlan();planEffect();drawRoom();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateStudCard();updateWhy();updateWar();updateReadouts();updateRecap();renderCareLog();
@@ -1239,7 +1238,7 @@
     var el=document.getElementById('plan-effect');if(!el)return;
     var f=projData&&projData.length?projData[projData.length-1]:null,rg=projData&&projData.range?projData.range:null;
     var L=[];
-    if(f)L.push('이 계획대로면 <b>3년 뒤</b> — 믿음 점수 <b>'+Math.round(f.idx)+'</b> · 내면화 <b>'+Math.round(f.own)+'</b> · 졸업 신앙 잔존 <b>'+(f.carry!=null?Math.round(f.carry)+'%':'—')+'</b>'+(rg&&rg.idx?' <span class="hint">(여러 번 돌리면 '+Math.round(rg.idx[0])+'~'+Math.round(rg.idx[1])+')</span>':''));
+    if(f)L.push(badge('model')+' 이 계획대로면 <b>3년 뒤</b> — 믿음 점수 <b>'+Math.round(f.idx)+'</b> · 내면화 <b>'+Math.round(f.own)+'</b> · 졸업 신앙 잔존 <b>'+(f.carry!=null?Math.round(f.carry)+'%':'—')+'</b>'+(rg&&rg.idx?' <span class="hint">(여러 번 돌리면 '+Math.round(rg.idx[0])+'~'+Math.round(rg.idx[1])+')</span>':''));
     L.push('· <b>'+SERMON_FOCUS[DEC.focus].label+' 설교</b>: '+(SERMON_DESC[DEC.focus]||''));
     L.push('· <b>시험기간</b>(연 4회): 그동안 출석이 눌렸다 끝나면 회복 — 영속 손상은 아닙니다.');
     if(schedule.some(function(e){return e.type==='retreat';}))L.push('· <b>수련회</b>: 참가한 아이만 출석·헌신이 급등했다 몇 주에 걸쳐 식습니다(여운). 안 간 아이와 격차가 생깁니다.');
@@ -1347,7 +1346,7 @@
     if(leg){var base;
       if(fc){var lost=Math.round(expLost(fc)),grd=0,shy=0;roomDots.forEach(function(d){var m=fc[d.s.id];if(m){if(m.gradP>=0.5)grd++;else if(m.lostP<0.5&&m.eng<0.3)shy++;}});
         var yrs=roomWhen/WEEKS_PER_YEAR,lv={retreat:'수련회 강화',mentor:'훈련 강화',parent:'부모 세우기'}[roomLever];
-        base='<b>이대로 '+yrs+'년 뒤</b>'+(lv?'('+lv+' 하면)':'')+' — <span style="color:#94a3b8">●</span> 이탈 위험 약 '+lost+'명, 졸업 '+grd+'명, <span style="color:#dc2626">●</span> 흔들림 '+shy+'명. 회색 ×=떠날 위험 큰 아이. "지금"으로 돌아가기.';
+        base='<b>이대로 '+yrs+'년 뒤</b>'+(lv?'('+lv+' 하면)':'')+badge('model')+' — <span style="color:#94a3b8">●</span> 이탈 위험 약 '+lost+'명, 졸업 '+grd+'명, <span style="color:#dc2626">●</span> 흔들림 '+shy+'명. 회색 ×=떠날 위험 큰 아이. "지금"으로 돌아가기.';
         if(lv){var baseLost=coaLost(roomWhen,'plan'),save=baseLost-lost;
           base+='<br><b style="color:#16a34a">'+lv+'</b>: 그대로면 약 '+baseLost+'명 잃는데 약 '+lost+'명으로 — '+(save>=1?'<b style="color:#16a34a">'+save+'명쯤 더 건집니다.</b>':save<=-1?'오히려 '+(-save)+'명쯤 더 잃습니다.':'큰 차이는 없습니다(다른 손길과 배합이 필요).');}}
       else{base='<span style="color:#16a34a">●</span> 잘 나옴 <span style="color:#d97706">●</span> 뜸함 <span style="color:#dc2626">●</span> 흔들림 · 검은 테=먼저 만날 아이.';
@@ -1445,7 +1444,7 @@
     })};
   }
   function updateVisitList(){
-    var el=document.getElementById('visit-list');var v=visitPick();
+    var el=document.getElementById('visit-list');if(!el)return;var v=visitPick();
     if(!v.total){el.innerHTML='<p class="muted" style="color:var(--good)">지금 무너지는 아이가 없습니다. 든든한 아이들을 한 걸음 더 깊이 세우세요.</p>';return;}
     el.innerHTML=v.top.map(function(o){
       return '<div class="visit" data-si="'+o.si+'" style="cursor:pointer"><span class="who">'+studName(o.s)+'</span><span>'+o.why+' → <b>'+o.what+'</b></span></div>';
@@ -1505,7 +1504,7 @@
     };
   }
   function fidelityLine(){
-    if(!roster||!roster.length)return '지금은 명단 없이 슬라이더로 잡은 <b>추정</b>입니다'+badge('est')+' 명단을 올리면 우리 아이들 이름으로 진단합니다.';
+    if(!roster||!roster.length)return '<span class="model-note" style="display:block">'+badge('est')+' 지금은 명단 없는 <b>슬라이더 추정</b>입니다 — 이름도, 실제 관계망도 없습니다. <a href="#" id="goto-sample">예시 명단 보기</a> · <a href="#" id="ladder-more">우리 부 명단 넣기</a></span>';
     var st=stageStatus();
     function seg(t,done,n,total){return t+' '+(done?'✓':n>0?n+'/'+total:'아직');}
     var parts=['명단 '+roster.length+'명'+badge('obs'),
@@ -1541,7 +1540,8 @@
     if(pvv){var vp=visitPick();
       if(!students.length)pvv.innerHTML='<p class="muted">명단을 올리거나 예시로 시작하면 여기 이름이 나옵니다.</p>';
       else if(!vp.total)pvv.innerHTML='<p class="muted" style="color:var(--good)">지금 무너지는 아이가 없습니다. 든든한 아이들을 한 걸음 더 깊이 세우세요.</p>';
-      else pvv.innerHTML=vp.top.map(function(o){return '<div class="pv-card" data-si="'+o.si+'"><span class="who">'+studName(o.s)+'</span><span class="what">'+o.why+' → <b>'+o.what+'</b></span></div>';}).join('')
+      else pvv.innerHTML=((!roster||!roster.length)?'<p class="hint" style="background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:8px 12px;color:#92400e">아래는 가상의 아이입니다. <a href="#" id="visit-upload" style="color:#92400e;font-weight:800">명단을 올리면</a> 우리 아이들 실명으로 나옵니다.</p>':'')
+        +vp.top.map(function(o){return '<div class="pv-card" data-si="'+o.si+'"><span class="who">'+studName(o.s)+'</span><span class="what">'+o.why+' → <b>'+o.what+'</b></span></div>';}).join('')
         +(vp.total>3?'<p class="hint" style="margin-top:6px">외 '+(vp.total-3)+'명 더 있습니다("자세히"에 전체).</p>':'')
         +'<p class="hint" style="margin-top:6px">만날 순서는 친구 관계로 가늠했습니다'+badge(anyCol('친구이름','친한친구')?'teach':'est')+'</p>';}
     var pa=document.getElementById('pv-action');
@@ -1594,14 +1594,18 @@
     if(hasSvc){[1,2].forEach(function(sv){grades.forEach(function(gr){
       groups.push({label:sv+'부 '+GRADE_LABELS[gr],list:a.filter(function(s){return s.grade===gr&&(s.svc==null?1:s.svc)===sv;})});});});}
     else grades.forEach(function(gr){groups.push({label:GRADE_LABELS[gr],list:a.filter(function(s){return s.grade===gr;})});});
-    var W=cssW(cv,600),colW=W/groups.length,perRow=groups.length<=3?8:4,rowH=16,top=24;
-    var maxRows=1;groups.forEach(function(gp){maxRows=Math.max(maxRows,Math.ceil(gp.list.length/perRow));});
-    var H=top+maxRows*rowH+12,RAD=4.6,g=sharpCanvas(cv,W,H);
-    groups.forEach(function(gp,gi){var x0=gi*colW;
-      g.fillStyle='#667085';g.font='11px sans-serif';g.textAlign='center';g.fillText(gp.label+' '+gp.list.length,x0+colW/2,14);
-      if(gi>0){g.strokeStyle=(hasSvc&&gi===grades.length)?'rgba(15,23,42,.22)':'rgba(15,23,42,.07)';g.beginPath();g.moveTo(x0,18);g.lineTo(x0,H-4);g.stroke();}
+    // 좁은 화면(스마트폰)에서는 부×학년 6열이 비좁다 — 1부 윗줄·2부 아랫줄 두 띠로 쌓는다.
+    var W=cssW(cv,600);
+    var cols=(hasSvc&&W<480)?grades.length:groups.length;
+    var colW=W/cols,perRow=cols<=3?(W<480?5:8):4,rowH=16,headH=24;
+    var bandRows=[];groups.forEach(function(gp,i){var b=Math.floor(i/cols);bandRows[b]=Math.max(bandRows[b]||1,Math.ceil(gp.list.length/perRow)||1);});
+    var bandY=[],accY=0;bandRows.forEach(function(r,b){bandY[b]=accY;accY+=headH+r*rowH+6;});
+    var H=accY+6,RAD=4.6,g=sharpCanvas(cv,W,H);
+    groups.forEach(function(gp,gi){var b=Math.floor(gi/cols),ci=gi%cols,x0=ci*colW,yb=bandY[b];
+      g.fillStyle='#667085';g.font='11px sans-serif';g.textAlign='center';g.fillText(gp.label+' '+gp.list.length,x0+colW/2,yb+14);
+      if(ci>0){g.strokeStyle=(hasSvc&&cols===groups.length&&ci===grades.length)?'rgba(15,23,42,.22)':'rgba(15,23,42,.07)';g.beginPath();g.moveTo(x0,yb+18);g.lineTo(x0,yb+headH+bandRows[b]*rowH);g.stroke();}
       gp.list.forEach(function(s,i){var r=Math.floor(i/perRow),c=i%perRow;
-        var x=x0+14+c*((colW-26)/Math.max(1,perRow-1)),y=top+r*rowH;
+        var x=x0+14+c*((colW-26)/Math.max(1,perRow-1)),y=yb+headH+r*rowH;
         flockDots.push({s:s,x:x,y:y});
         var dc=colByEng(s.eng);g.fillStyle=dc;g.shadowColor=dc;g.shadowBlur=5;g.beginPath();g.arc(x,y,RAD,0,6.2832);g.fill();g.shadowBlur=0;
         if(selStudent&&selStudent.id===s.id){g.strokeStyle='#2563eb';g.lineWidth=2.2;g.beginPath();g.arc(x,y,RAD+2.8,0,6.2832);g.stroke();}});});
@@ -1781,7 +1785,7 @@
     var L=projData[n-1],rg=projData.range;
     var band=rg&&rg.idx?' (여러 번 돌리면 '+Math.round(rg.idx[0])+'~'+Math.round(rg.idx[1])+' 사이)':'';
     var ceilLvl=E<0.4?'낮음':E>0.6?'높음':'보통';
-    document.getElementById('idx-now').textContent='3년 뒤 믿음 '+Math.round(L.idx)+band+' · 내면화 '+Math.round(L.own!=null?L.own:0)+' · 생태계 천장 '+ceilLvl+'(약 '+ceil+', 가정·교회가 받치는 높이) · 진한 파랑=평균, 연한 가닥=가능한 시나리오, 보라 점선=내면화';
+    document.getElementById('idx-now').innerHTML=badge('model')+' 3년 뒤 믿음 '+Math.round(L.idx)+band+' · 내면화 '+Math.round(L.own!=null?L.own:0)+' · 생태계 천장 '+ceilLvl+'(약 '+ceil+', 가정·교회가 받치는 높이) · 진한 파랑=평균, 연한 가닥=가능한 시나리오, 보라 점선=내면화';
   }
   function updateRisk(){
     var el=document.getElementById('risk-box');if(!el||!projData)return;
@@ -1934,7 +1938,7 @@
   document.getElementById('btn-report').addEventListener('click',buildReport);
   document.getElementById('set-close').addEventListener('click',function(){drawer.hidden=true;});
   drawer.addEventListener('click',function(e){if(e.target===drawer)drawer.hidden=true;});
-  document.getElementById('set-apply').addEventListener('click',function(){drawer.hidden=true;roster=null;rosterCols=[];try{localStorage.removeItem('woori_roster_v1');localStorage.removeItem('woori_roster_url');}catch(err){}document.getElementById('roster-status').textContent='';generate();updateOnboard();});
+  document.getElementById('set-apply').addEventListener('click',function(){drawer.hidden=true;roster=null;rosterCols=[];try{localStorage.removeItem('woori_roster_v1');localStorage.removeItem('woori_roster_url');localStorage.setItem('woori_mode','sliders');}catch(err){}document.getElementById('roster-status').textContent='';generate();updateOnboard();});
 
   // ── 주 진행 컨트롤 ──
   var playing2=false,last=0;
@@ -1951,6 +1955,7 @@
   Array.prototype.forEach.call(document.querySelectorAll('[data-goto]'),function(b){b.addEventListener('click',function(){setView(this.dataset.goto);});});
   // 이번 주 탭의 만날 아이 카드 → 그 아이 요약을 양떼 지도 아래 인라인으로
   var pvv2=document.getElementById('pv-visit');if(pvv2)pvv2.addEventListener('click',function(e){
+    if(e.target.closest('#visit-upload')){e.preventDefault();onboardOpen=true;updateOnboard();var ob=document.getElementById('onboard');if(ob)ob.scrollIntoView({block:'start'});return;}
     var row=e.target.closest('[data-si]');if(!row)return;var s=students[+row.dataset.si];if(!s)return;
     selStudent=s;updateStudCard();drawFlock();
     var c=document.getElementById('pv-stud');if(c)c.scrollIntoView({block:'center'});});
@@ -1962,8 +1967,9 @@
     var sa=students.filter(function(x){return x.id===+act.dataset.sid;})[0];if(sa)runAction(act.dataset.action,sa);});
   // 예시 배너 → 데이터 사다리 펼치기
   var bnOpen=document.getElementById('banner-open');if(bnOpen)bnOpen.addEventListener('click',function(e){e.preventDefault();onboardOpen=true;updateOnboard();var ob=document.getElementById('onboard');if(ob)ob.scrollIntoView({block:'start'});});
-  // 충실도 줄의 [더 넣기]/[접기] → 사다리 토글 (줄이 매주 다시 그려지므로 위임)
+  // 충실도 줄의 [더 넣기]/[접기]·[예시 명단 보기] → 사다리 토글/예시 로드 (줄이 매주 다시 그려지므로 위임)
   var dbEl=document.getElementById('data-badge');if(dbEl)dbEl.addEventListener('click',function(e){
+    if(e.target.closest('#goto-sample')){e.preventDefault();try{localStorage.removeItem('woori_mode');}catch(err){}loadSampleRoster();return;}
     var l=e.target.closest('#ladder-more');if(!l)return;e.preventDefault();
     onboardOpen=!onboardOpen;updateOnboard();dbEl.innerHTML=fidelityLine();
     if(onboardOpen){var ob=document.getElementById('onboard');if(ob)ob.scrollIntoView({block:'start'});}});
@@ -2004,10 +2010,11 @@
       L.push(ev.type==='sermon'?(SERMON_FOCUS[ev.focus].label+' 설교'):(EVENTS[ev.type]?EVENTS[ev.type].label:ev.type));});
     return '<b>'+w+'주차</b><br>'+(L.length?L.join(' · '):'예정 없음');});
 
-  // ── 시작 ── 명단(실측)이 저장돼 있으면 그것으로. 첫 방문이면 예시 명단을 자동으로 보여 준다(빈 화면 금지).
-  var firstVisit=false;try{firstVisit=!localStorage.getItem('woori_ui_v1');}catch(err){}
+  // ── 시작 ── 명단(실측)이 저장돼 있으면 그것으로. 명단이 없으면 항상 예시를 보여 준다(빈 추정 화면 금지).
+  // 예외: 사용자가 "이 설정으로 시작"(슬라이더 추정)을 명시한 경우(woori_mode='sliders')만 그대로.
+  var uiMode='';try{uiMode=localStorage.getItem('woori_mode')||'';}catch(err){}
   loadUI();loadRoster();
-  if((!roster||!roster.length)&&firstVisit)roster=placeholderRoster();
+  if((!roster||!roster.length)&&uiMode!=='sliders')roster=placeholderRoster();
   renderDecide();applyDecision();
   setView(pendingView||'week');
   if(savedRosterUrl())loadFromUrl(savedRosterUrl(),true); // 시트 자동 급식: 저장된 링크가 있으면 조용히 최신 명단으로 갱신

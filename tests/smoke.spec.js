@@ -166,6 +166,30 @@ test('1·2부 분리: 부 칼럼 CSV는 부별 인원·카드 표기, 부 없는
   expect(errors).toEqual([]);
 });
 
+test('시작 경로: 구버전 방문자도 예시 구제, 슬라이더 모드는 존중, 자세히엔 행동 절 없음', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  // 구버전 방문자 시뮬: woori_ui_v1만 있고 명단 없음 → 예시 자동 로드
+  await page.goto(FILE_URL);
+  await page.evaluate(() => { localStorage.clear(); localStorage.setItem('woori_ui_v1', '{}'); });
+  await page.reload();
+  await expect(page.locator('#sample-banner')).toBeVisible();
+  // 슬라이더 모드 명시 → 리로드해도 예시 강제 안 함 + 추정 콜아웃
+  await page.locator('#tab-detail').click();
+  await page.locator('#btn-settings').click();
+  await page.locator('#set-apply').click();
+  await page.reload();
+  await expect(page.locator('#sample-banner')).toBeHidden();
+  await expect(page.locator('#data-badge')).toContainText('슬라이더 추정');
+  await page.locator('#tab-week').click();
+  await expect(page.locator('#pv-visit')).toContainText('가상의 아이');
+  // 자세히 탭은 분석 전용(행동 절 중복 제거)
+  expect(await page.locator('#visit-list').count()).toBe(0);
+  expect(await page.locator('#action-one').count()).toBe(0);
+  expect(await page.locator('#step-list').count()).toBe(0);
+  expect(errors).toEqual([]);
+});
+
 test('새로고침 복원: 명단과 탭이 유지된다', async ({ page }) => {
   const errors = [];
   collectErrors(page, errors);
