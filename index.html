@@ -169,8 +169,16 @@
   .ten span::before{content:'';position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;background:inherit}
   .ten span.keep{background:#16a34a}
   .ten{margin-top:18px}
-  .ob-step{display:flex;gap:14px;align-items:flex-start;margin:14px 0}
-  .ob-n{flex:none;font-size:22px;font-weight:800;color:var(--accent);line-height:1.4}
+  .ladder{border:1.5px solid var(--line);border-radius:var(--r-md);padding:14px 16px;margin:10px 0;background:#fff}
+  .ld-head{font-size:16.5px;color:var(--ink)}
+  .ld-head b{color:var(--accent);font-size:17px;margin-right:2px}
+  .ld-status{display:inline-block;font-size:12.5px;font-weight:800;padding:3px 10px;border-radius:99px;margin-left:8px;vertical-align:middle}
+  .ld-status.ok{background:#f0fdf4;color:#15803d}
+  .ld-status.part{background:#fffbeb;color:#b45309}
+  .ld-status.no{background:#f1f5f9;color:#64748b}
+  .ld-cols{font-size:15px;margin-top:7px}
+  .ld-use{font-size:13.5px;color:#5b6b8c;margin-top:5px}
+  .ld-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
   .sample-banner{background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:15px;border-radius:var(--r-sm);padding:10px 14px;margin-bottom:12px}
   .sample-banner a{color:#92400e;font-weight:800}
   .wk-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -220,13 +228,33 @@
   <!-- ① 이번 주: 지금 어떤가(실측 진단) + 누구를 만날까 + 무엇을 할까 -->
   <section id="view-week" class="card pv">
     <div id="onboard" hidden>
-      <h2 class="pv-h">우리 부 명단으로 시작하세요 (세 걸음)</h2>
-      <div class="ob-step"><span class="ob-n">①</span><div><button class="btn pv-btn" id="ob-template">명단 양식 받기</button><p class="hint">출석부·행정 기록(이름·학년·출석·소그룹)만으로 시작할 수 있습니다. 모르는 칸은 비워 두면 됩니다.</p></div></div>
-      <div class="ob-step"><span class="ob-n">②</span><div><label class="btn pv-btn primary" style="position:relative;overflow:hidden;cursor:pointer">채운 명단 올리기<input type="file" id="ob-file" accept=".csv,text/csv" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label><p class="hint">올리면 바로 우리 아이들 이름으로 진단이 나옵니다. 출석 칸만 바꿔 다시 올리면 진단이 새로워집니다.</p>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><input id="ob-url" type="url" placeholder="또는 구글 시트 링크 붙여넣기 (파일 → 웹에 게시 → CSV)" style="flex:1;min-width:220px;font-size:14px;padding:9px 12px;border:1.5px solid var(--line);border-radius:var(--r-sm)"><button id="ob-url-btn" class="btn">링크로 불러오기</button></div>
-        <p id="ob-url-msg" class="hint"></p>
-        <p class="hint">시트 링크를 쓰면 다음 방문 때 자동으로 새 명단을 받아 옵니다(출석부를 시트에서 관리하면 편합니다).</p></div></div>
-      <div class="ob-step"><span class="ob-n">③</span><div><span style="display:inline-flex;gap:8px;flex-wrap:wrap"><button class="btn" id="ob-sheet-teacher">교사 관찰지 인쇄</button><button class="btn" id="ob-sheet-parent">학부모 설문지 인쇄</button><button class="btn" id="ob-sheet-student">학생 설문지 인쇄</button></span><p class="hint">더 정확히 보려면: 교사는 자기 반 6명만(학기 1회), 학부모는 모임에서(학기 1회), 학생 설문은 연 1회 표본이면 충분합니다.</p></div></div>
+      <h2 class="pv-h">무엇을 넣어야 하나 — 쉬운 것부터 네 단계 <span class="hint" style="font-weight:500">(넣는 칸은 전부 화면 어딘가에 쓰입니다)</span></h2>
+      <div class="ladder">
+        <div class="ld-head"><b>1단계</b> · 오늘 5분 · 간사/교역자가 행정 기록에서 <span id="st1" class="ld-status"></span></div>
+        <div class="ld-cols">넣는 칸: <b>이름 · 학년 · 출석4주</b> <span class="hint">이 셋이면 시작. 있으면: 소그룹 · 멘토 · 봉사역할 · 부모출석 · 다락방</span></div>
+        <div class="ld-use">쓰이는 곳 → 신호등 진단 · 만날 아이 실명 · 양떼 지도 · 생태계 천장</div>
+        <div class="ld-btns"><button class="btn" id="ob-template">양식 받기</button><label class="btn primary" style="position:relative;overflow:hidden;cursor:pointer">채운 명단 올리기<input type="file" id="ob-file" accept=".csv,text/csv" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label></div>
+        <div class="ld-btns"><input id="ob-url" type="url" placeholder="또는 구글 시트 링크 (파일 → 웹에 게시 → CSV, 재방문 때 자동 갱신)" style="flex:1;min-width:220px;font-size:13.5px;padding:9px 12px;border:1.5px solid var(--line);border-radius:var(--r-sm)"><button id="ob-url-btn" class="btn">시트 링크로</button></div>
+        <p id="ob-url-msg" class="hint" style="margin:4px 0 0"></p>
+      </div>
+      <div class="ladder">
+        <div class="ld-head"><b>2단계</b> · 학기 1회 · 교사가 자기 반 6명만, 본 것만 <span id="st2" class="ld-status"></span></div>
+        <div class="ld-cols">넣는 칸: 친구이름 · 자기말표현 · 의심질문 · 예배후머묾 · 챙기는어른</div>
+        <div class="ld-use">쓰이는 곳 → 만날 순서(실제 관계망) · 속이 빈 아이 · 조기경보 · 학생 카드의 처방</div>
+        <div class="ld-btns"><button class="btn" id="ob-sheet-teacher">교사 관찰지 인쇄</button></div>
+      </div>
+      <div class="ladder">
+        <div class="ld-head"><b>3단계</b> · 학기 1회 · 학부모가, 사실 두 가지만 <span id="st3" class="ld-status"></span></div>
+        <div class="ld-cols">넣는 칸: 신앙대화(주 횟수) · 가정예배 <span class="hint">다락방은 모임 출석부에서</span></div>
+        <div class="ld-use">쓰이는 곳 → 학생 카드 가정 줄 · 가정 지렛대 · 부모 모임 수치 자동</div>
+        <div class="ld-btns"><button class="btn" id="ob-sheet-parent">학부모 설문지 인쇄</button></div>
+      </div>
+      <div class="ladder">
+        <div class="ld-head"><b>4단계</b> · 연 1회 · 학생이, 수련회에서 <span id="st4" class="ld-status"></span></div>
+        <div class="ld-cols">넣는 칸: 내면화점수(6문항 평균) · 부모관계</div>
+        <div class="ld-use">쓰이는 곳 → "잘 나오지만 속이 빈 아이" 실측 · 졸업 신앙 전망의 바탕</div>
+        <div class="ld-btns"><button class="btn" id="ob-sheet-student">학생 설문지 인쇄</button></div>
+      </div>
       <p class="hint" style="margin-top:10px"><a href="#" id="ob-sample">예시 명단으로 둘러보기</a> · <a href="#" id="ob-rough">명단 없이 대략 보기(설정)</a></p>
     </div>
     <div id="sample-banner" class="sample-banner" hidden>지금 보는 것은 <b>예시 명단</b>(가상의 28명)입니다. 둘러본 뒤 <a href="#" id="banner-open">우리 부 명단 넣기</a>를 누르세요.</div>
@@ -454,12 +482,12 @@
     <div id="roster-status" class="hint" style="margin-bottom:6px"></div>
     <details style="margin-bottom:8px"><summary class="summary-h" style="font-size:12.5px">엑셀 칸에 뭘 적나 ▾</summary>
       <div class="hint" style="line-height:1.7;margin-top:6px">
-      모든 칸이 <b>관찰하거나 기록에서 옮길 수 있는 것</b>이다. 속마음을 짐작해 적는 칸은 없다.<br>
-      <b>행정 기록에서</b> — <b>학년</b> 중1~고3 · <b>출석4주</b> 최근 4주 중 나온 횟수 0~4 · <b>소그룹·멘토·봉사역할</b> 있으면 Y · <b>부모출석</b> 본 교회 출석하는 부모 수 0~2 · <b>형제등록</b> 형제가 교회학교·중고등부 명단에 있으면 Y · <b>다락방</b> 부모가 다락방(부모 모임) 출석부에 있으면 Y(있으면 부모 모임 슬라이더를 실측 참여율로 맞춘다).<br>
-      <b>교사가 본 행동</b> — <b>친구이름</b> 주로 함께 다니는 친구 이름 1~3명(공백·가운뎃점 구분, 쉼표 금지 — 넣으면 전염 진단·먼저 만날 아이가 실제 관계망으로 계산된다) · <b>자기말표현</b> 나눔·기도에서 자기 말로 신앙을 표현하는 걸 봄 0 없음·1 가끔·2 자주 · <b>의심질문</b> 신앙 질문·의심을 어른에게 꺼낸 적 있으면 Y · <b>예배후머묾</b> 모임 후 남아 어울림 0~2 · <b>챙기는어른</b> 이름을 댈 수 있는 어른 수 0~5.<br>
-      <b>학부모 설문에서</b> — <b>신앙대화</b> 지난 한 주 부모·자녀 신앙 대화 횟수 0~7 · <b>가정예배</b> 1 안 함~5 자주.<br>
-      <b>학생 설문에서(연 1회)</b> — <b>내면화점수</b> 6문항 평균 1~5(있으면 이 값으로 '속'을 잡는다) · <b>부모관계</b> 자녀가 답한 온기 1~5.<br>
-      못 본 칸은 비워 두라(빈 칸=모름으로 기본값 처리, 추측보다 낫다). 옛 양식의 열 이름(부모신앙·교회친구수·신앙주인의식·소속감·의심나눔 등)도 그대로 읽힌다. 문항 근거는 SURVEY.md.
+      모든 칸이 <b>관찰하거나 기록에서 옮길 수 있는 것</b>이고, 전부 화면 어딘가에 쓰인다. 속마음을 짐작해 적는 칸도, 쓰이지 않는 칸도 없다.<br>
+      <b>1단계 · 행정 기록에서</b> — <b>학년</b> 중1~고3 · <b>출석4주</b> 최근 4주 중 나온 횟수 0~4 · <b>소그룹·멘토·봉사역할</b> 있으면 Y · <b>부모출석</b> 본 교회 출석하는 부모 수 0~2 · <b>다락방</b> 부모가 다락방(부모 모임) 출석부에 있으면 Y(부모 모임 슬라이더를 실측 참여율로 맞춘다).<br>
+      <b>2단계 · 교사가 본 행동</b> — <b>친구이름</b> 주로 함께 다니는 친구 이름 1~3명(공백·가운뎃점 구분, 쉼표 금지 — 전염 진단·먼저 만날 아이가 실제 관계망으로 계산된다) · <b>자기말표현</b> 나눔·기도에서 자기 말로 신앙을 표현하는 걸 봄 0 없음·1 가끔·2 자주 · <b>의심질문</b> 신앙 질문·의심을 어른에게 꺼낸 적 있으면 Y · <b>예배후머묾</b> 모임 후 남아 어울림 0~2(학생 카드 소속 줄·만날 이유) · <b>챙기는어른</b> 이름을 댈 수 있는 어른 수 0~5(학생 카드·처방 "어른 한 명부터").<br>
+      <b>3단계 · 학부모 설문에서</b> — <b>신앙대화</b> 지난 한 주 부모·자녀 신앙 대화 횟수 0~7 · <b>가정예배</b> 1 안 함~5 자주(둘 다 학생 카드 가정 줄에 보인다).<br>
+      <b>4단계 · 학생 설문에서(연 1회)</b> — <b>내면화점수</b> 6문항 평균 1~5(이 값으로 '속'을 잡는다) · <b>부모관계</b> 자녀가 답한 온기 1~5.<br>
+      못 본 칸은 비워 두라(빈 칸=모름으로 기본값 처리, 추측보다 낫다). 옛 양식의 열 이름(부모신앙·형제등록·교회친구수·신앙주인의식·소속감·의심나눔 등)도 그대로 읽힌다. 문항 근거는 SURVEY.md.
       </div>
     </details>
     <div class="grp">또는 대략 추정으로 (명단 없을 때) <small style="font-weight:400;color:var(--mut)">아래 값은 관찰이 아니라 짐작이다. 화면에 "추정"으로 표시된다.</small></div>
@@ -813,8 +841,8 @@
   var roster=null;
   // 파싱이 받아들이는 전체 열: 새 관찰 열 + 옛 열 별칭 + 수집 양식(collection-template.csv, main 이식) 호환. 새 열이 있으면 새 열 우선.
   var CSV_COLS=['이름','학년','부모신앙','형제신앙','교회친구수','소그룹','멘토','봉사역할','출석4주','QT','학업압박','신앙주인의식','가정예배','챙기는어른','소속감','의심나눔','부모관계','내면화점수','신앙대화','다락방','친구이름','부모출석','형제등록','자기말표현','의심질문','예배후머묾','신앙배경','코어','외톨이','출석상태','내면화','말씀','소속','가정신앙','곁의어른수','친한친구'];
-  // 양식이 권하는 열: 관찰·기록 가능한 것만(행정 → 교사 행동 관찰 → 학부모 사실 → 학생 내면).
-  var TEMPLATE_COLS=['이름','학년','출석4주','소그룹','멘토','봉사역할','부모출석','형제등록','다락방','친구이름','자기말표현','의심질문','예배후머묾','챙기는어른','신앙대화','가정예배','부모관계','내면화점수'];
+  // 양식이 권하는 열: 단계 순(1 행정 → 2 교사 관찰 → 3 학부모 → 4 학생). 모든 칸은 화면 사용처가 있다 — 없는 칸은 양식에서 뺀다(형제등록은 효과가 미미해 제외, 별칭 파싱만 유지).
+  var TEMPLATE_COLS=['이름','학년','출석4주','소그룹','멘토','봉사역할','부모출석','다락방','친구이름','자기말표현','의심질문','예배후머묾','챙기는어른','신앙대화','가정예배','부모관계','내면화점수'];
   var rosterCols=[]; // 명단에 실제로 들어온 열(데이터 충실도·출처 배지용)
   var GMAP={'중1':1,'중2':2,'중3':3,'고1':4,'고2':5,'고3':6};
   function yn(v){v=(v||'').toString().trim().toLowerCase();return v==='y'||v==='예'||v==='o'||v==='1'||v==='true';}
@@ -864,6 +892,7 @@
         acad:clampn(num(g('학업압박'),3),1,5),
         own:has('자기말표현')?L2[clampn(Math.round(num(g('자기말표현'),1)),0,2)]:clampn(num(g('신앙주인의식'),3),1,5),  // 관찰: 자기 말로 신앙을 표현한 것을 봄
         hw:has('가정예배')?clampn(num(g('가정예배'),3),1,5):(fmHw!=null?fmHw:3),
+        hwGiven:has('가정예배')||fmHw!=null, // 실제로 받은 값인지(학생 카드 가정 줄 표시용)
         adults:has('챙기는어른')?clampn(num(g('챙기는어른'),1),0,5):clampn(num(g('곁의어른수'),1),0,5),
         belongQ:has('예배후머묾')?L2[clampn(Math.round(num(g('예배후머묾'),1)),0,2)]:(T3(g('소속'))!=null?T3(g('소속')):clampn(num(g('소속감'),3),1,5)), // 관찰: 모임 후 남아 어울림
         doubt:has('의심질문')?(yn(g('의심질문'))?4:2.5):(dsVal!=null?dsVal:3),                               // 관찰: 의심·질문을 꺼낸 사건
@@ -888,7 +917,9 @@
       owned:(r.intern>0?clampn((r.intern-1)/4,0,1):clampn(0.18+0.12*(r.own-3)+0.06*(r.qt-3)+0.06*(r.doubt-3)+0.28*faith,0,1)),doubtSpace:clampn(0.40+0.12*(r.doubt-3),0,1),adults:r.adults,
       warmth:clampn(0.2+0.15*(r.warmth-1),0,1),doubt:clampn(0.20+0.05*r.grade,0,1),
       rSg:r.sg?0:1,rMt:r.mentor?0:1,sermonAcc:0,retreatGlow:0,examPress:0,absent:0,left:false,dropped:false,
-      sg:!!r.sg,mentor:!!r.mentor,friends:[],phase:Math.random()*6.28,seat:freeSeat(),mx:Math.random(),my:Math.random(),_friendN:r.friendN,_fNames:r.fNames||null,name:r.name,id:++sid};
+      sg:!!r.sg,mentor:!!r.mentor,friends:[],phase:Math.random()*6.28,seat:freeSeat(),mx:Math.random(),my:Math.random(),
+      _friendN:r.friendN,_fNames:r.fNames||null,_talk:r.talk!=null?r.talk:null,_hw:r.hwGiven?r.hw:null, // 받은 원천 값(학생 카드 가정 줄 — 안 받았으면 표시 안 함)
+      name:r.name,id:++sid};
   }
   function syncSlidersFromRoster(rows){
     var n=rows.length||1,a=0,rk=0,mid=0,mota=0,none=0,core=0,lon=0;
@@ -937,15 +968,15 @@
         for(var t=0;t<k;t++){var j=Math.floor(Math.random()*rows.length);if(j!==i&&names.indexOf(rows[j].name)<0)names.push(rows[j].name);}
         if(names.length){r.fNames=names;r.friendN=names.length;}}
       if(!r.fNames)r.friendN=Math.floor(Math.random()*5);});
-    rows._cols=['이름','학년','출석4주','소그룹','멘토','봉사역할','부모출석','형제등록','다락방','친구이름','자기말표현','의심질문','예배후머묾','챙기는어른'];
+    rows._cols=['이름','학년','출석4주','소그룹','멘토','봉사역할','부모출석','다락방','친구이름','자기말표현','의심질문','예배후머묾','챙기는어른'];
     rows._sample=true; // 예시 명단 표시(랜딩 배너용)
     return rows;
   }
   function downloadCSV(){
     // 양식은 관찰·기록 가능한 열만 권한다(옛 열 이름으로 된 파일도 계속 읽힌다).
-    // 이름,학년,출석4주,소그룹,멘토,봉사역할,부모출석,형제등록,다락방,친구이름,자기말표현,의심질문,예배후머묾,챙기는어른,신앙대화,가정예배,부모관계,내면화점수
+    // 이름,학년,출석4주,소그룹,멘토,봉사역할,부모출석,다락방,친구이름,자기말표현,의심질문,예배후머묾,챙기는어른,신앙대화,가정예배,부모관계,내면화점수
     var head=TEMPLATE_COLS.join(',');
-    var ex=['김민수,중3,4,Y,Y,N,2,Y,Y,박지훈 이서연,2,Y,2,3,3,4,4,4','이서연,고1,1,N,N,N,0,N,N,,0,N,0,0,,,,','박지훈,고2,3,Y,N,Y,1,N,Y,김민수,1,N,1,2,1,3,3,'];
+    var ex=['김민수,중3,4,Y,Y,N,2,Y,박지훈 이서연,2,Y,2,3,3,4,4,4','이서연,고1,1,N,N,N,0,N,,0,N,0,0,,,,','박지훈,고2,3,Y,N,Y,1,Y,김민수,1,N,1,2,1,3,3,'];
     var blob=new Blob(['﻿'+head+'\n'+ex.join('\n')+'\n'],{type:'text/csv;charset=utf-8'});
     var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='우리부_명단_양식.csv';a.click();URL.revokeObjectURL(url);
   }
@@ -1067,6 +1098,7 @@
     el.innerHTML=pool.slice(0,3).map(function(o){var s=o.s,why=[];
       if((s.owned!=null?s.owned:0)<0.35)why.push('믿음이 아직 자기 것이 아니고');
       if((s.doubt!=null?s.doubt:0)*(1-(s.doubtSpace!=null?s.doubtSpace:0.5))>=0.18)why.push('의심을 말할 곳이 없고');
+      if((s.belong||0)<0.35)why.push('모임 후 바로 가고');
       if(s.warmth!=null&&s.warmth<0.4)why.push('집과 관계가 차갑고');
       var what=(s.owned!=null?s.owned:0)<0.35?'멘토·소그룹으로 자기 신앙 세우기':'의심을 솔직히 나눌 자리 만들기';
       return '<div class="visit" data-si="'+students.indexOf(s)+'" style="cursor:pointer"><span class="who">'+studName(s)+'</span><span>출석은 좋지만 '+(why.join(' ')||'속이 외부에 기대 있어')+' 전환기에 위험합니다 → <b>'+what+'</b></span></div>';
@@ -1324,6 +1356,7 @@
   // 한 아이에게 '필요한 한 가지'(목양 한 줄). 카드와 행동 배정이 함께 쓴다.
   function studNeed(s){
     var warm=s.warmth!=null?Math.round(s.warmth*100):null,fest=(s.doubt||0)*(1-(s.doubtSpace!=null?s.doubtSpace:0.5)),fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
+    if((s.adults||0)===0&&!s.mentor)return '이름 알고 챙기는 어른 한 명부터 세우기(부모 외 어른이 없음)';
     if((s.owned||0)<0.35)return '멘토·소그룹으로 자기 신앙 세우기(말씀을 자기 말로 고백하게)';
     if(fest>=0.18)return '정죄 없이 의심을 함께 씨름할 어른 한 명 붙이기';
     if(warm!=null&&warm<40)return '부모를 먼저 세우고(다락방·상담), 곁의 어른으로 채우기';
@@ -1343,8 +1376,12 @@
     var assigned=careLog.some(function(c){return c.type==='care'&&c.sid===s.id&&!c.done;});
     // 민감 속성(속·취약도·의심·부모 온기·믿음 단계)은 담임만. 교사·부모는 출석·친구·필요한 한 가지만.
     var line=see
-      ? '겉(출석) <b>'+pct(s.eng)+'</b> · 속(내면화) <b>'+pct(s.owned)+'</b> · 취약도 <b>'+pct(fragility(s))+'</b><br>의심을 말할 공간 <b>'+pct(s.doubtSpace)+'</b>'+(warm!=null?' · 부모 관계 온기 <b>'+warm+'</b>':'')+' · 교회 친구 <b>'+fr+'명</b>'
+      ? '겉(출석) <b>'+pct(s.eng)+'</b> · 속(내면화) <b>'+pct(s.owned)+'</b> · 취약도 <b>'+pct(fragility(s))+'</b><br>의심을 말할 공간 <b>'+pct(s.doubtSpace)+'</b>'+(warm!=null?' · 부모 관계 온기 <b>'+warm+'</b>':'')+' · 소속(머묾) <b>'+pct(s.belong)+'</b><br>교회 친구 <b>'+fr+'명</b> · 곁의 어른 <b>'+(s.adults||0)+'명</b>'+(s.mentor?' · 멘토 있음':'')
       : '출석 <b>'+pct(s.eng)+'</b> · 교회 친구 <b>'+fr+'명</b>'+(s.eng<0.3?' · 요즘 발걸음이 뜸함':'');
+    // 가정 줄: 학부모 설문(3단계)이 실제로 들어온 아이만 — 모든 기록은 화면에 닿는다.
+    var famLine=see&&(s._talk!=null||s._hw!=null)
+      ? '<div class="hint" style="margin-top:4px">가정: '+[s._talk!=null?'신앙 대화 주 <b>'+Math.round(s._talk)+'회</b>':null,s._hw!=null?'가정예배 <b>'+Math.round(s._hw)+'/5</b>':null].filter(Boolean).join(' · ')+'</div>'
+      : '';
     var stageL=see?' <span class="hint" style="font-weight:600">· '+['','부여된(빌려온) 믿음','탐색 중(의심하는 중)','내면화(자기 믿음)'][faithStage(s)]+'</span>':'';
     var actBtns=assigned
       ? '<button class="btn sm" disabled style="margin-top:10px;opacity:.6">✓ 돌봄 맡김</button> '
@@ -1354,7 +1391,7 @@
     if(role==='parent')actBtns=''; // 부모 화면은 읽기 전용
     el.innerHTML='<div class="callout" style="margin-top:8px;background:#f8fafc;border-color:#e2e8f0">'+
       '<div style="font-weight:800;font-size:15px;margin-bottom:6px">'+studName(s)+stageL+'</div>'+
-      '<div class="hint" style="line-height:1.8">'+line+(s.bg==='none'?' · 혼자 다니는 아이':s.bg==='mota'?' · 믿는 가정':'')+(s.core?' · 헌신된 제자':'')+'</div>'+
+      '<div class="hint" style="line-height:1.8">'+line+(s.bg==='none'?' · 혼자 다니는 아이':s.bg==='mota'?' · 믿는 가정':'')+(s.core?' · 헌신된 제자':'')+'</div>'+famLine+
       '<div style="margin-top:8px;font-size:14px">필요한 한 가지 → <b>'+need+'</b></div>'+
       actBtns+
       (see?'':'<div class="hint" style="margin-top:8px">한 영혼의 속(내면화·의심)은 담임만 봅니다 — 사찰이 아니라 목양이기 위함.</div>')+
@@ -1389,6 +1426,7 @@
     return {total:shaken.length,top:shaken.slice(0,3).map(function(s){
       var frN=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length,why=[],what;
       if(s.loner||frN<=1){why.push('친구가 거의 없고');what='또래·소그룹에 이어 주기';}
+      if((s.belong||0)<0.35)why.push('모임 후 바로 가고');
       if(s.bg==='none')why.push('믿는 가정이 아니고');
       why.push('요즘 출석이 흔들립니다');
       if(!what)what='이번 주 안부 전화 한 번';
@@ -1445,25 +1483,41 @@
   function hasCol(c){return rosterCols.indexOf(c)>=0;}
   // 어떤 데이터까지 들어왔나 한 줄 — 무엇이 실측이고 무엇이 추정인지 정직하게.
   function anyCol(){for(var i=0;i<arguments.length;i++)if(hasCol(arguments[i]))return true;return false;}
+  // 단계별 수집 현황 — 개념 단위로 센다(새 관찰 열·옛 열·수집 양식 별칭을 함께 인정).
+  function stageStatus(){
+    var real=!!(roster&&roster.length);
+    return {
+      s1:real&&(hasCol('출석4주')||hasCol('출석상태')),
+      c2:[anyCol('친구이름','친한친구','교회친구수','외톨이'),anyCol('자기말표현','신앙주인의식','내면화'),anyCol('의심질문','의심나눔'),anyCol('예배후머묾','소속감','소속'),anyCol('챙기는어른','곁의어른수')].filter(Boolean).length,
+      c3:[anyCol('신앙대화'),anyCol('가정예배','가정신앙'),anyCol('다락방')].filter(Boolean).length,
+      c4:(hasCol('내면화점수')?1:0)+(hasCol('부모관계')?1:0)
+    };
+  }
   function fidelityLine(){
     if(!roster||!roster.length)return '지금은 명단 없이 슬라이더로 잡은 <b>추정</b>입니다'+badge('est')+' 명단을 올리면 우리 아이들 이름으로 진단합니다.';
-    // 개념 단위로 센다(새 관찰 열·옛 열·수집 양식 별칭을 함께 인정).
-    var t1=[anyCol('친구이름','친한친구','교회친구수','외톨이'),anyCol('자기말표현','신앙주인의식'),anyCol('의심질문','의심나눔'),anyCol('예배후머묾','소속감','소속'),anyCol('챙기는어른','곁의어른수')].filter(Boolean).length;
-    var t2=[anyCol('신앙대화'),anyCol('가정예배','가정신앙')].filter(Boolean).length;
-    var t3=hasCol('내면화점수');
-    var parts=['명단 '+roster.length+'명'+badge('obs')];
-    parts.push(anyCol('친구이름','친한친구')?'친구망 실측'+badge('teach'):'친구망 추정'+badge('est'));
-    parts.push(t1>0?'교사 관찰 '+t1+'/5'+badge('teach'):'교사 관찰 전'+badge('est'));
-    parts.push(t2>0?'학부모 설문 '+t2+'/2'+badge('survey'):'학부모 설문 전'+badge('est'));
-    parts.push(t3?'속(내면화) 실측'+badge('survey'):hasCol('내면화')?'속(내면화) 교사 추정'+badge('est'):'속(내면화)은 추정'+badge('est'));
-    return parts.join(' · ');
+    var st=stageStatus();
+    function seg(t,done,n,total){return t+' '+(done?'✓':n>0?n+'/'+total:'아직');}
+    var parts=['명단 '+roster.length+'명'+badge('obs'),
+      seg('1단계 행정',st.s1,0,0),
+      seg('2단계 교사',st.c2>=5,st.c2,5),
+      seg('3단계 학부모',st.c3>=3,st.c3,3),
+      seg('4단계 학생',st.c4>=2,st.c4,2),
+      anyCol('친구이름','친한친구')?'친구망 실측'+badge('teach'):'친구망 추정'+badge('est')];
+    var more=roster._sample?'':' <a href="#" id="ladder-more">'+(onboardOpen?'[접기]':'[더 넣기]')+'</a>';
+    return parts.join(' · ')+more;
   }
+  var onboardOpen=false; // 배너/[더 넣기]를 누르면 사다리를 펼친다
   function updateOnboard(){
-    var hasReal=!!(roster&&roster.length&&!roster._sample),isSample=!!(roster&&roster.length&&roster._sample);
-    var ob=document.getElementById('onboard');if(ob)ob.hidden=hasReal||(isSample&&!onboardOpen);
+    var has=!!(roster&&roster.length),isSample=has&&!!roster._sample;
+    var ob=document.getElementById('onboard');if(ob)ob.hidden=has&&!onboardOpen;
     var bn=document.getElementById('sample-banner');if(bn)bn.hidden=!isSample;
+    var st=stageStatus();
+    function chip(id,done,n,total){var e=document.getElementById(id);if(!e)return;
+      if(done){e.textContent='✓ 들어옴';e.className='ld-status ok';}
+      else if(n>0){e.textContent=n+'/'+total+' 들어옴';e.className='ld-status part';}
+      else{e.textContent='아직';e.className='ld-status no';}}
+    chip('st1',st.s1,0,0);chip('st2',st.c2>=5,st.c2,5);chip('st3',st.c3>=3,st.c3,3);chip('st4',st.c4>=2,st.c4,2);
   }
-  var onboardOpen=false; // 예시 배너에서 "우리 부 명단 넣기"를 누르면 3걸음을 펼친다
   var N_TEN=['','하나','둘','셋','넷','다섯','여섯','일곱','여덟','아홉','열'];
   function renderPastor(){
     var pv=document.getElementById('pv-verdict');if(!pv)return;
@@ -1561,18 +1615,18 @@
     var body='';
     if(kind==='teacher'){
       var rows='';for(var i=0;i<6;i++)rows+='<tr><td class="nm"></td><td style="min-width:130px"></td><td></td><td></td><td></td><td></td></tr>';
-      body='<h1>교사 관찰지 — 내가 맡은 아이들 (본 것만)</h1>'+
+      body='<h1>교사 관찰지 (2단계) — 내가 맡은 아이들, 본 것만</h1>'+
         '<p class="note">교사·소그룹장이 <b>자기가 맡은 6명쯤만</b>, 학기 1회 적습니다. 전부 <b>실제로 본 행동</b>입니다 — 아이의 속마음을 짐작해 적지 마세요. 못 봤으면 비워 둡니다(빈 칸은 "모름"으로 처리되며, 추측보다 낫습니다). 다 쓰면 명단 엑셀(CSV)의 같은 이름 칸에 옮깁니다.</p>'+
         '<table><tr><th>이름</th><th>친구이름<br>주로 함께 다니는 아이 1~3명<br>(공백으로 구분, 쉼표 금지)</th><th>자기말표현<br>나눔·기도에서 자기 말로<br>신앙을 표현하는 걸 봄<br>0 없음·1 가끔·2 자주</th><th>의심질문<br>신앙 질문·의심을<br>어른에게 꺼낸 적 있음<br>Y/N</th><th>예배후머묾<br>모임 후 바로 가지 않고<br>남아 어울림<br>0 없음·1 가끔·2 자주</th><th>챙기는어른<br>이름을 댈 수 있는<br>어른 수 0~5</th></tr>'+rows+'</table>'+
         '<p class="note">왜 행동만 묻나: 혼자 기도하는지, 믿음이 자기 것인지 같은 속마음은 교사가 볼 수 없는 영역이라 묻지 않습니다(그건 연 1회 학생 설문이 잽니다). 친구이름은 전염 진단과 "먼저 만날 아이" 순서를 실제 관계망으로 계산하게 해 주는 가장 값진 관찰입니다.</p>';
     }else if(kind==='parent'){
-      body='<h1>학부모 설문지 — 가정의 신앙 (사실만 두 가지)</h1>'+
+      body='<h1>학부모 설문지 (3단계) — 가정의 신앙, 사실만 두 가지</h1>'+
         '<p class="note">자녀 이름: ______________ · 학기 1회, 학부모 모임에서 적습니다. 연구마다 자녀 신앙의 가장 강한 예측은 프로그램이 아니라 <b>가정의 평소 신앙 대화</b>였습니다. 지난 한 주를 떠올려 사실대로 적어 주세요.</p>'+
         '<div class="q"><b>1. 지난 한 주, 자녀와 신앙·삶의 고민을 이야기한 횟수는?</b> 주 ______회 <span class="note">(명단의 "신앙대화" 칸, 0~7)</span></div>'+
         '<div class="q"><b>2. 지난 한 달, 가정예배나 함께 기도하는 시간을 가진 빈도는?</b> 1 안 함 · 2 · 3 가끔 · 4 · 5 자주 <span class="note">(명단의 "가정예배" 칸)</span></div>'+
         '<p class="note">다락방(부모 모임) 참여는 모임 출석부(행정 기록)로 잡으므로 여기서 묻지 않습니다. 부모·자녀 관계의 온기는 자녀가 더 정직하게 답할 수 있어 학생 설문에서 잽니다. 응답은 평가가 아니라 도울 곳을 찾는 나침반입니다.</p>';
     }else{
-      body='<h1>학생 설문지 — 내 믿음은 어디쯤 (연 1회)</h1>'+
+      body='<h1>학생 설문지 (4단계) — 내 믿음은 어디쯤, 연 1회</h1>'+
         '<p class="note">이름: ______________ · 수련회처럼 다 모인 자리에서 연 1회면 충분합니다. 각 문항에 1(전혀 아니다)~5(매우 그렇다)로 답합니다. 여기 묻는 것은 <b>나만 아는 것</b>(속마음)입니다 — 그래서 교사나 부모가 아니라 본인에게 묻습니다.</p>'+
         '<h2>가. 내 믿음 (검증 척도 RCI-A·FMS·CRIS에서 추린 6문항)</h2>'+
         '<div class="q"><b>1. 내 신앙은 부모나 교회의 기대 때문이 아니라 나 자신의 것이다.</b> ____</div>'+
@@ -1883,8 +1937,13 @@
   var pvStud=document.getElementById('pv-stud');if(pvStud)pvStud.addEventListener('click',function(e){
     var act=e.target.closest('[data-action]');if(!act)return;
     var sa=students.filter(function(x){return x.id===+act.dataset.sid;})[0];if(sa)runAction(act.dataset.action,sa);});
-  // 예시 배너 → 온보딩 3걸음 펼치기
+  // 예시 배너 → 데이터 사다리 펼치기
   var bnOpen=document.getElementById('banner-open');if(bnOpen)bnOpen.addEventListener('click',function(e){e.preventDefault();onboardOpen=true;updateOnboard();var ob=document.getElementById('onboard');if(ob)ob.scrollIntoView({block:'start'});});
+  // 충실도 줄의 [더 넣기]/[접기] → 사다리 토글 (줄이 매주 다시 그려지므로 위임)
+  var dbEl=document.getElementById('data-badge');if(dbEl)dbEl.addEventListener('click',function(e){
+    var l=e.target.closest('#ladder-more');if(!l)return;e.preventDefault();
+    onboardOpen=!onboardOpen;updateOnboard();dbEl.innerHTML=fidelityLine();
+    if(onboardOpen){var ob=document.getElementById('onboard');if(ob)ob.scrollIntoView({block:'start'});}});
   function loop(t){if(playing2&&t-last>=650){step();last=t;}requestAnimationFrame(loop);}
   requestAnimationFrame(loop);
 

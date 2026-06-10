@@ -36,10 +36,33 @@ test('부팅(첫 방문): 예시 명단이 자동 로드되고 배너·진단·�
   await expect(page.locator('#pv-verdict .vtext')).toHaveText(/.+/);
   const lw = await page.locator('#flock').getAttribute('data-lw');
   expect(Number(lw)).toBeGreaterThan(100);
-  // 배너를 누르면 온보딩 3걸음이 펼쳐진다
+  // 배너를 누르면 데이터 사다리(4단계)가 펼쳐지고 단계 상태 칩이 보인다
   await expect(page.locator('#onboard')).toBeHidden();
   await page.locator('#banner-open').click();
   await expect(page.locator('#onboard')).toBeVisible();
+  await expect(page.locator('#onboard')).toContainText('1단계');
+  await expect(page.locator('#onboard')).toContainText('4단계');
+  await expect(page.locator('#st1')).toContainText('들어옴');
+  expect(errors).toEqual([]);
+});
+
+test('연결 보장: 3·4단계 칸이 학생 카드에 보이고 어른 0명 처방이 뜬다', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  await freshPage(page);
+  const csv = [
+    '이름,학년,출석4주,소그룹,부모출석,친구이름,자기말표현,의심질문,예배후머묾,챙기는어른,신앙대화,가정예배,내면화점수',
+    '김민수,중3,4,Y,2,박지훈,2,Y,2,3,5,4,4',
+    '이서연,고1,0,N,0,,0,N,0,0,1,1,2',
+    '박지훈,고2,3,Y,1,김민수,1,N,1,2,2,3,3'
+  ].join('\n');
+  await page.locator('#ob-file').setInputFiles({ name: 'f.csv', mimeType: 'text/csv', buffer: Buffer.from('﻿' + csv, 'utf-8') });
+  await expect(page.locator('#data-badge')).toContainText('1단계 행정 ✓');
+  // 위기인 이서연 카드: 곁의 어른·가정 줄·어른 우선 처방이 모두 보인다(모든 칸이 화면에 닿음)
+  await page.locator('#pv-visit .pv-card').first().click();
+  await expect(page.locator('#pv-stud')).toContainText('곁의 어른');
+  await expect(page.locator('#pv-stud')).toContainText('가정: 신앙 대화');
+  await expect(page.locator('#pv-stud')).toContainText('어른 한 명부터');
   expect(errors).toEqual([]);
 });
 
