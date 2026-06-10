@@ -483,7 +483,7 @@
     <details style="margin-bottom:8px"><summary class="summary-h" style="font-size:12.5px">엑셀 칸에 뭘 적나 ▾</summary>
       <div class="hint" style="line-height:1.7;margin-top:6px">
       모든 칸이 <b>관찰하거나 기록에서 옮길 수 있는 것</b>이고, 전부 화면 어딘가에 쓰인다. 속마음을 짐작해 적는 칸도, 쓰이지 않는 칸도 없다.<br>
-      <b>1단계 · 행정 기록에서</b> — <b>학년</b> 중1~고3 · <b>출석4주</b> 최근 4주 중 나온 횟수 0~4 · <b>소그룹·멘토·봉사역할</b> 있으면 Y · <b>부모출석</b> 본 교회 출석하는 부모 수 0~2 · <b>다락방</b> 부모가 다락방(부모 모임) 출석부에 있으면 Y(부모 모임 슬라이더를 실측 참여율로 맞춘다).<br>
+      <b>1단계 · 행정 기록에서</b> — <b>학년</b> 중1~고3 · <b>출석4주</b> 최근 4주 중 나온 횟수 0~4 · <b>소그룹(반)·멘토(훈련)·봉사역할(사역팀·임원)</b> 있으면 Y · <b>부모출석</b> 본 교회 출석하는 부모 수 0~2 · <b>다락방</b> 부모가 다락방(부모 모임) 출석부에 있으면 Y(부모 모임 슬라이더를 실측 참여율로 맞춘다).<br>
       <b>2단계 · 교사가 본 행동</b> — <b>친구이름</b> 주로 함께 다니는 친구 이름 1~3명(공백·가운뎃점 구분, 쉼표 금지 — 전염 진단·먼저 만날 아이가 실제 관계망으로 계산된다) · <b>자기말표현</b> 나눔·기도에서 자기 말로 신앙을 표현하는 걸 봄 0 없음·1 가끔·2 자주 · <b>의심질문</b> 신앙 질문·의심을 어른에게 꺼낸 적 있으면 Y · <b>예배후머묾</b> 모임 후 남아 어울림 0~2(학생 카드 소속 줄·만날 이유) · <b>챙기는어른</b> 이름을 댈 수 있는 어른 수 0~5(학생 카드·처방 "어른 한 명부터").<br>
       <b>3단계 · 학부모 설문에서</b> — <b>신앙대화</b> 지난 한 주 부모·자녀 신앙 대화 횟수 0~7 · <b>가정예배</b> 1 안 함~5 자주(둘 다 학생 카드 가정 줄에 보인다).<br>
       <b>4단계 · 학생 설문에서(연 1회)</b> — <b>내면화점수</b> 6문항 평균 1~5(이 값으로 '속'을 잡는다) · <b>부모관계</b> 자녀가 답한 온기 1~5.<br>
@@ -508,9 +508,9 @@
     <label class="slab"><span>외톨이<small>교회에 친한 친구가 거의 없는 아이</small></span><input type="range" id="p-loner" min="0" max="100" step="1" value="15"><b id="v-p-loner"></b></label>
     <div id="seg-hint" class="hint" style="margin:2px 0 0"></div>
     <div class="grp">평소 사역 <small style="font-weight:400;color:var(--mut)">우리 부가 늘 하는 것</small></div>
-    <label class="slab"><span>소그룹 참여<small>소그룹(목장)에 든 아이 비율</small></span><input type="range" id="s-sg" min="0" max="100" step="1" value="55"><b id="v-s-sg"></b></label>
-    <label class="slab"><span>멘토 있는 아이<small>따로 챙겨 주는 멘토가 있는 비율</small></span><input type="range" id="s-mt" min="0" max="100" step="1" value="30"><b id="v-s-mt"></b></label>
-    <label class="slab"><span>교사 수<small>실제로 아이를 맡아 챙기는 교사(이름만 말고)</small></span><input type="range" id="s-tc" min="4" max="70" step="1" value="25"><b id="v-s-tc"></b></label>
+    <label class="slab"><span>반(소그룹) 참여<small>반 모임에 실제로 붙어 있는 아이 비율</small></span><input type="range" id="s-sg" min="0" max="100" step="1" value="55"><b id="v-s-sg"></b></label>
+    <label class="slab"><span>훈련·멘토 있는 아이<small>디모데·리더 같은 훈련이나 따로 챙기는 멘토가 있는 비율</small></span><input type="range" id="s-mt" min="0" max="100" step="1" value="30"><b id="v-s-mt"></b></label>
+    <label class="slab"><span>반 담임 수<small>실제로 아이를 맡아 챙기는 반 담임(이름만 말고)</small></span><input type="range" id="s-tc" min="4" max="70" step="1" value="25"><b id="v-s-tc"></b></label>
     <label class="slab"><span>한 해 새 아이<small>해마다 들어오는 새 학생(주로 중1)</small></span><input type="range" id="s-in" min="0" max="90" step="1" value="50"><b id="v-s-in"></b></label>
     <label class="slab"><span>변화 속도<small>아이들이 얼마나 빨리 변하나(보통 천천히)</small></span><input type="range" id="s-speed" min="20" max="100" step="5" value="40"><b id="v-s-speed"></b></label>
     <label class="slab"><span>부모 모임 참여<small>부모가 기도·양육 모임(다락방)에 나오는 정도</small></span><input type="range" id="s-daracbang" min="0" max="100" step="1" value="50"><b id="v-s-daracbang"></b></label>
@@ -537,7 +537,7 @@
   // 중3→고1 전환 절벽 — 이제 손으로 정한 값이 아니라 취약도에서 자란다(Uecker: 전환기엔 출석이 무너지고 신념은 남는다).
   // 출석이 높아도 그 출석이 외부에 떠받쳐진 모래성이면(취약도 큼) 크게 빠진다. 내면화된 아이는 출석이 잠시 낮아도 넘어간다.
   function cliffProb(s){return clamp(0.07+0.62*fragility(s)+(s.loner?0.12:0)+(s.bg==='none'?0.07:0)-(s.core?0.10:0),0,0.82);}
-  var EVENTS={retreat:{label:'수련회',color:'#5fb04e'},outreach:{label:'전도·친구초청',color:'#378add'},smallgroup:{label:'소그룹 집중주간',color:'#7a5cd0'},service:{label:'봉사·단기선교',color:'#1d9e75'},exam:{label:'시험기간',color:'#d65a4f'},sooneung:{label:'수능(고3)',color:'#8a0f1a'},sermon:{label:'설교 시리즈',color:'#c9852b'}};
+  var EVENTS={retreat:{label:'수련회',color:'#5fb04e'},outreach:{label:'새생명축제·친구초청',color:'#378add'},smallgroup:{label:'반모임 집중주간',color:'#7a5cd0'},service:{label:'봉사·단기선교',color:'#1d9e75'},exam:{label:'시험기간',color:'#d65a4f'},sooneung:{label:'수능(고3)',color:'#8a0f1a'},sermon:{label:'설교 시리즈',color:'#c9852b'}};
   var SERMON_FOCUS={nurture:{label:'양육형',color:'#c9852b'},evangel:{label:'전도형',color:'#378add'},recovery:{label:'회복형',color:'#9a5bd0'},word:{label:'말씀형',color:'#7a5c38'},holiness:{label:'거룩·순결형',color:'#6b4a8a'},grace:{label:'은혜·위로형',color:'#2e8b8b'}};
   // 설교 결마다 다른 효과(트레이드오프). eng=출석힘, faith=신앙, word·holy·belong=영적 갈래. seek=구도자 추가 출석 페널티.
   var SERMON_FX={
@@ -548,7 +548,7 @@
     holiness:{eng:-0.012,faith:0.010,word:0.006,holy:0.028,belong:-0.010,seek:-0.010,tgt:function(s){return true;}},
     grace:{eng:0.014,faith:0.016,word:0.004,holy:0.000,belong:0.024,tgt:function(s){return true;}}
   };
-  var CHURCH_EVENTS={senior:{label:'담임 말씀 시리즈',color:'#b5651d'},allretreat:{label:'전교인 수련회',color:'#2e8b57'},revival:{label:'부흥회',color:'#c0392b'},season:{label:'절기',color:'#8e7cc3'}};
+  var CHURCH_EVENTS={senior:{label:'담임 말씀 시리즈',color:'#b5651d'},allretreat:{label:'전교인 수련회',color:'#2e8b57'},revival:{label:'특새·부흥회',color:'#c0392b'},season:{label:'절기',color:'#8e7cc3'}};
 
   var seats=[];for(var r=0;r<12;r++)for(var c=0;c<15;c++)seats.push({x:14+c*20,y:36+r*13,taken:false});
   var students=[],week=0,dropouts=0,gradKeep=0,gradLapse=0,playing=false,speed=1,hist=[],maxN=1,schedule=[],eid=0,mode='observe',curCands=[],selStudent=null,prevMetrics=null,contagionDeps={};
@@ -627,7 +627,7 @@
     sched.forEach(function(ev){
       if(ev.type==='senior'){if(periodActive(ev,w)){boost+=0.12;labels.push('담임 말씀 '+(w-ev.start+1)+'/'+ev.weeks+'주');}}
       else if(ev.type==='allretreat'){if(fires(ev,w)){boost+=0.30;allRetreat=true;labels.push('전교인 수련회');}}
-      else if(ev.type==='revival'){if(periodActive(ev,w)){boost+=0.22;revival=true;labels.push('부흥회');}}
+      else if(ev.type==='revival'){if(periodActive(ev,w)){boost+=0.22;revival=true;labels.push('특새·부흥회');}}
       else if(ev.type==='season'){if(fires(ev,w)){boost+=0.08;labels.push('절기');}}
     });
     return {boost:boost,allRetreat:allRetreat,revival:revival,labels:labels};
@@ -805,13 +805,16 @@
   function captureConfig(){return {dist:distFromDOM(),ops:{sg:val('s-sg')/100,mt:val('s-mt')/100,tc:val('s-tc'),intake:val('s-in'),speed:val('s-speed')/100,daracbang:val('s-daracbang')/100},schedule:schedule.map(copyEv),church:churchSchedule.map(copyEv)};}
   function cloneCfg(c){return {dist:c.dist,ops:{sg:c.ops.sg,mt:c.ops.mt,tc:c.ops.tc,intake:c.ops.intake,speed:c.ops.speed,daracbang:c.ops.daracbang},schedule:c.schedule.map(copyEv),church:(c.church||[]).map(copyEv)};}
   // ── 기본 일정(엔진 입력, 실제 달력 52주 기준. 1주차 ≈ 3월 신학기). ③ 결정 섹션에서 편집 ──
-  schedule.push({id:eid++,type:'sermon',start:3,focus:'nurture',weeks:8,repeat:0});      // 봄 양육 시리즈
-  schedule.push({id:eid++,type:'sermon',start:35,focus:'evangel',weeks:6,repeat:0});      // 가을 전도 시리즈
-  schedule.push({id:eid++,type:'retreat',start:30,nights:2,attendRate:0.7,intensity:0.6,repeat:52}); // 여름수련회(매년)
+  // 분당우리교회 실측 연간 리듬으로 보정(홈페이지 확인, 2026-06). week 1 ≈ 3월 첫 주.
+  schedule.push({id:eid++,type:'sermon',start:3,focus:'nurture',weeks:8,repeat:0});      // 봄 양육 시리즈(3~4월)
+  schedule.push({id:eid++,type:'sermon',start:27,focus:'evangel',weeks:6,repeat:0});      // 가을 시리즈(9~10월)
+  schedule.push({id:eid++,type:'retreat',start:20,nights:2,attendRate:0.7,intensity:0.6,repeat:52}); // 여름수련회(7월 중순, 보통 2박3일)
+  schedule.push({id:eid++,type:'retreat',start:46,nights:2,attendRate:0.6,intensity:0.6,repeat:52}); // 겨울수련회(1월, 숙박)
   schedule.push({id:eid++,type:'exam',start:9,weeks:3,repeat:13});                         // 중간·기말 연 4회
-  schedule.push({id:eid++,type:'sooneung',start:46,weeks:6,repeat:52});                    // 수능(11월, 고3)
+  schedule.push({id:eid++,type:'sooneung',start:33,weeks:6,repeat:52});                    // 수능 시즌(10월~11월 중순, 고3)
   churchSchedule.push({id:ceid++,type:'senior',start:2,weeks:10,repeat:52});               // 담임 말씀 시리즈
-  churchSchedule.push({id:ceid++,type:'allretreat',start:28,repeat:52});                   // 전교인 수련회(여름)
+  churchSchedule.push({id:ceid++,type:'revival',start:4,weeks:1,repeat:52});               // 고난주간 특별부흥회(3월 말)
+  churchSchedule.push({id:ceid++,type:'revival',start:30,weeks:1,repeat:52});              // 가을특새(9월 말)
 
   // ── 차트 공통: 팔레트 + DPR(레티나) 선명화 + 호버 툴팁 ──
   var PAL={good:'#16a34a',warn:'#d97706',bad:'#dc2626',stock:'#2563eb',act:'#7c3aed',accent:'#4f46e5',base:'#98a2b3',grid:'#e8ecf3',txt:'#667085',ink:'#334155',blueSoft:'#93c5fd'};
@@ -1040,10 +1043,10 @@
       else if(ev.type==='sermon')logEv(SERMON_FOCUS[ev.focus].label+' 설교 시작');
       else if(ev.type==='exam')logEv('시험기간 시작',true);
       else if(ev.type==='sooneung')logEv('수능 시즌 시작(고3)',true);
-      else if(ev.type==='outreach')logEv('전도 주간');
-      else if(ev.type==='smallgroup')logEv('소그룹 집중주간');});
+      else if(ev.type==='outreach')logEv('새생명축제·전도 주간');
+      else if(ev.type==='smallgroup')logEv('반모임 집중주간');});
     churchSchedule.forEach(function(ev){if(!fires(ev,week))return;
-      if(ev.type==='allretreat')logEv('전교인 수련회');else if(ev.type==='revival')logEv('부흥회');else if(ev.type==='senior')logEv('담임 말씀 시리즈 시작');});
+      if(ev.type==='allretreat')logEv('전교인 수련회');else if(ev.type==='revival')logEv('특새·부흥회');else if(ev.type==='senior')logEv('담임 말씀 시리즈 시작');});
     var cu=advanceChurch(churchClimate,parentVitality,churchSchedule,week,sp,val('s-daracbang')/100);
     churchClimate=cu.cc;parentVitality=cu.pv;
     var ctx={arr:students,sgFrac:sg,mtFrac:mt,tEff:tEff,speed:sp,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:parentVitality,churchClimate:churchClimate,allRetreat:cu.allRetreat,revival:cu.revival};lastCtx=ctx;
@@ -1100,7 +1103,7 @@
       if((s.doubt!=null?s.doubt:0)*(1-(s.doubtSpace!=null?s.doubtSpace:0.5))>=0.18)why.push('의심을 말할 곳이 없고');
       if((s.belong||0)<0.35)why.push('모임 후 바로 가고');
       if(s.warmth!=null&&s.warmth<0.4)why.push('집과 관계가 차갑고');
-      var what=(s.owned!=null?s.owned:0)<0.35?'멘토·소그룹으로 자기 신앙 세우기':'의심을 솔직히 나눌 자리 만들기';
+      var what=(s.owned!=null?s.owned:0)<0.35?'훈련·반으로 자기 신앙 세우기':'의심을 솔직히 나눌 자리 만들기';
       return '<div class="visit" data-si="'+students.indexOf(s)+'" style="cursor:pointer"><span class="who">'+studName(s)+'</span><span>출석은 좋지만 '+(why.join(' ')||'속이 외부에 기대 있어')+' 전환기에 위험합니다 → <b>'+what+'</b></span></div>';
     }).join('')+(pool.length>3?'<p class="hint" style="margin-top:6px">외 '+(pool.length-3)+'명 더 있습니다.</p>':'');
   }
@@ -1200,7 +1203,7 @@
     b+='<br><span class="hint" style="margin-right:4px">보기:</span>';
     [[0,'지금'],[52,'1년 뒤'],[156,'3년 뒤']].forEach(function(t){b+='<button class="chip'+(roomWhen===t[0]?' on':'')+'" data-when="'+t[0]+'">'+t[1]+'</button>';});
     if(roomWhen>0){b+=' <span class="hint" style="margin:0 4px">만약:</span>';
-      [['plan','그대로'],['retreat','수련회'],['mentor','멘토'],['parent','부모 세우기']].forEach(function(l){b+='<button class="chip'+((roomLever||'plan')===l[0]?' on':'')+'" data-lever="'+l[0]+'">'+l[1]+'</button>';});}
+      [['plan','그대로'],['retreat','수련회'],['mentor','훈련·멘토'],['parent','부모 세우기']].forEach(function(l){b+='<button class="chip'+((roomLever||'plan')===l[0]?' on':'')+'" data-lever="'+l[0]+'">'+l[1]+'</button>';});}
     el.innerHTML=b;
   }
   // ── 올해 계획(의사결정 중심): 1년 일정을 트랙별 막대로. 무엇을 언제 + 지금 주차 표시 ──
@@ -1335,7 +1338,7 @@
     var leg=document.getElementById('room-leg');
     if(leg){var base;
       if(fc){var lost=Math.round(expLost(fc)),grd=0,shy=0;roomDots.forEach(function(d){var m=fc[d.s.id];if(m){if(m.gradP>=0.5)grd++;else if(m.lostP<0.5&&m.eng<0.3)shy++;}});
-        var yrs=roomWhen/WEEKS_PER_YEAR,lv={retreat:'수련회 강화',mentor:'멘토 강화',parent:'부모 세우기'}[roomLever];
+        var yrs=roomWhen/WEEKS_PER_YEAR,lv={retreat:'수련회 강화',mentor:'훈련 강화',parent:'부모 세우기'}[roomLever];
         base='<b>이대로 '+yrs+'년 뒤</b>'+(lv?'('+lv+' 하면)':'')+' — <span style="color:#94a3b8">●</span> 이탈 위험 약 '+lost+'명, 졸업 '+grd+'명, <span style="color:#dc2626">●</span> 흔들림 '+shy+'명. 회색 ×=떠날 위험 큰 아이. "지금"으로 돌아가기.';
         if(lv){var baseLost=coaLost(roomWhen,'plan'),save=baseLost-lost;
           base+='<br><b style="color:#16a34a">'+lv+'</b>: 그대로면 약 '+baseLost+'명 잃는데 약 '+lost+'명으로 — '+(save>=1?'<b style="color:#16a34a">'+save+'명쯤 더 건집니다.</b>':save<=-1?'오히려 '+(-save)+'명쯤 더 잃습니다.':'큰 차이는 없습니다(다른 손길과 배합이 필요).');}}
@@ -1357,10 +1360,10 @@
   function studNeed(s){
     var warm=s.warmth!=null?Math.round(s.warmth*100):null,fest=(s.doubt||0)*(1-(s.doubtSpace!=null?s.doubtSpace:0.5)),fr=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;
     if((s.adults||0)===0&&!s.mentor)return '이름 알고 챙기는 어른 한 명부터 세우기(부모 외 어른이 없음)';
-    if((s.owned||0)<0.35)return '멘토·소그룹으로 자기 신앙 세우기(말씀을 자기 말로 고백하게)';
+    if((s.owned||0)<0.35)return '훈련(디모데·리더)·반으로 자기 신앙 세우기(말씀을 자기 말로 고백하게)';
     if(fest>=0.18)return '정죄 없이 의심을 함께 씨름할 어른 한 명 붙이기';
     if(warm!=null&&warm<40)return '부모를 먼저 세우고(다락방·상담), 곁의 어른으로 채우기';
-    if(fr<=1)return '또래·소그룹에 이어 주기';
+    if(fr<=1)return '반·또래에 이어 주기';
     if(s.eng<0.3)return '이번 주 안부 한 번, 다음 주 직접 만나기';
     return '한 걸음 더 깊은 섬김·리더 역할로 세우기';
   }
@@ -1425,7 +1428,7 @@
     shaken.sort(function(a,b){return spreadScore(b,students)-spreadScore(a,students)||a.eng-b.eng;});
     return {total:shaken.length,top:shaken.slice(0,3).map(function(s){
       var frN=s.friends.filter(function(j){return students[j]&&!students[j].left;}).length,why=[],what;
-      if(s.loner||frN<=1){why.push('친구가 거의 없고');what='또래·소그룹에 이어 주기';}
+      if(s.loner||frN<=1){why.push('친구가 거의 없고');what='반·또래에 이어 주기';}
       if((s.belong||0)<0.35)why.push('모임 후 바로 가고');
       if(s.bg==='none')why.push('믿는 가정이 아니고');
       why.push('요즘 출석이 흔들립니다');
@@ -1462,8 +1465,8 @@
     var forecast='이대로 가면 3년 뒤 약 <b>'+Math.round(f.n)+'명</b>이 함께하고, 그동안 떠나는 아이는 약 <b>'+Math.round(f.drop)+'명</b>입니다. 무엇보다 <b>졸업하는 아이 중 신앙을 들고 나가는 비율은 약 '+(f.carry!=null?Math.round(f.carry):'—')+'%</b>입니다. 출석보다 이 숫자가 진짜 성적표입니다.';
     var cands=[];
     Object.keys(SERMON_FOCUS).forEach(function(fo){if(fo===DEC.focus)return;var c=cloneCfg(plan);c.schedule.forEach(function(e){if(e.type==='sermon')e.focus=fo;});cands.push({label:SERMON_FOCUS[fo].label+' 설교',sim:c});});
-    if(!DEC.prog.sg){var c1=cloneCfg(plan);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'소그룹 집중',sim:c1});}
-    if(!DEC.prog.mentor){var c2=cloneCfg(plan);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'멘토 강화',sim:c2});}
+    if(!DEC.prog.sg){var c1=cloneCfg(plan);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'반모임 집중',sim:c1});}
+    if(!DEC.prog.mentor){var c2=cloneCfg(plan);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'훈련 강화(디모데·리더)',sim:c2});}
     var c3=cloneCfg(plan);c3.ops.daracbang=Math.min(1,(c3.ops.daracbang!=null?c3.ops.daracbang:0.5)+0.2);cands.push({label:'부모 다락방 강화',sim:c3});
     // 후보는 출석이 아니라 북극성(내면화+졸업 신앙 잔존)으로 견준다. 출석만 올리는 한 수는 모래성일 수 있다.
     var best=null;cands.forEach(function(cd){var h=simulate(cd.sim,W,R);var L=h[h.length-1];var g=(L.own-P.own)+0.5*((L.carry||0)-(P.carry||0));if(!best||g>best.g)best={label:cd.label,g:g};});
@@ -1659,7 +1662,7 @@
   }
   // ── 전쟁 위계(전략·작전·전술) 채우기 — 매주, 가벼운 계산 ──
   function sermonProg(){var s=null;schedule.forEach(function(ev){if(ev.type==='sermon'&&periodActive(ev,week))s=ev;});return s?{focus:s.focus,x:week-s.start+1,y:s.weeks}:null;}
-  function nextBigOp(){var T={retreat:'수련회',sooneung:'수능',exam:'시험기간',outreach:'전도 주간',smallgroup:'소그룹 집중'};
+  function nextBigOp(){var T={retreat:'수련회',sooneung:'수능',exam:'시험기간',outreach:'새생명축제·전도',smallgroup:'반모임 집중'};
     for(var d=0;d<=WEEKS_PER_YEAR;d++){var w=week+d,found=null;schedule.forEach(function(ev){if(!T[ev.type]||found)return;var on=(ev.type==='exam'||ev.type==='sooneung')?periodActive(ev,w):fires(ev,w);if(on)found={label:T[ev.type],d:d};});if(found)return found;}return null;}
   function stepRow(n,t,d){return '<div class="stepn"><span class="sn">STEP '+n+'</span><span><b>'+t+'</b> — '+d+'</span></div>';}
   function updateWar(){
@@ -1792,7 +1795,7 @@
 
   // ── ③ 결정 + 추천 ──
   var DEC={focus:'nurture',prog:{parent:false,retreat:true,sg:false,outreach:false,mentor:false}};
-  var PROGS=[{k:'parent',n:'부모 세우기'},{k:'retreat',n:'수련회 강화'},{k:'sg',n:'소그룹 집중'},{k:'mentor',n:'멘토 강화'},{k:'outreach',n:'전도 주간'}];
+  var PROGS=[{k:'parent',n:'부모 세우기'},{k:'retreat',n:'수련회 강화'},{k:'sg',n:'반모임 집중'},{k:'mentor',n:'훈련 강화(디모데·리더)'},{k:'outreach',n:'전도(새생명축제)'}];
   var SERMON_DESC={nurture:'믿음과 출석을 고루 키운다. 무난한 기본.',evangel:'안 믿는 친구·약한 아이에게 가닿는다.',recovery:'지치고 상한 아이를 돌이킨다.',word:'말씀이 깊어진다. 대신 출석은 살짝 눌릴 수 있다.',holiness:'거룩을 강하게 세운다. 대신 출석·소속은 눌릴 수 있다.',grace:'소속감·출석을 올린다. 대신 거룩은 더디다.'};
   function renderDecide(){
     document.getElementById('sermon-pick').innerHTML=Object.keys(SERMON_FOCUS).map(function(f){return '<button class="chip'+(DEC.focus===f?' on':'')+'" data-f="'+f+'">'+SERMON_FOCUS[f].label+'</button>';}).join('');
@@ -1806,11 +1809,13 @@
   function decToSchedule(){
     var sc=[];
     sc.push({id:eid++,type:'sermon',start:3,focus:DEC.focus,weeks:10,repeat:0});
-    if(DEC.prog.outreach)sc.push({id:eid++,type:'outreach',start:35,repeat:26});
-    if(DEC.prog.sg)sc.push({id:eid++,type:'smallgroup',start:6,repeat:13});
-    sc.push(DEC.prog.retreat?{id:eid++,type:'retreat',start:30,nights:3,attendRate:0.82,intensity:0.78,repeat:52}:{id:eid++,type:'retreat',start:30,nights:2,attendRate:0.6,intensity:0.5,repeat:52});
+    if(DEC.prog.outreach)sc.push({id:eid++,type:'outreach',start:31,repeat:52}); // 새생명축제 시즌(9~10월)
+    if(DEC.prog.sg)sc.push({id:eid++,type:'smallgroup',start:6,repeat:13});      // 반모임 집중
+    // 수련회는 실측대로 연 2회: 여름(7월 중순, 보통 2박3일) + 겨울(1월). "수련회 강화"는 여름을 3박·참여 끌어올림.
+    sc.push(DEC.prog.retreat?{id:eid++,type:'retreat',start:20,nights:3,attendRate:0.82,intensity:0.78,repeat:52}:{id:eid++,type:'retreat',start:20,nights:2,attendRate:0.7,intensity:0.6,repeat:52});
+    sc.push({id:eid++,type:'retreat',start:46,nights:2,attendRate:0.6,intensity:0.6,repeat:52});
     sc.push({id:eid++,type:'exam',start:9,weeks:3,repeat:13});
-    sc.push({id:eid++,type:'sooneung',start:46,weeks:6,repeat:52});
+    sc.push({id:eid++,type:'sooneung',start:33,weeks:6,repeat:52});
     return sc;
   }
   function applyDecision(){
@@ -1827,8 +1832,8 @@
       var base=captureConfig(),W=2*WEEKS_PER_YEAR,R=4;var b=simulate(base,W,R),P=b[b.length-1];
       var cands=[];
       Object.keys(SERMON_FOCUS).forEach(function(f){if(f===DEC.focus)return;var c=cloneCfg(base);c.schedule.forEach(function(e){if(e.type==='sermon')e.focus=f;});cands.push({label:SERMON_FOCUS[f].label+' 설교',sim:c});});
-      if(!DEC.prog.sg){var c1=cloneCfg(base);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'소그룹 집중',sim:c1});}
-      if(!DEC.prog.mentor){var c2=cloneCfg(base);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'멘토 강화',sim:c2});}
+      if(!DEC.prog.sg){var c1=cloneCfg(base);c1.schedule.push({type:'smallgroup',start:6,repeat:6});c1.ops.sg=Math.min(1,c1.ops.sg+0.15);cands.push({label:'반모임 집중',sim:c1});}
+      if(!DEC.prog.mentor){var c2=cloneCfg(base);c2.ops.mt=Math.min(1,c2.ops.mt+0.15);cands.push({label:'훈련 강화(디모데·리더)',sim:c2});}
       if(!DEC.prog.retreat){var c3=cloneCfg(base);var r=c3.schedule.filter(function(e){return e.type==='retreat';});if(r.length)r.forEach(function(e){e.nights=3;e.attendRate=0.82;e.intensity=0.78;});cands.push({label:'수련회 강화',sim:c3});}
       var c4=cloneCfg(base);c4.ops.daracbang=Math.min(1,(c4.ops.daracbang!=null?c4.ops.daracbang:0.5)+0.2);cands.push({label:'부모 다락방 강화',sim:c4});
       // 북극성(내면화+졸업 신앙 잔존)으로 견주고, 출석 변화도 나란히 보여 '출석만 올리는 모래성'을 가른다.
