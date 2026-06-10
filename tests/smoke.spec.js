@@ -33,7 +33,10 @@ test('부팅(첫 방문): 예시 명단이 자동 로드되고 배너·진단·�
   await expect(page.locator('#view-detail')).toBeHidden();
   // 빈 화면 대신 예시 명단 브리핑 + 배너
   await expect(page.locator('#sample-banner')).toBeVisible();
+  await expect(page.locator('.brand h1')).toContainText('서현 고등부');
   await expect(page.locator('#pv-verdict .vtext')).toHaveText(/.+/);
+  // 예시 명단은 1·2부 구분이 있어 신호등 부제에 부별 인원이 나온다
+  await expect(page.locator('#pv-verdict')).toContainText('1부');
   const lw = await page.locator('#flock').getAttribute('data-lw');
   expect(Number(lw)).toBeGreaterThan(100);
   // 배너를 누르면 데이터 사다리(4단계)가 펼쳐지고 단계 상태 칩이 보인다
@@ -138,6 +141,28 @@ test('수집 양식 호환: collection-template(글 값)이 그대로 읽힌다'
   await expect(page.locator('#data-badge')).toContainText('친구망 실측');
   // 이름이 친구 칸에 가로채이지 않았다(헤더 최장 일치) — 위기인 이서연이 만날 아이에 뜬다
   await expect(page.locator('#pv-visit')).toContainText('이서연');
+  expect(errors).toEqual([]);
+});
+
+test('1·2부 분리: 부 칼럼 CSV는 부별 인원·카드 표기, 부 없는 CSV는 미구분 표기', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  await freshPage(page);
+  const withSvc = [
+    '이름,학년,부,출석4주,부모출석,친구이름',
+    '김민수,고3,1,4,2,박지훈',
+    '이서연,고1,2,0,0,',
+    '박지훈,고2,1,3,1,김민수'
+  ].join('\n');
+  await page.locator('#ob-file').setInputFiles({ name: 's.csv', mimeType: 'text/csv', buffer: Buffer.from('﻿' + withSvc, 'utf-8') });
+  await expect(page.locator('#data-badge')).toContainText('1·2부 구분');
+  await expect(page.locator('#pv-verdict')).toContainText('1부 2명·2부 1명');
+  await page.locator('#pv-visit .pv-card').first().click();
+  await expect(page.locator('#pv-stud')).toContainText('2부');
+  // 부 칼럼이 없는 옛 양식은 미구분으로 정직하게 표시
+  const noSvc = ['이름,학년,출석4주', '홍길동,고1,2', '김믿음,고2,3'].join('\n');
+  await page.locator('#ob-file').setInputFiles({ name: 'n.csv', mimeType: 'text/csv', buffer: Buffer.from('﻿' + noSvc, 'utf-8') });
+  await expect(page.locator('#data-badge')).toContainText('부 미구분');
   expect(errors).toEqual([]);
 });
 
