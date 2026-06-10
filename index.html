@@ -161,6 +161,8 @@
   .pv-card:hover{border-color:var(--accent)}
   .pv-card .who{flex:none;font-weight:800;font-size:18px;min-width:84px}
   .pv-card .what{font-size:16.5px;line-height:1.6}
+  .win-close{display:inline-block;flex:none;font-size:12px;font-weight:800;color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;border-radius:99px;padding:3px 10px;margin-left:auto;white-space:nowrap;align-self:center}
+  .pv-card.dept{background:#f8fafc;border-style:dashed;cursor:default}
   .badge{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;vertical-align:middle;margin-left:6px}
   .b-obs{background:#f0fdf4;color:#15803d}.b-teach{background:#eff6ff;color:#1d4ed8}.b-survey{background:#f5f3ff;color:#6d28d9}.b-model{background:#fff7ed;color:#b45309}.b-est{background:#f1f5f9;color:#64748b}
   .model-note{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:14.5px;border-radius:var(--r-sm);padding:10px 14px;margin:0 0 14px}
@@ -277,6 +279,8 @@
     <div id="pv-chips" class="wk-chips"></div>
     <h2 class="pv-h">이번 주 만날 아이</h2>
     <div id="pv-visit"><p class="muted">명단을 올리거나 예시로 시작하면 여기 이름이 나옵니다.</p></div>
+    <h2 class="pv-h">지금 열린 창 <span class="hint" style="font-weight:500">같은 손길도 닿는 때가 있다</span></h2>
+    <div id="pv-windows"></div>
     <h2 class="pv-h">이번 주 한 가지</h2>
     <div id="pv-action"><p class="muted">계획을 정하면 권하는 한 가지가 나옵니다.</p></div>
     <div id="pv-north"></div>
@@ -359,6 +363,8 @@
         <div id="gauges"></div>
         <div class="mini-h" style="margin-top:14px">믿음 단계 — 빌려온 믿음에서 자기 믿음으로</div>
         <div id="stage-box"></div>
+        <div class="mini-h" style="margin-top:14px">버팀목 구조 — 무엇이 아이를 받치고 있나</div>
+        <div id="pillar-box"></div>
         <h2 class="plain-h" style="margin-top:16px">잘 나오지만 속이 빈 아이</h2>
         <div id="hidden-list"><p class="muted">출석은 좋은데 믿음이 아직 자기 것이 안 된 아이. 전환기에 무너질 아이들입니다.</p></div>
       </div>
@@ -441,6 +447,8 @@
     <div style="margin-top:14px">
       <h3 class="plain-h">무엇에 기댔나</h3>
       <div class="plain-p">출석과 별개로 <b>내면화(자기 것이 된 믿음)</b>를 따로 본 것은 청소년 신앙 잔존 연구의 핵심이다. 주요 근거: 부모가 최강 예측 변수이며 평소 신앙 대화·관계 온기가 곱으로 작동한다(Bengtson 2013; Smith & Adamczyk 2021; Stearns & McKinney 2020). 전환기에는 출석만 무너지고 신념은 남는다(Uecker 2007; Smith 2009). 의심은 막으면 갉고 말하면 깊어진다(Fuller Youth Institute). 습관은 맥락이 끊기면 무너진다(Wood & Neal 2007). 믿음은 빌려온 단계에서 자기 단계로 자란다(Fowler; Westerhoff). 한국 현실: 청소년 출석률 64%→20대 55%, 부모와 신앙 대화 "자주"는 12%(목회데이터연구소). 자세한 출처는 <b>CLAUDE.md·SURVEY.md</b>.</div>
+      <h3 class="plain-h" style="margin-top:16px">열린 창(타이밍)의 근거</h3>
+      <div class="plain-p">새 학기·새 주 같은 시간 이정표 직후에 결심 행동이 급증한다(Fresh Start Effect — Dai·Milkman·Riis 2014, Management Science). 새로 온 사람의 정착은 첫 여섯 달의 친구 수가 가른다(Arn 교우관계 연구: 정착자 평균 7.3명 vs 이탈자 1.9명 — 부서 규모에 맞춰 "첫 학기 친구 3명"으로 각색한 가정값). 수련회 여운 창은 엔진의 감쇠 가정(주당 ×0.85)에서 그대로 도출했고, 첫 결석 창은 현장 통례다. 창의 폭·배수는 전부 방향 참고용 가정값이다.</div>
       <h3 class="plain-h" style="margin-top:16px">엔진이 만든, 뻔하지 않은 결과(검증됨)</h3>
       <div class="plain-p">· 출석이 더 높아도 속이 비면 전환 절벽 이탈이 더 크다(출석0.8·내면0.2 → 절벽 0.38 vs 출석0.6·내면0.55 → 0.07).<br>· 같은 부모 신앙이라도 관계가 차가우면 전수가 약하다(의심 나눌 공간 37 vs 52).<br>· 한 레버 몰빵보다 버팀목 없는 아이에게 배합할 때 합이 크다. 흔들리는 군집이 절반을 넘으면 함께 무너진다(캐스케이드).</div>
       <h3 class="plain-h" style="margin-top:16px">아직 안 담은 것(단순화)</h3>
@@ -1055,14 +1063,14 @@
     churchClimate=cu.cc;parentVitality=cu.pv;
     var ctx={arr:students,sgFrac:sg,mtFrac:mt,tEff:tEff,speed:sp,f:we.f,retreat:we.retreat,sermon:we.sermon,exam:we.exam,sooneung:we.sooneung,parentVitality:parentVitality,churchClimate:churchClimate,allRetreat:cu.allRetreat,revival:cu.revival};lastCtx=ctx;
     active.forEach(function(s){tick(s,ctx);});
-    if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var i=0;i<4;i++){var ns=makeOne(Math.random()<0.6?DEPT.gMin:DEPT.gMin+1,rnd(0.62,0.85));if(inv.length){ns.friends.push(students.indexOf(inv[Math.floor(Math.random()*inv.length)]));}ns.mx=Math.random();ns.my=Math.random();students.push(ns);}}
+    if(we.f.outreach){var inv=active.filter(function(s){return !s.loner;});for(var i=0;i<4;i++){var ns=makeOne(Math.random()<0.6?DEPT.gMin:DEPT.gMin+1,rnd(0.62,0.85));ns.joinWk=week;if(inv.length){ns.friends.push(students.indexOf(inv[Math.floor(Math.random()*inv.length)]));}ns.mx=Math.random();ns.my=Math.random();students.push(ns);}}
     students.filter(function(s){return !s.left;}).forEach(function(s){if(s.absent>=LEAVE_AFTER){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;if(s.seat>=0)seats[s.seat].taken=false;}});
     weekInc=students.filter(function(s){return !s.left&&s.eng<0.3&&!s._wasW;}).length;
     if(week%WEEKS_PER_YEAR===0){var grad=0,gradK=0,cliff=0;students.forEach(function(s){if(!s.left){var was=s.grade;s.grade++;
         if(s.grade>MAX_GRADE){s.left=true;grad++;if(s.seat>=0)seats[s.seat].taken=false; // 졸업: 내면화된 아이만 신앙을 들고 나간다
           if(Math.random()<clamp(0.10+0.95*(s.owned!=null?s.owned:0),0.03,0.95)){gradKeep++;gradK++;}else gradLapse++;}
         else if(was===3&&Math.random()<cliffProb(s)){s.left=true;s.dropped=true;s.eng=0;s.commit=0;dropouts++;cliff++;if(s.seat>=0)seats[s.seat].taken=false;}}});
-      for(var j=0;j<intake;j++){var n2=makeOne(DEPT.gMin);var p=students.filter(function(o){return !o.left&&o.grade<=DEPT.gMin+1;});n2.loner?link(n2,p,0,1):link(n2,p,3,5);n2.mx=Math.random();n2.my=Math.random();students.push(n2);}
+      for(var j=0;j<intake;j++){var n2=makeOne(DEPT.gMin);n2.joinWk=week;var p=students.filter(function(o){return !o.left&&o.grade<=DEPT.gMin+1;});n2.loner?link(n2,p,0,1):link(n2,p,3,5);n2.mx=Math.random();n2.my=Math.random();students.push(n2);}
       layoutNet();logEv('새 학년 — 졸업 '+grad+'명(신앙 들고 '+gradK+'명) · 고1 신입 '+intake+'명'+(cliff?' · 전환 이탈 '+cliff+'명':''),true);}
     else{var wd=dropouts-prevDrop;if(wd>=2)logEv(wd+'명이 이탈했습니다',true);}
     render();
@@ -1095,7 +1103,7 @@
       card('전체',a.length)+card('든든한 아이',ac,'good')+card('느슨한 아이',lo,'warn')+card('흔들리는 아이',ri,'bad')+card('믿음 지수',idx,'idx');
     updateVerdict();updateKpi();drawTrend();drawCompare();drawYearPlan();planEffect();drawRoom();updateFront();updateGauges();updateVisitList();updateHiddenRisk();updateStudCard();updateWhy();updateWar();updateReadouts();updateRecap();renderCareLog();
     updateDiag();updateProj();
-    renderPastor();drawFlock();renderWeekChips();renderNorthMini();renderOutcome();updateOnboard();
+    renderPastor();drawFlock();renderWeekChips();renderWindows();renderNorthMini();renderOutcome();updateOnboard();
   }
   // 출석은 좋지만(eng 높음) 속이 빈(취약도 높음) 아이 — 출석 기반 대시보드엔 안 보이는 위험. 전환기에 무너진다.
   function updateHiddenRisk(){
@@ -1129,7 +1137,7 @@
       '<span class="ewi-chip" style="'+ewc+'">조기경보 '+ewi+' — 출석이 무너지기 전, 속에서 자라는 위험</span>';
     el.innerHTML=bar('겉 — 출석으로 든든한 아이',actR,'att','매주 잘 나오는 아이의 비율')+
       bar('속 — 믿음이 자기 것이 된 아이',ownR,'own','전환기를 넘게 하는 진짜 힘(내면화)')+sand+trans;
-    updateNorthStar(a);updateStageBox(a);
+    updateNorthStar(a);updateStageBox(a);renderPillars(a);
   }
   // 북극성: 이대로 가면 졸업하는 아이 중 신앙을 들고 나가는 비율. 모든 사역의 최종 목적지.
   function updateNorthStar(a){
@@ -1579,6 +1587,92 @@
       +'<div class="nx">이대로면 졸업하는 아이 <b>열 명 중 '+(ct.k>0?N_TEN[ct.k]:'거의 없음')+'</b>이 믿음을 지니고 나갑니다 <span style="opacity:.7;font-size:12.5px">(가정값 모형의 전망)</span></div>'
       +'<button class="btn" data-goto="plan">올해 계획 바꾸기</button>';
   }
+  // ── 열린 창(window) 레지스트리 ──
+  // 엔진은 줄곧 타이밍을 품고 있었다(여운 감쇠 ×0.85, 시험 압박 해제, 첫 결석 카운터, 신입 진입).
+  // 그것을 상태("누가 약한가")가 아니라 때("지금 누구에게 닿으면 크게 박히나")로 읽는다.
+  // 근거: Fresh Start Effect(Dai·Milkman·Riis 2014 — 시간 이정표 직후 결심 행동 급증),
+  // Arn 교우관계 연구(정착자 6개월 내 친구 7.3명 vs 이탈자 1.9명 → 부서 규모로 "첫 학기 3명" 각색).
+  // 창의 폭·기준은 가정값이며 방향 참고용이다.
+  function aliveFriendN(s){return s.friends.filter(function(j){return students[j]&&!students[j].left;}).length;}
+  function openWindows(){
+    var wins=[],a=students.filter(function(s){return !s.left;});
+    var wy=week%WEEKS_PER_YEAR;
+    // 부서 창: 신학기 새 출발(연초 2주) — 시간 이정표
+    if(wy<=1)wins.push({s:null,type:'fresh',label:'신학기 새 출발',closes:2-wy,
+      why:'새 학년의 결심이 살아 있는 때입니다(시간 이정표 효과)',act:'한 해 신앙 목표를 아이들 입으로 말하게 하고, 반모임 첫 약속 잡기'});
+    // 부서 창: 시험·수능이 막 끝남 — 회복기
+    if(week>=1){var nowE=weekEffects(schedule,week),prevE=weekEffects(schedule,week-1);
+      if(prevE.exam&&!nowE.exam)wins.push({s:null,type:'recover',label:'시험 끝 회복기',closes:2,
+        why:'눌렸던 발걸음이 돌아오는 2주입니다',act:'시험 끝 환영 자리(간식·예배 후 머묾)로 돌아올 문턱 낮추기'});
+      if(prevE.sooneung&&!nowE.sooneung)wins.push({s:null,type:'sn',label:'수능 끝 — 고3의 새 출발',closes:3,
+        why:'시험이 끝난 고3이 인생에서 가장 열려 있는 몇 주입니다(졸업 전 마지막 창)',act:'고3 한 명씩 만나 다음 걸음(청년부 연결·훈련)을 함께 정하기'});}
+    // 아이 창들
+    a.forEach(function(s){
+      // 정착 창: 고1 첫 학기(또는 들어온 지 24주 안), 마음 나눌 친구가 아직 3명 미만
+      var elapsed=(s.joinWk!=null)?(week-s.joinWk):(s.grade===DEPT.gMin?wy:null);
+      if(elapsed!=null&&elapsed<24){var fr=aliveFriendN(s);
+        if(fr<3)wins.push({s:s,type:'settle',label:'정착 창',closes:24-elapsed,
+          why:'첫 학기의 친구 수가 정착을 가릅니다(지금 '+fr+'명)',act:'반모임에서 또래 둘과 짝지어 이어 주기'});}
+      // 여운 창: 수련회 은혜가 식기 전(엔진 감쇠 ×0.85에서 도출). 훈련·멘토가 아직 없는 아이만 — 여운을 다음 걸음으로 바꿀 후보.
+      if((s.retreatGlow||0)>0.15&&!s.mentor&&s.eng>=0.3){var cl=Math.max(1,Math.ceil(Math.log(0.15/s.retreatGlow)/Math.log(0.85)));
+        wins.push({s:s,type:'glow',label:'수련회 여운',closes:cl,
+          why:'은혜가 아직 따뜻합니다 — 식기 전에 다음 걸음으로',act:'훈련(디모데·리더) 권유, 작은 섬김 역할 맡기기'});}
+      // 첫 결석 창: 4주를 기다리지 않는다(조기경보의 사람 단위)
+      if(s.absent===1)wins.push({s:s,type:'miss',label:'첫 결석',closes:1,
+        why:'이번 주 처음 깊게 빠졌습니다 — 패턴이 되기 전이 가장 쉽습니다',act:'가벼운 안부 연락(부담 없이, 추궁 없이)'});
+    });
+    wins.sort(function(x,y){return (x.s?1:0)-(y.s?1:0)||x.closes-y.closes;});
+    return wins;
+  }
+  function renderWindows(){
+    var el=document.getElementById('pv-windows');if(!el)return;
+    var wins=openWindows();
+    if(!wins.length){el.innerHTML='<p class="muted">지금은 특별히 열린 창이 없습니다. 평소의 꾸준함이 정답인 주간입니다.</p>';return;}
+    var dept=wins.filter(function(w){return !w.s;}),kids=wins.filter(function(w){return w.s;});
+    var shown=dept.slice(0,2).concat(kids.slice(0,3)),rest=wins.length-shown.length;
+    // 손길의 경제: 수요(만날 아이 ∪ 열린 창)와 우리 손(반 담임 수)을 견준다
+    var vp=visitPick(),ids={};kids.forEach(function(w){ids[w.s.id]=1;});
+    var demand=vp.total;for(var id in ids)if(!vp.top.some(function(o){return o.s.id===+id;}))demand++;
+    demand=Math.max(demand,Object.keys(ids).length);
+    var tc=val('s-tc');
+    var cap=demand<=tc?'이번 주 손길이 필요한 아이 약 <b>'+demand+'명</b> · 반 담임 '+tc+'명이 한 명씩만 맡아도 닿습니다':
+      '이번 주 손길이 필요한 아이 약 <b>'+demand+'명</b> — 반 담임 '+tc+'명을 넘습니다. 위 순서(닫히는 창 먼저)대로 고르세요';
+    el.innerHTML=shown.map(function(w){
+      if(!w.s)return '<div class="pv-card dept"><span class="who">'+w.label+'</span><span class="what">'+w.why+' → <b>'+w.act+'</b></span><span class="win-close">'+w.closes+'주 남음</span></div>';
+      return '<div class="pv-card" data-si="'+students.indexOf(w.s)+'"><span class="who">'+studName(w.s)+'</span><span class="what">'+w.label+' — '+w.why+' → <b>'+w.act+'</b></span><span class="win-close">'+w.closes+'주 남음</span></div>';
+    }).join('')
+      +(rest>0?'<p class="hint" style="margin-top:6px">외 '+rest+'건 더 열려 있습니다.</p>':'')
+      +'<p class="hint" style="margin-top:6px">'+cap+' '+badge('est')+' <span style="color:var(--mut)">(반 담임 1명이 주 1건 깊은 손길 가정)</span></p>';
+  }
+  // ── 버팀목 구조: 엔진의 sup 집계(반·훈련·든든한 친구·믿는 가정·곁의 어른)를 사람 단위로 뒤집는다 ──
+  // 한 줄(버팀목 1개)에 매달린 아이는 그 줄이 끊기는 순간이 곧 이탈이다. 단일 장애점 진단.
+  function pillarsOf(s){
+    var fr=s.friends.map(function(j){return students[j];}).filter(function(x){return x&&!x.left;});
+    var pull=fr.length?fr.reduce(function(x,y){return x+y.commit;},0)/fr.length:0;
+    var names=[];
+    if(s.sg)names.push('반');
+    if(s.mentor)names.push('훈련·멘토');
+    if(fr.length&&pull>=0.55)names.push('든든한 친구');
+    if((s.fam||0)>=0.65)names.push('믿는 가정');
+    if((s.adults||0)>=2)names.push('곁의 어른');
+    return names;
+  }
+  function renderPillars(a){
+    var el=document.getElementById('pillar-box');if(!el)return;
+    var ok=a.filter(function(s){return s.eng>=0.3;});if(!ok.length){el.innerHTML='';return;}
+    var p0=[],p1=[],p2=[];
+    ok.forEach(function(s){var n=pillarsOf(s).length;(n===0?p0:n===1?p1:p2).push(s);});
+    var n=ok.length,w=function(x){return Math.round(x.length/n*100);};
+    var html='<div class="fbar"><div class="seg g" style="width:'+w(p2)+'%"></div><div class="seg a" style="width:'+w(p1)+'%"></div><div class="seg r" style="width:'+w(p0)+'%"></div></div>'
+      +'<div class="fbar-leg"><span><i class="g"></i>두 줄 이상 '+p2.length+'명</span><span><i class="a"></i>한 줄뿐 '+p1.length+'명</span><span><i class="r"></i>버팀목 없음 '+p0.length+'명</span></div>'
+      +'<p class="hint" style="margin-top:6px">엔진의 버팀목 집계(반·훈련·든든한 친구·믿는 가정·곁의 어른)와 같은 셈법이다. 한 줄에 매달린 아이는 그 줄이 끊기면 무너진다 — 첫 버팀목의 효과가 가장 크니(수확 체감) 없는 아이부터 채우는 것이 합이 크다.</p>';
+    if(ROLES[role].sensitive){
+      var spof=p1.map(function(s){return {s:s,fr:fragility(s)};}).sort(function(x,y){return y.fr-x.fr;}).slice(0,3);
+      if(spof.length)html+='<div class="mini-h" style="margin-top:10px">한 줄에 매달린 아이 — 두 번째 버팀목부터</div>'
+        +spof.map(function(o){var nm=pillarsOf(o.s);return '<div class="visit" data-si="'+students.indexOf(o.s)+'" style="cursor:pointer"><span class="who">'+studName(o.s)+'</span><span>지금 버팀목은 <b>'+nm.join('·')+'</b> 하나뿐입니다 → 다른 줄(또래·어른·반) 하나 더 잇기</span></div>';}).join('');
+    }else html+='<p class="hint" style="margin-top:8px">한 줄에 매달린 아이 명단은 담임만 봅니다.</p>';
+    el.innerHTML=html;
+  }
   // ── 양떼 지도(랜딩 중심): 모든 아이를 상태색 점으로. 누르면 그 아이 요약이 바로 아래 펼쳐진다 ──
   var flockDots=[];
   // 부서 학년 범위(고1~3). 옛 6학년 명단이 들어오면 실제 범위로 넓혀 그린다.
@@ -1961,6 +2055,11 @@
     var c=document.getElementById('pv-stud');if(c)c.scrollIntoView({block:'center'});});
   // 양떼 지도: 점을 누르면 그 아이
   var flockEl=document.getElementById('flock');if(flockEl)flockEl.addEventListener('click',flockClick);
+  // 열린 창 카드 → 그 아이 인라인 카드
+  var pvw=document.getElementById('pv-windows');if(pvw)pvw.addEventListener('click',function(e){
+    var row=e.target.closest('[data-si]');if(!row)return;var s=students[+row.dataset.si];if(!s)return;
+    selStudent=s;updateStudCard();drawFlock();
+    var c=document.getElementById('pv-stud');if(c)c.scrollIntoView({block:'center'});});
   // 랜딩의 학생 카드 행동 버튼(돌봄 맡기기 등)도 동작하게
   var pvStud=document.getElementById('pv-stud');if(pvStud)pvStud.addEventListener('click',function(e){
     var act=e.target.closest('[data-action]');if(!act)return;

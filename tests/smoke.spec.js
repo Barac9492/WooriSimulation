@@ -190,6 +190,32 @@ test('시작 경로: 구버전 방문자도 예시 구제, 슬라이더 모드�
   expect(errors).toEqual([]);
 });
 
+test('열린 창과 버팀목 구조: 타이밍 카드와 단일 장애점 진단이 렌더된다', async ({ page }) => {
+  const errors = [];
+  collectErrors(page, errors);
+  await freshPage(page);
+  // 0주차(신학기)에는 새 출발 창이 반드시 열려 있다
+  await expect(page.locator('#pv-windows')).toContainText('신학기 새 출발');
+  await expect(page.locator('#pv-windows')).toContainText('주 남음');
+  await expect(page.locator('#pv-windows')).toContainText('손길이 필요한 아이');
+  // 창 카드 클릭 → 인라인 학생 카드
+  const kidCard = page.locator('#pv-windows .pv-card[data-si]').first();
+  if (await kidCard.count()) {
+    await kidCard.click();
+    await expect(page.locator('#pv-stud')).toContainText('필요한 한 가지');
+  }
+  // 버팀목 구조(숫자로 더 보기 안)
+  await page.locator('#tab-detail').click();
+  await page.evaluate(() => {
+    document.querySelectorAll('#view-detail details').forEach((d) => {
+      const sm = d.querySelector('summary');
+      if (sm && sm.textContent.includes('숫자로')) d.open = true;
+    });
+  });
+  await expect(page.locator('#pillar-box')).toContainText('한 줄뿐');
+  expect(errors).toEqual([]);
+});
+
 test('새로고침 복원: 명단과 탭이 유지된다', async ({ page }) => {
   const errors = [];
   collectErrors(page, errors);
