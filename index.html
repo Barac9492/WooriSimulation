@@ -1710,6 +1710,11 @@
     var x=(e.clientX-r.left)/r.width*lw,y=(e.clientY-r.top)/r.height*lh,best=null;
     flockDots.forEach(function(d){var dx=d.x-x,dy=d.y-y,dd=dx*dx+dy*dy;if(dd<400&&(!best||dd<best.d))best={s:d.s,d:dd};});
     if(best){selStudent=best.s;updateStudCard();drawFlock();var c=document.getElementById('pv-stud');if(c)c.scrollIntoView({block:'nearest'});}}
+  // 시험 훅: i번째 점의 화면 좌표 — 예시 명단은 무작위 생성이라 고정 픽셀 클릭은 빗나간다(스모크 테스트 전용)
+  window.__flock=function(i){var cv=document.getElementById('flock');if(!cv||!flockDots.length)return null;
+    var d=flockDots[Math.min(i||0,flockDots.length-1)],r=cv.getBoundingClientRect();
+    var lw=+cv.dataset.lw||cv.width,lh=+cv.dataset.lh||cv.height;
+    return {x:r.left+d.x*r.width/lw,y:r.top+d.y*r.height/lh};};
   // ── 이번 주 흐름 칩: 설교 진행·다가오는 큰 일·시험기간 — 연간 계획에서 읽는다 ──
   function renderWeekChips(){
     var el=document.getElementById('pv-chips');if(!el)return;

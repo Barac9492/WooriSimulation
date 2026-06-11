@@ -73,8 +73,8 @@ test('양떼 지도: 점을 누르면 그 아이 요약이 인라인으로 펼�
   const errors = [];
   collectErrors(page, errors);
   await freshPage(page);
-  const box = await page.locator('#flock').boundingBox();
-  await page.mouse.click(box.x + 30, box.y + 40);
+  const pt = await page.evaluate(() => window.__flock(0));
+  await page.mouse.click(pt.x, pt.y);
   await expect(page.locator('#pv-stud')).toContainText('필요한 한 가지');
   expect(errors).toEqual([]);
 });
