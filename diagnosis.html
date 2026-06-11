@@ -1,0 +1,1501 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>진단실 : 어디가 아픈가, 어떻게 재는가</title>
+<style>
+/* ── 진단실 v2 : 상황판(어두운 관제실) + 자세히(전체 기록) ── */
+:root{
+  --bg:#0a0e16; --card:#111726; --panel:#0d1422; --ink:#e8ecf4; --mut:#8b95ab; --line:#212b42;
+  --good:#34d399; --warn:#fbbf24; --bad:#f87171; --na:#5b6680; --accent:#8b9dff; --accent2:#67e8f9;
+  --r-lg:16px; --r-md:12px; --r-sm:9px;
+}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font-family:'Pretendard',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:14.5px;line-height:1.62;
+  background:
+    radial-gradient(1100px 540px at 75% -12%, rgba(139,157,255,.10), transparent 60%),
+    radial-gradient(900px 520px at -10% 28%, rgba(103,232,249,.05), transparent 60%),
+    var(--bg)}
+main{max-width:1180px;margin:0 auto;padding:14px 18px 60px}
+header.top{border-bottom:1px solid var(--line);background:rgba(13,18,32,.72);backdrop-filter:blur(10px);position:sticky;top:0;z-index:30}
+.hwrap{max-width:1180px;margin:0 auto;padding:13px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hwrap h1{margin:0;font-size:19px;letter-spacing:-.3px}
+.hwrap h1 .dotpulse{display:inline-block;width:8px;height:8px;border-radius:99px;background:var(--accent2);margin-right:8px;vertical-align:2px;box-shadow:0 0 10px var(--accent2);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+.hwrap .sub{margin:0;color:var(--mut);font-size:12.5px}
+.vtabs{display:flex;gap:6px;margin-left:6px}
+.vtab{padding:6px 16px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--mut);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+.vtab.on{background:rgba(139,157,255,.14);border-color:rgba(139,157,255,.5);color:#cfd8ff}
+.hwrap .tools{margin-left:auto;display:flex;gap:8px;align-items:center}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 40%),var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;margin:14px 0;box-shadow:0 10px 34px rgba(0,0,0,.35);animation:rise .45s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h2{font-size:15.5px;margin:0 0 8px}
+h3{font-size:14px;margin:14px 0 6px}
+button,.btn{font:inherit;font-size:13px;padding:7px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;color:var(--ink)}
+button:hover,.btn:hover{border-color:#3a4666}
+button.primary{background:rgba(139,157,255,.18);border-color:rgba(139,157,255,.55);color:#dfe5ff}
+input[type=number],input[type=text],select{font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink)}
+input[type=number]{width:90px}
+a{color:var(--accent)}
+.mut{color:var(--mut)}
+.small{font-size:12px}
+
+/* 출처 배지 */
+.badge{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:99px;vertical-align:1px;margin:0 2px}
+.b-obs{background:rgba(139,157,255,.14);color:#aab8ff}
+.b-teach{background:rgba(192,132,252,.14);color:#d8c2ff}
+.b-survey{background:rgba(45,212,191,.13);color:#7ee7d8}
+.b-man{background:rgba(251,191,36,.13);color:#fcd34d}
+.b-est{background:rgba(148,163,184,.13);color:#aab4c8}
+
+/* ══ 상황판 ══ */
+.hero{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:16px 0 4px}
+.hero .hl{flex:1;min-width:280px;font-size:21px;font-weight:800;line-height:1.45;letter-spacing:-.3px}
+.hero .hl .hl-bad{color:var(--bad);text-shadow:0 0 18px rgba(248,113,113,.35)}
+.hero .hl .hl-warn{color:var(--warn);text-shadow:0 0 18px rgba(251,191,36,.3)}
+.hero .hl .hl-na{color:var(--na)}
+.gauge{display:flex;align-items:center;gap:10px}
+.gauge .glab{font-size:12px;color:var(--mut);text-align:right}
+.gauge .glab b{display:block;font-size:15px;color:var(--ink)}
+.datapill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:4px 12px;background:rgba(255,255,255,.02);cursor:pointer}
+.datapill b{color:var(--ink)}
+.datapill .warn{color:var(--warn);font-weight:700}
+
+.vrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.vital{background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);padding:11px 14px;animation:rise .45s ease both}
+.vital .k{font-size:11.5px;color:var(--mut);letter-spacing:.2px}
+.vital .v{font-size:27px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px;margin:1px 0}
+.vital .s{font-size:11.5px;color:var(--mut)}
+.vbar{height:4px;border-radius:99px;background:rgba(255,255,255,.06);margin-top:7px;overflow:hidden}
+.vbar i{display:block;height:100%;border-radius:99px}
+
+.board-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.board-grid{grid-template-columns:1fr}}
+.netwrap{position:relative}
+#net{width:100%;height:470px;display:block;border-radius:var(--r-md);background:radial-gradient(640px 360px at 50% 42%,rgba(139,157,255,.05),transparent 70%)}
+#net-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:13px;text-align:center;pointer-events:none;padding:0 40px}
+#net-tip{position:fixed;pointer-events:none;background:rgba(13,20,34,.96);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:12px;display:none;z-index:60;max-width:250px;box-shadow:0 8px 26px rgba(0,0,0,.5)}
+.netlegend{font-size:11.5px;color:var(--mut);margin-top:8px;display:flex;gap:13px;flex-wrap:wrap}
+.lg{display:inline-flex;align-items:center;gap:5px}
+.lg i{width:10px;height:10px;border-radius:99px;display:inline-block}
+
+/* 검사 보드 타일 */
+.trow{display:flex;gap:8px;align-items:flex-start;margin:7px 0}
+.trow-lab{width:44px;flex-shrink:0;font-size:12px;font-weight:800;color:var(--mut);padding-top:7px}
+.tiles{display:flex;flex-wrap:wrap;gap:6px}
+.tile{font-size:12px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.tile .st{width:7px;height:7px;border-radius:99px;flex-shrink:0}
+.tile.lv-good{border-color:rgba(52,211,153,.45)}.tile.lv-good .st{background:var(--good);box-shadow:0 0 8px rgba(52,211,153,.7)}
+.tile.lv-warn{border-color:rgba(251,191,36,.5)}.tile.lv-warn .st{background:var(--warn);box-shadow:0 0 8px rgba(251,191,36,.7)}
+.tile.lv-bad{border-color:rgba(248,113,113,.6);box-shadow:inset 0 0 14px rgba(248,113,113,.08)}.tile.lv-bad .st{background:var(--bad);box-shadow:0 0 9px rgba(248,113,113,.8)}
+.tile.lv-na{border-style:dashed;color:var(--mut)}.tile.lv-na .st{background:var(--na)}
+.tile:hover{transform:translateY(-1px)}
+
+.sidebox{border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel);padding:11px 13px;margin:10px 0;font-size:13px}
+.sidebox .k{font-size:11.5px;color:var(--mut);font-weight:700;letter-spacing:.3px;margin-bottom:4px}
+.sidebox.hotline{border-color:rgba(251,191,36,.4)}
+.sidebox .cnt{color:var(--accent)}
+#board-stud .sc-name{font-size:15px;font-weight:800}
+#board-stud .row{margin:4px 0;font-size:12.5px}
+#board-stud .row .lab{color:var(--mut);font-size:11.5px;display:inline-block;min-width:64px}
+
+/* ══ 자세히(전체 기록) ══ */
+.premise{background:rgba(251,191,36,.05);border-color:rgba(251,191,36,.28)}
+.premise b{color:#fcd34d}
+.premise ul{margin:6px 0 0;padding-left:18px}
+.premise li{margin:2px 0}
+#chain svg,#chain-hero svg{width:100%;height:auto;display:block}
+.headline{font-size:15.5px;font-weight:700;margin:4px 0 10px}
+.headline .hl-bad{color:var(--bad)} .headline .hl-warn{color:var(--warn)} .headline .hl-na{color:var(--na)}
+.link-panel{scroll-margin-top:70px}
+.lk-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:6px}
+.lk-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:99px;background:rgba(139,157,255,.18);color:#cfd8ff;font-size:13px;font-weight:800;align-self:center}
+.lk-head h2{margin:0;font-size:16.5px}
+.lk-q{color:var(--mut);font-size:13px}
+.lk-meta{margin-left:auto;color:var(--mut);font-size:11.5px}
+.test{border:1px solid var(--line);border-left-width:4px;border-radius:var(--r-md);padding:11px 14px;margin:10px 0;background:var(--panel);scroll-margin-top:70px}
+.test.lv-good{border-left-color:var(--good)}
+.test.lv-warn{border-left-color:var(--warn)}
+.test.lv-bad{border-left-color:var(--bad)}
+.test.lv-na{border-left-color:var(--na);background:rgba(255,255,255,.015)}
+.test.flash{box-shadow:0 0 0 2px rgba(139,157,255,.6);transition:box-shadow 1.2s}
+.t-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.t-head b{font-size:14px}
+.t-ask{color:var(--mut);font-size:12px}
+.chip{display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:99px}
+.chip.lv-good{background:rgba(52,211,153,.13);color:var(--good)}
+.chip.lv-warn{background:rgba(251,191,36,.13);color:var(--warn)}
+.chip.lv-bad{background:rgba(248,113,113,.14);color:var(--bad)}
+.chip.lv-na{background:rgba(148,163,184,.12);color:#9aa5bb}
+.t-read{margin:7px 0 2px;font-size:14px}
+.t-read b{font-variant-numeric:tabular-nums}
+.t-how{margin-top:6px;font-size:12px;color:var(--mut);border-top:1px dashed var(--line);padding-top:6px}
+.t-how .lab{font-weight:700;color:#aab4c8}
+.t-unlock{margin-top:6px;font-size:12.5px;color:#aab4c8;background:rgba(255,255,255,.02);border:1px dashed #34405f;border-radius:9px;padding:7px 10px}
+.t-unlock b{color:var(--accent)}
+details.names{margin-top:7px}
+details.names summary{cursor:pointer;font-size:12.5px;color:var(--accent)}
+.namelist{margin:6px 0 0;font-size:13px;line-height:2}
+.nm{display:inline-block;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:1px 8px;margin:1px 3px 1px 0;cursor:pointer}
+.nm:hover{border-color:#46537a}
+.gate{margin-top:10px;font-size:12px;color:var(--mut);background:rgba(255,255,255,.02);border-radius:9px;padding:7px 11px}
+.den-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin:8px 0}
+.den{border:1px solid var(--line);border-radius:var(--r-md);padding:9px 12px;background:rgba(255,255,255,.02)}
+.den .k{font-size:12px;color:var(--mut)}
+#map{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;margin-top:8px}
+.gcol{min-width:84px}
+.gcol .gl{font-size:12px;color:var(--mut);font-weight:700;margin-bottom:4px}
+.dots{display:flex;flex-wrap:wrap;gap:5px;max-width:120px}
+.dot{width:15px;height:15px;border-radius:99px;cursor:pointer;border:2px solid transparent}
+.dot.c0{background:#2ea872}
+.dot.c1{background:#d7a13c}
+.dot.c2{background:#e0712c}
+.dot.c3{background:#e05252}
+.dot.lowcov{border-color:#0a0e16;box-shadow:0 0 0 1.5px #5b6680}
+.dot:hover{transform:scale(1.25)}
+.maplegend{font-size:12px;color:var(--mut);margin-top:10px}
+.maplegend .dot{display:inline-block;vertical-align:-3px;cursor:default}
+#stud-card{margin-top:12px;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;background:var(--panel);display:none}
+#stud-card .sc-name{font-size:15px;font-weight:800}
+#stud-card .row{margin:5px 0;font-size:13px}
+#stud-card .row .lab{color:var(--mut);font-size:12px;display:inline-block;min-width:70px}
+.symchip{display:inline-block;background:rgba(248,113,113,.13);color:var(--bad);font-size:11.5px;font-weight:700;border-radius:99px;padding:1px 9px;margin:1px 3px 1px 0}
+.symchip.ok{background:rgba(52,211,153,.13);color:var(--good)}
+.voice-form{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;margin:8px 0}
+.voice-form .fcol{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--mut)}
+.voice-form input[type=range]{width:84px}
+.dq-row{display:flex;align-items:center;gap:10px;margin:7px 0}
+.dq-lab{width:190px;font-size:12.5px;flex-shrink:0}
+.dq-lab b{font-size:13px}
+.dq-track{position:relative;flex:1;height:26px;background:rgba(255,255,255,.03);border-radius:99px;border:1px solid var(--line)}
+.dq-dot{position:absolute;top:50%;width:13px;height:13px;border-radius:99px;transform:translate(-50%,-50%);opacity:.92;box-shadow:0 0 8px rgba(0,0,0,.4)}
+.dq-spread{width:86px;font-size:11.5px;color:var(--mut);text-align:right;flex-shrink:0}
+.dq-spread.hot{color:var(--bad);font-weight:700}
+.vlist{font-size:12px;color:var(--mut);margin-top:8px}
+.vlist .vx{cursor:pointer;color:var(--bad);font-weight:700;margin-left:3px}
+.vfind{margin-top:10px;font-size:13.5px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.3);border-radius:var(--r-md);padding:9px 12px}
+table.guide{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+table.guide th,table.guide td{border-top:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+table.guide th{color:var(--mut);font-weight:700;font-size:12px;border-top:none}
+.unlockrow{border:1px solid var(--line);border-radius:var(--r-md);padding:9px 12px;margin:8px 0;background:rgba(255,255,255,.02)}
+.unlockrow b.cnt{color:var(--accent)}
+table.trend{border-collapse:collapse;font-size:12.5px;margin-top:6px}
+table.trend th,table.trend td{border-top:1px solid var(--line);padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums}
+table.trend th{color:var(--mut);font-weight:700;border-top:none}
+table.trend td:first-child,table.trend th:first-child{text-align:left}
+.up{color:var(--good)} .dn{color:var(--bad)}
+footer{max-width:1180px;margin:0 auto;padding:0 18px 40px;color:var(--mut);font-size:12px}
+footer .eth{font-weight:700;color:#aab4c8}
+
+/* ── 늑대의 눈 : 같은 데이터를 적의 정찰로 거꾸로 읽는 거울 ── */
+.wolfbtn{border-color:rgba(248,113,113,.45);color:#fca5a5;background:rgba(248,113,113,.06);border-radius:99px}
+.wolfbtn:hover{border-color:rgba(248,113,113,.8);box-shadow:0 0 14px rgba(248,113,113,.25)}
+#wolf{position:fixed;inset:0;z-index:100;display:none;overflow:auto;
+  background:radial-gradient(900px 500px at 50% -10%,rgba(248,113,113,.08),transparent 60%),rgba(6,4,6,.96)}
+.wolf-inner{max-width:760px;margin:0 auto;padding:36px 18px 70px}
+.wolf-kicker{font-size:12px;letter-spacing:3px;color:#9d6b6b;font-weight:800}
+.wolf-h{font-size:25px;font-weight:800;color:#fca5a5;margin:4px 0 2px;letter-spacing:-.3px;text-shadow:0 0 22px rgba(248,113,113,.3)}
+.wolf-mirror{font-size:12.5px;color:#8b95ab;border:1px dashed #3a2a33;border-radius:10px;padding:8px 12px;margin:12px 0 4px}
+.wolf-sec{font-size:12px;letter-spacing:2px;color:#b07a7a;font-weight:800;margin:26px 0 4px}
+.wolf-card{border:1px solid rgba(248,113,113,.22);border-left:3px solid #f87171;background:rgba(248,113,113,.04);border-radius:12px;padding:13px 16px;margin:10px 0;font-size:15px;line-height:1.8}
+.wolf-card .wn{color:#fca5a5;font-weight:800}
+.wolf-card .wm{color:#8b95ab;font-size:12px;display:block;margin-top:4px}
+.wolf-card.fear{border-color:rgba(52,211,153,.25);border-left-color:#34d399;background:rgba(52,211,153,.04)}
+.wolf-card.fear .wn{color:#6ee7b7}
+.wolf-end{margin-top:26px;font-size:16.5px;font-weight:800;color:#e8ecf4;line-height:1.7}
+.wolf-vs{color:#6ee7b7}
+#wolf-close{margin-top:22px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.45);color:#a7f3d0;border-radius:99px;padding:9px 18px;font-weight:700}
+#wolf-close:hover{box-shadow:0 0 16px rgba(52,211,153,.25)}
+@media (max-width:560px){.lk-meta{margin-left:0}.dq-lab{width:130px}.hero .hl{font-size:17px}}
+@media print{
+  .noprint{display:none !important}
+  body{background:#fff;color:#111}
+  #view-board{display:none !important}
+  #view-detail{display:block !important}
+  .card{box-shadow:none;break-inside:avoid;background:#fff;border-color:#ddd}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="hwrap">
+    <h1><span class="dotpulse"></span>진단실</h1>
+    <p class="sub">어디가 아픈가, 어떻게 재는가. 치료는 다음 단계다.</p>
+    <nav class="vtabs noprint" aria-label="화면 선택">
+      <button class="vtab on" data-v="board" id="tab-board">상황판</button>
+      <button class="vtab" data-v="detail" id="tab-detail">자세히</button>
+    </nav>
+    <div class="tools noprint">
+      <a class="btn" href="index.html" style="text-decoration:none">목회 수첩으로</a>
+      <button id="btn-print">한 장 인쇄</button>
+    </div>
+  </div>
+</header>
+<main>
+
+<!-- ════════ 상황판 (관제실) ════════ -->
+<div id="view-board">
+  <div class="hero">
+    <div class="hl" id="headline-big"></div>
+    <div class="gauge"><div class="glab">검사 가동<b id="gauge-num"></b></div><div id="gauge-ring"></div></div>
+    <button id="btn-wolf" class="wolfbtn noprint" title="같은 관찰 기록을 적의 눈으로 거꾸로 읽는다">🐺 늑대의 눈</button>
+  </div>
+  <div style="margin:2px 0 4px"><span class="datapill" id="data-pill"></span></div>
+
+  <section class="card" style="padding:14px 18px 10px">
+    <div id="chain-hero"></div>
+    <div class="small mut" style="margin-top:2px">"약해졌다"는 다섯 고리의 사슬이다(닿음→양육→잔존→번짐→역량, DIAGNOSIS.md). 고리를 누르면 그 검사 묶음으로 들어간다. 점선은 아직 재지 못한 고리다.</div>
+  </section>
+
+  <div class="vrow" id="board-vitals"></div>
+
+  <div class="board-grid">
+    <section class="card netwrap" style="margin:0">
+      <h2 style="display:flex;align-items:baseline;gap:8px">실측 관계망 <span class="small mut">교사가 적은 친구이름으로 그린 진짜 망 · 점=아이 · 색=겹친 증상</span></h2>
+      <canvas id="net"></canvas>
+      <div id="net-empty" style="display:none"></div>
+      <div class="netlegend">
+        <span class="lg"><i style="background:#34d399"></i>증상 0</span>
+        <span class="lg"><i style="background:#fbbf24"></i>1개</span>
+        <span class="lg"><i style="background:#fb923c"></i>2개</span>
+        <span class="lg"><i style="background:#f87171"></i>3개 이상</span>
+        <span class="lg"><i style="background:transparent;border:1.5px dashed #5b6680"></i>관찰 부족</span>
+        <span class="lg" style="color:#f87171">붉은 선=흔들리는 아이끼리</span>
+        <span class="lg">큰 점=여럿이 매달린 연결점</span>
+      </div>
+    </section>
+    <div>
+      <section class="card" style="margin:0 0 12px">
+        <h2>검사 보드 <span class="small mut">17개 · 누르면 자세히로</span></h2>
+        <div id="board-tests"></div>
+      </section>
+      <div id="board-next"></div>
+      <div id="board-voice"></div>
+      <div id="board-stud"></div>
+      <div id="board-trend"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 자세히 (전체 기록) ════════ -->
+<div id="view-detail" style="display:none">
+
+  <section class="card premise">
+    <b>이 화면의 전제.</b> 진단실은 모형을 한 번도 돌리지 않는다. 출석부와 교사의 눈, 학부모의 답처럼 <b>관찰된 기록만</b> 읽는다. 앞날 전망과 처방은 목회 수첩의 몫이고, 여기서는 증상을 가르고 재는 일만 한다.
+    <ul class="small mut">
+      <li>모든 검사는 <b>양호·주의·경고·미검사</b> 네 상태를 가진다. "이상 없음"과 "아직 재지 못함"은 다른 말이다.</li>
+      <li>기준선의 숫자는 검증된 값이 아니라 방향을 잡기 위한 가정값이다.</li>
+      <li>이름이 보이는 것은 줄 세우기 위함이 아니라 먼저 살피기 위함이다. 목양이지 사찰이 아니다.</li>
+    </ul>
+  </section>
+
+  <section class="card" id="data-card">
+    <h2>읽고 있는 기록</h2>
+    <div id="src-line" style="font-size:14px"></div>
+    <div id="fid-line" class="small mut" style="margin-top:5px"></div>
+    <div class="noprint" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button id="btn-main">수첩에 저장된 명단 읽기</button>
+      <label class="btn" style="display:inline-block">CSV 올리기<input type="file" id="csv-file" accept=".csv,text/csv" style="display:none"></label>
+      <button id="btn-sample">예시 명단 보기</button>
+      <span class="small mut">올린 파일은 이 화면에서만 읽고, 수첩의 명단을 건드리지 않는다.</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>다섯 고리 사슬 : "약해졌다"는 한 단어가 아니다</h2>
+    <p class="small mut" style="margin:2px 0 8px">"약해졌다"는 서로 다른 다섯 주장을 한 단어에 욱여넣은 것이다(DIAGNOSIS.md). 고리는 서로 독립이라, 어느 고리가 끊겼는지 갈라 물어야 비로소 답할 수 있다.</p>
+    <div class="headline" id="headline"></div>
+    <div id="chain"></div>
+  </section>
+
+  <div id="panels"></div>
+
+  <section class="card" id="map-card">
+    <h2>증상 지도 : 누구에게 증상이 겹치는가</h2>
+    <p class="small mut" style="margin:2px 0 4px">점 하나가 아이 하나다. 색은 그 아이에게서 관찰된 증상의 수다. 테두리가 옅은 점은 아직 관찰이 절반도 안 된 아이라, 좋아 보여도 모르는 것이 많다는 뜻이다. 점을 누르면 소견이 펼쳐진다.</p>
+    <div id="map"></div>
+    <div class="maplegend">
+      <span class="dot c0" style="cursor:default"></span> 증상 0
+      <span class="dot c1" style="cursor:default"></span> 1개
+      <span class="dot c2" style="cursor:default"></span> 2개
+      <span class="dot c3" style="cursor:default"></span> 3개 이상
+      <span class="dot c0 lowcov" style="cursor:default"></span> 관찰 부족(절반 미만)
+    </div>
+    <div id="stud-card"></div>
+    <div id="triage" style="margin-top:14px"></div>
+  </section>
+
+  <section class="card" id="collect-card">
+    <h2>다음에 모을 것 : 닫힌 검사를 여는 순서</h2>
+    <p class="small mut" style="margin:2px 0 4px">미검사는 실패가 아니라 다음 걸음이다. 종이 한 장이 검사 몇 개를 여는지로 순서를 매겼다.</p>
+    <div id="collect"></div>
+  </section>
+
+  <section class="card" id="voices-card">
+    <h2>불일치 지도 : 어른들은 같은 병을 보고 있는가</h2>
+    <p class="small mut" style="margin:2px 0 4px">"약해졌다"고 말할 때 사람마다 다른 고리를 가리키면, 모두가 고개를 끄덕여도 처방은 엇갈린다. 담임목사·교육목사·부장·반 담임·학부모가 각자 다섯 문장에 0(전혀 아니다)~4(바로 이것이다)로 답하게 하라. 점수의 평균이 아니라 <b>흩어짐</b>을 본다. 갈리는 자리가 곧 진단이다.</p>
+    <div class="voice-form noprint" id="voice-form">
+      <div class="fcol">역할<select id="vf-role">
+        <option>담임목사</option><option>교육목사</option><option>부장</option><option selected>반 담임</option><option>학부모</option><option>학생</option><option>기타</option>
+      </select></div>
+      <div class="fcol">이름(선택)<input type="text" id="vf-name" placeholder="" style="width:90px"></div>
+      <div class="fcol" id="vf-sliders" style="flex-direction:row;gap:10px;align-items:flex-end"></div>
+      <button class="primary" id="vf-add">기록</button>
+    </div>
+    <div id="voices-plot"></div>
+    <div id="voices-find"></div>
+    <div class="vlist" id="voices-list"></div>
+  </section>
+
+  <section class="card" id="guide-card">
+    <h2>측정 가이드 : 누가, 언제, 무엇을 적는가</h2>
+    <p class="small mut" style="margin:2px 0 4px">볼 수 없는 것은 묻지 않는다(SURVEY.md의 관찰 원칙). 마음 속을 설문하지 않고, 행정 기록과 본 행동만 받는다. 모든 칸은 이 화면의 검사로 이어진다.</p>
+    <table class="guide">
+      <tr><th>도구</th><th>누가 적나</th><th>언제</th><th>칸</th><th>먹여 살리는 검사</th></tr>
+      <tr><td><b>1단계 행정 기록</b></td><td>부서 행정</td><td>상시(이미 있다)</td><td>이름·학년·부·출석4주·소그룹·멘토·봉사역할·부모출석·다락방</td><td id="g-s1"></td></tr>
+      <tr><td><b>2단계 교사 관찰</b></td><td>반 담임(자기 반 6명만)</td><td>학기 1회</td><td>친구이름·자기말표현·의심질문·예배후머묾·챙기는어른</td><td id="g-s2"></td></tr>
+      <tr><td><b>3단계 학부모 설문</b></td><td>학부모 본인</td><td>학기 1회(다락방에서 한 장)</td><td>신앙대화(주 횟수)·가정예배</td><td id="g-s3"></td></tr>
+      <tr><td><b>4단계 학생 표본</b></td><td>학생 본인(연 1회, 수련회 자리)</td><td>연 1회</td><td>내면화점수(6문항 평균)·부모관계</td><td id="g-s4"></td></tr>
+      <tr><td><b>숫자 네 개</b></td><td>교역자가 직접</td><td>연 1회</td><td>작년 재적·교인 가정 자녀 수·동네 학령인구·반 담임 수</td><td id="g-s5"></td></tr>
+      <tr><td><b>장부 밖 세 가지</b></td><td>부서 행정(새 칸)</td><td>생길 때마다</td><td>등록연월·누가 데려왔나(초청)·졸업생 6개월 후 연락 기록</td><td id="g-s6"></td></tr>
+    </table>
+    <p class="small noprint" style="margin-top:8px"><a href="#" id="dl-template">수집 양식(CSV) 내려받기</a> · 교사·학부모·학생 설문지는 목회 수첩의 인쇄 단추에서 뽑는다.</p>
+  </section>
+
+  <section class="card" id="trend-card">
+    <h2>추세 : 진단은 한 번이 아니라 맥박이다</h2>
+    <div id="trend"></div>
+  </section>
+
+</div>
+</main>
+<div id="net-tip"></div>
+<div id="wolf" class="noprint" role="dialog" aria-modal="true" aria-label="늑대의 눈 정찰 보고">
+  <div class="wolf-inner">
+    <div class="wolf-kicker">적의 정찰 보고</div>
+    <div class="wolf-h">늑대의 눈</div>
+    <div class="wolf-mirror">이 보고서의 적은 혈과 육이 아니다(엡 6:12). 새 데이터도, 새 가정도 없다. 위 상황판과 같은 관찰 기록을 거꾸로 읽어, <b>먼저 지킬 자리</b>를 비추는 거울일 뿐이다. 아이를 겨냥한 표가 아니다.</div>
+    <div id="wolf-body"></div>
+    <button id="wolf-close">목자의 눈으로 돌아가기</button>
+  </div>
+</div>
+<footer>
+  <p><span class="eth">한계와 윤리.</span> 검사 기준선(열에 둘이면 주의 같은 수치)은 모두 가정값이며 한국 데이터로 검증된 것이 아니다. 빈 칸은 기본값으로 채워져 표시되지 않으니, 채워진 칸만 믿으라. 점수로 사람을 평가하거나 줄 세우지 않는다. 이 화면은 어디를 먼저 볼지 정하는 데만 쓴다.</p>
+  <p>증상의 분해는 DIAGNOSIS.md, 측정 설계는 SURVEY.md, 학술 근거는 METHODOLOGY.md를 따른다.</p>
+</footer>
+
+<script>
+(function(){
+'use strict';
+/* ════════════════ 공용 도우미 ════════════════ */
+function $(id){return document.getElementById(id);}
+function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function num(v,d){var n=parseFloat(v);return isNaN(n)?d:n;}
+function clampn(v,a,b){return v<a?a:v>b?b:v;}
+function yn(v){v=(v||'').toString().trim().toLowerCase();return v==='y'||v==='예'||v==='o'||v==='1'||v==='true';}
+function pctTxt(x){return Math.round(x*100)+'%';}
+function ten(sh){var n=Math.round(sh*10);if(n<=0&&sh>0)return '열 명 중 1명이 안 된다';if(n<=0)return '없다';return '열 명 중 약 '+n+'명';}
+var SRC_LABEL={obs:'출석부·행정',teach:'교사 관찰',survey:'설문',man:'직접 입력',est:'추정'};
+function badge(src){return '<span class="badge b-'+src+'">'+SRC_LABEL[src]+'</span>';}
+var GRADE_LABELS=['중1','중2','중3','고1','고2','고3'];
+var SYMCOL=['#34d399','#fbbf24','#fb923c','#f87171'];
+function symColor(n){return SYMCOL[Math.min(n,3)];}
+
+/* ════════════════ CSV 읽기 : 수첩(index.html)과 같은 열·별칭 ════════════════ */
+var CSV_COLS=['이름','학년','부모신앙','형제신앙','교회친구수','소그룹','멘토','봉사역할','출석4주','QT','학업압박','신앙주인의식','가정예배','챙기는어른','소속감','의심나눔','부모관계','내면화점수','신앙대화','다락방','친구이름','부모출석','형제등록','자기말표현','의심질문','예배후머묾','신앙배경','코어','외톨이','출석상태','내면화','말씀','소속','가정신앙','곁의어른수','친한친구','부','예배부'];
+var TEMPLATE_COLS=['이름','학년','부','출석4주','소그룹','멘토','봉사역할','부모출석','다락방','친구이름','자기말표현','의심질문','예배후머묾','챙기는어른','신앙대화','가정예배','부모관계','내면화점수'];
+var GMAP={'중1':1,'중2':2,'중3':3,'고1':4,'고2':5,'고3':6};
+function splitCSVLine(line){
+  var out=[],cur='',q=false;
+  for(var i=0;i<line.length;i++){var ch=line[i];
+    if(q){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+    else{if(ch==='"')q=true;else if(ch===','){out.push(cur);cur='';}else cur+=ch;}}
+  out.push(cur);return out;
+}
+function parseCSV(text){
+  var lines=String(text).replace(/^﻿/,'').replace(/\r/g,'').split('\n').filter(function(l){return l.trim().length;});
+  if(!lines.length)return [];
+  var head=splitCSVLine(lines[0]).map(function(h){return h.trim();});
+  var idx={};head.forEach(function(h,i){
+    var best=null;CSV_COLS.forEach(function(c){if(h.indexOf(c)>=0&&(!best||c.length>best.length))best=c;});
+    if(best&&idx[best]==null)idx[best]=i;});
+  var rows=[];
+  var L2=[2,3.5,4.5];
+  var T3=function(v){v=(v||'').trim();return v.indexOf('상')===0?4.5:v.indexOf('중')===0?3:v.indexOf('하')===0?1.5:null;};
+  for(var li=1;li<lines.length;li++){var c=splitCSVLine(lines[li]);var g=function(k){return idx[k]!=null?(c[idx[k]]||'').trim():'';};
+    var has=function(k){return idx[k]!=null&&g(k)!=='';};
+    var gr=g('학년');var grade=GMAP[gr]||num(gr,1);
+    var fRaw=has('친구이름')?g('친구이름'):has('친한친구')?g('친한친구'):null;
+    var fNames=fRaw!=null?fRaw.split(/[·;,/\s]+/).filter(Boolean):null;
+    var bgT=g('신앙배경'),bgPf=bgT?(bgT.indexOf('모태')>=0?3:bgT.indexOf('비신앙')>=0?1:2):null;
+    var stT=g('출석상태'),stAtt=stT?(stT.indexOf('활발')>=0?4:stT.indexOf('위기')>=0?0:2):null;
+    var fmT=g('가정신앙'),fmHw=fmT?(fmT.indexOf('열심')>=0?5:fmT.indexOf('약함')>=0?2:fmT.indexOf('없')>=0?1:3):null;
+    var dsRaw=g('의심나눔'),dsVal=dsRaw===''?null:(dsRaw.indexOf('예')>=0?4:dsRaw.indexOf('아니')>=0?2.5:clampn(num(dsRaw,3),1,5));
+    var wmRaw=g('부모관계'),wmVal=wmRaw===''?null:(wmRaw.indexOf('따뜻')>=0?4.5:wmRaw.indexOf('소원')>=0?1.5:wmRaw.indexOf('보통')>=0?3:clampn(num(wmRaw,3),1,5));
+    rows.push({name:g('이름')||('학생'+li),grade:clampn(Math.round(grade),1,6),
+      parentFaith:has('부모출석')?clampn(Math.round(num(g('부모출석'),1)),0,2)+1:has('부모신앙')?clampn(num(g('부모신앙'),2),1,3):(bgPf!=null?bgPf:2),
+      sibFaith:has('형제등록')?(yn(g('형제등록'))?3:2):clampn(num(g('형제신앙'),2),1,3),
+      fNames:fNames,
+      friendN:fNames?clampn(fNames.length,0,6):has('교회친구수')?clampn(num(g('교회친구수'),2),0,6):(has('외톨이')?(yn(g('외톨이'))?0:3):2),
+      sg:yn(g('소그룹')),mentor:yn(g('멘토')),
+      serve:yn(g('봉사역할'))||yn(g('코어')),
+      att4:has('출석4주')?clampn(num(g('출석4주'),3),0,4):(stAtt!=null?stAtt:3),
+      qt:has('QT')?clampn(num(g('QT'),3),1,5):(T3(g('말씀'))!=null?T3(g('말씀')):3),
+      acad:clampn(num(g('학업압박'),3),1,5),
+      own:has('자기말표현')?L2[clampn(Math.round(num(g('자기말표현'),1)),0,2)]:clampn(num(g('신앙주인의식'),3),1,5),
+      hw:has('가정예배')?clampn(num(g('가정예배'),3),1,5):(fmHw!=null?fmHw:3),
+      hwGiven:has('가정예배')||fmHw!=null,
+      adults:has('챙기는어른')?clampn(num(g('챙기는어른'),1),0,5):clampn(num(g('곁의어른수'),1),0,5),
+      belongQ:has('예배후머묾')?L2[clampn(Math.round(num(g('예배후머묾'),1)),0,2)]:(T3(g('소속'))!=null?T3(g('소속')):clampn(num(g('소속감'),3),1,5)),
+      doubt:has('의심질문')?(yn(g('의심질문'))?4:2.5):(dsVal!=null?dsVal:3),
+      warmth:wmVal!=null?wmVal:3,
+      intern:has('내면화점수')?clampn(num(g('내면화점수'),0),0,5):(T3(g('내면화'))!=null?T3(g('내면화')):0),
+      svc:(function(){var v=(has('부')?g('부'):has('예배부')?g('예배부'):'').replace(/[^12]/g,'');return v==='1'?1:v==='2'?2:null;})(),
+      talk:has('신앙대화')?clampn(num(g('신앙대화'),2),0,7):null,
+      dara:has('다락방')?yn(g('다락방')):null});}
+  rows._cols=Object.keys(idx);
+  return rows;
+}
+
+/* ════════════════ 예시 명단(씨앗 고정 : 화면이 늘 같다) ════════════════ */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function sampleRoster(){
+  var rnd=mulberry32(20260611),L2=[2,3.5,4.5];
+  var SUR='김이박최정강조윤장임한오서신권황안송전홍'.split('');
+  var GN=['민준','서연','도윤','지우','하준','서진','예은','시우','지호','수아','은우','다은','건우','소율','현우','지안','우진','채원','선우','유나','준서','가은','연우','시은','정우','하린','지훈','나윤','승현','예린','주원','세아'];
+  var rows=[];
+  for(var i=0;i<32;i++){
+    var r=rnd(),att=r<0.08?0:r<0.18?1:r<0.40?2:r<0.70?3:4;
+    var oe=rnd(),ownRaw=oe<0.32?0:oe<0.75?1:2;
+    rows.push({name:SUR[Math.floor(rnd()*SUR.length)]+GN[i],grade:1+Math.floor(rnd()*6),svc:rnd()<0.5?1:2,
+      parentFaith:(function(p){return p<0.25?1:p<0.7?2:3;})(rnd()),sibFaith:2,
+      fNames:null,friendN:0,sg:rnd()<0.55,mentor:rnd()<0.3,serve:rnd()<0.22,
+      att4:att,qt:3,acad:3,own:L2[ownRaw],hw:3,hwGiven:false,
+      adults:(function(p){return p<0.25?0:p<0.6?1:p<0.85?2:3;})(rnd()),
+      belongQ:L2[Math.floor(rnd()*3)],doubt:rnd()<0.35?4:2.5,warmth:3,intern:0,
+      talk:null,dara:rnd()<0.45});}
+  rows.forEach(function(r,i){
+    if(rnd()>=0.7)return;
+    var k=1+Math.floor(rnd()*3),names=[];
+    for(var t=0;t<k*4&&names.length<k;t++){
+      var j=Math.floor(rnd()*rows.length);if(j===i)continue;
+      var o=rows[j];
+      if(Math.abs(o.grade-r.grade)>1)continue;
+      if(Math.abs(o.att4-r.att4)>1&&rnd()<0.6)continue;
+      if(names.indexOf(o.name)<0)names.push(o.name);}
+    if(names.length){r.fNames=names;r.friendN=names.length;}});
+  rows._cols=['이름','학년','부','출석4주','소그룹','멘토','봉사역할','부모출석','다락방','친구이름','자기말표현','의심질문','예배후머묾','챙기는어른'];
+  return rows;
+}
+
+/* ════════════════ 상태 ════════════════ */
+var rows=[],cols=[],source='sample';
+var students=[],T={},selStud=null,view='board';
+var inputs={ly:0,fk:0,ar:0,tc:0};
+try{var iv=JSON.parse(localStorage.getItem('woori_diag_inputs_v1')||'{}');['ly','fk','ar','tc'].forEach(function(k){if(iv[k]>0)inputs[k]=iv[k];});}catch(e){}
+function saveInputs(){try{localStorage.setItem('woori_diag_inputs_v1',JSON.stringify(inputs));}catch(e){}}
+
+var GROUPS={
+  ATT:{label:'출석4주',cols:['출석4주','출석상태'],src:'obs'},
+  NET:{label:'친구이름',cols:['친구이름','친한친구'],src:'teach'},
+  NETALT:{label:'교회친구수(숫자만)',cols:['교회친구수','외톨이'],src:'est'},
+  OWN:{label:'자기말표현',cols:['자기말표현','신앙주인의식','내면화점수','내면화'],src:'teach'},
+  DOUBT:{label:'의심질문',cols:['의심질문','의심나눔'],src:'teach'},
+  BELONG:{label:'예배후머묾',cols:['예배후머묾','소속감','소속'],src:'teach'},
+  ADULT:{label:'챙기는어른',cols:['챙기는어른','곁의어른수'],src:'teach'},
+  TALK:{label:'신앙대화',cols:['신앙대화'],src:'survey'},
+  HW:{label:'가정예배',cols:['가정예배','가정신앙'],src:'survey'},
+  DARA:{label:'다락방',cols:['다락방'],src:'obs'},
+  PARENT:{label:'부모출석',cols:['부모출석','부모신앙','신앙배경'],src:'obs'},
+  SERVE:{label:'봉사역할',cols:['봉사역할','코어'],src:'obs'},
+  INTERN:{label:'내면화점수',cols:['내면화점수','내면화'],src:'survey'}
+};
+function hasG(key){return key.split('|').some(function(k){var g=GROUPS[k];return g&&g.cols.some(function(c){return cols.indexOf(c)>=0;});});}
+
+/* ════════════════ 아이 객체와 실측 친구망 ════════════════ */
+function buildStudents(){
+  var byName={};
+  students=rows.map(function(r,i){
+    var ownLow,ownHigh;
+    if((r.intern||0)>0){ownLow=r.intern<=2;ownHigh=r.intern>=4;}
+    else{ownLow=(r.own!=null?r.own:3)<=2.6;ownHigh=(r.own!=null?r.own:3)>=4.2;}
+    return {i:i,name:r.name||('학생'+(i+1)),grade:clampn(Math.round(r.grade||1),1,6),svc:r.svc!=null?r.svc:null,
+      att4:r.att4!=null?r.att4:3,own:r.own!=null?r.own:3,intern:r.intern||0,ownLow:ownLow,ownHigh:ownHigh,
+      doubtVoiced:(r.doubt!=null?r.doubt:3)>=3.5,belongQ:r.belongQ!=null?r.belongQ:3,
+      adults:r.adults!=null?r.adults:1,talk:r.talk!=null?r.talk:null,hw:r.hwGiven?r.hw:null,
+      dara:r.dara,sg:!!r.sg,mentor:!!r.mentor,serve:!!r.serve,parentFaith:r.parentFaith!=null?r.parentFaith:2,
+      fNames:r.fNames||null,out:[],nbr:[],inDeg:0,friendN:null,sym:[],cov:0,covMax:0};});
+  students.forEach(function(s){if(s.name)byName[s.name.replace(/\s+/g,'')]=s.i;});
+  students.forEach(function(s){
+    if(!s.fNames)return;
+    s.fNames.forEach(function(nm){var j=byName[nm.replace(/\s+/g,'')];
+      if(j==null||j===s.i)return;
+      if(s.out.indexOf(j)<0)s.out.push(j);});});
+  students.forEach(function(s){s.out.forEach(function(j){
+    if(s.nbr.indexOf(j)<0)s.nbr.push(j);
+    var t=students[j];if(t.nbr.indexOf(s.i)<0)t.nbr.push(s.i);t.inDeg++;});});
+  students.forEach(function(s){
+    var named=s.fNames?s.fNames.length:0;
+    if(s.fNames||s.nbr.length)s.friendN=Math.max(named,s.nbr.length);
+    else if(hasG('NETALT'))s.friendN=rows[s.i].friendN;
+  });
+}
+
+function netObs(s){return s.friendN!=null;}
+var SYM=[
+  {k:'break',label:'출석 끊김',test:function(s){return hasG('ATT')&&s.att4<=1;}},
+  {k:'loose',label:'출석 느슨',test:function(s){return hasG('ATT')&&s.att4===2;}},
+  {k:'alone',label:'홀로(관찰된 친구 0)',test:function(s){return (hasG('NET')||hasG('NETALT'))&&netObs(s)&&s.friendN===0;}},
+  {k:'sand',label:'모래성(출석은 높고 표현이 없음)',test:function(s){return hasG('ATT')&&hasG('OWN')&&s.att4>=3&&s.ownLow;}},
+  {k:'silent',label:'의심의 침묵',test:function(s){return hasG('DOUBT')&&!s.doubtVoiced;}},
+  {k:'noadult',label:'곁의 어른 없음',test:function(s){return hasG('ADULT')&&s.adults===0&&!s.mentor;}},
+  {k:'homecold',label:'가정의 신앙 대화 0',test:function(s){return s.talk!=null&&s.talk===0;}},
+  {k:'edge',label:'전환기 학년에서 흔들림',test:function(s){return hasG('ATT')&&(s.grade===3||s.grade===6)&&s.att4<=2;}}
+];
+function applySymptoms(){
+  students.forEach(function(s){
+    s.sym=SYM.filter(function(y){return y.test(s);}).map(function(y){return y.label;});
+    var seen=0,max=0;
+    [['ATT',true],['NET',netObs(s)],['OWN',true],['DOUBT',true],['BELONG',true],['ADULT',true]].forEach(function(p){
+      max++;if(hasG(p[0])&&p[1])seen++;});
+    max+=2;if(s.talk!=null)seen++;if(s.hw!=null)seen++;
+    s.cov=seen;s.covMax=max;});
+  if(hasG('NET')&&hasG('ATT')){
+    clusters().forEach(function(cl){cl.forEach(function(i){students[i].sym.push('위기 군집 속('+cl.length+'명)');});});
+    students.forEach(function(s){if(s.inDeg>=2&&s.att4<=1)s.sym.push('여럿이 매달린 연결점인데 본인이 끊김');});
+  }
+}
+function clusters(){
+  var shaky=students.filter(function(s){return s.att4<=2;}).map(function(s){return s.i;});
+  var inSh={};shaky.forEach(function(i){inSh[i]=1;});
+  var seen={},out=[];
+  shaky.forEach(function(st){
+    if(seen[st])return;var comp=[],q=[st];seen[st]=1;
+    while(q.length){var v=q.pop();comp.push(v);
+      students[v].nbr.forEach(function(j){if(inSh[j]&&!seen[j]){seen[j]=1;q.push(j);}});}
+    if(comp.length>=2)out.push(comp);});
+  out.sort(function(a,b){return b.length-a.length;});
+  return out;
+}
+
+/* ════════════════ 검사 등록부 : 진단실의 심장 ════════════════ */
+function lvWorst(a,b){var o={bad:3,warn:2,good:1};return (o[a]||0)>=(o[b]||0)?a:b;}
+function namesOf(arr){return arr.map(function(s){return s.name;});}
+var LINKS=[
+  {k:'reach',name:'닿음',q:'있는 아이를 데려오는가',den:'교인 가정 자녀·동네 학령인구',clock:'연 단위',ctl:'절반(환경 절반)'},
+  {k:'form',name:'양육',q:'출석자가 진짜 신앙이 되는가',den:'재적 학생',clock:'2~3년(느림)',ctl:'높음'},
+  {k:'stay',name:'잔존',q:'전환점을 넘기는가',den:'코호트 진입 인원',clock:'전환 단위(중3→고1·졸업)',ctl:'높음'},
+  {k:'mult',name:'번짐',q:'데려오고, 세워지는가',den:'재적 학생',clock:'다년',ctl:'중간'},
+  {k:'cap',name:'역량',q:'떠받칠 어른이 있는가',den:'교사 1인당 학생·부모 참여',clock:'연 단위',ctl:'높음'}
+];
+var TESTS=[
+  {id:'R1',link:'reach',name:'분모 대비 우리 크기',ask:'줄었다는 말을 무엇으로 나눠 말하는가',
+   src:['obs','man'],
+   how:'재적(명단 수)을 세 분모로 나눈다. 작년 재적으로 나누면 추세, 교인 가정 자녀 수로 나누면 사역 효과, 동네 학령인구로 나누면 전도지의 크기다. 분모를 고르는 것이 곧 무엇을 책임질지 고르는 것이다.',
+   needsInput:'denom',unlock:'아래에 숫자를 넣으면 바로 열린다. 작년 재적은 작년 주소록, 교인 가정 자녀 수는 교적부, 동네 학령인구는 행정안전부 주민등록 통계(동 단위)에서 얻는다.',
+   run:function(){
+     var n=students.length,L=[],lv=null;
+     if(inputs.ly>0){var d=(n-inputs.ly)/inputs.ly;
+       L.push('작년 재적 '+inputs.ly+'명 대비 <b>'+(d>=0?'+':'')+Math.round(d*100)+'%</b>다. 추세일 뿐 원인은 못 가린다.');
+       lv=lvWorst(lv,d<=-0.10?'bad':d<=-0.03?'warn':'good');}
+     if(inputs.fk>0){var cv=n/inputs.fk;
+       L.push('교인 가정 자녀 '+inputs.fk+'명 가운데 '+ten(Math.min(cv,1))+'이 우리 곁에 있다('+pctTxt(Math.min(cv,1))+'). 이것이 우리 손 안의 몫이다.');
+       lv=lvWorst(lv,cv<0.5?'bad':cv<0.75?'warn':'good');}
+     if(inputs.ar>0)L.push('동네 학령인구 '+inputs.ar+'명 기준으로는 천 명당 약 <b>'+Math.round(n/inputs.ar*1000)+'명</b>이다. 전도지의 크기를 말할 뿐, 우리 탓도 공도 아니다.');
+     return {level:lv||'good',read:L.join('<br>')};
+   },
+   extra:function(){
+     return '<div class="den-grid noprint">'
+       +'<div class="den"><div class="k">작년 재적(명) '+badge('man')+'</div><input type="number" min="0" id="in-ly" value="'+(inputs.ly||'')+'" placeholder="예: 160"></div>'
+       +'<div class="den"><div class="k">교인 가정의 중고생 자녀 수(명) '+badge('man')+'</div><input type="number" min="0" id="in-fk" value="'+(inputs.fk||'')+'" placeholder="예: 210"></div>'
+       +'<div class="den"><div class="k">동네 학령인구(명) '+badge('man')+'</div><input type="number" min="0" id="in-ar" value="'+(inputs.ar||'')+'" placeholder="예: 9000"></div>'
+       +'</div>';}},
+  {id:'R2',link:'reach',name:'새 얼굴의 유입',ask:'한 해에 새 아이가 몇이나 들어오는가',
+   src:['obs'],
+   how:'등록연월(또는 첫 출석일)로 최근 1년 신입 수와 경로(가족·친구 초청·자발)를 센다.',
+   naByDesign:true,unlock:'지금 양식에는 <b>등록연월 칸이 없다</b>. 명단에 한 칸을 더하면 다음 진단부터 열린다.',
+   run:function(){return null;}},
+  {id:'F1',link:'form',name:'모래성',ask:'몸은 오는데 믿음이 자기 말이 되었는가',
+   src:['obs','teach'],needs:['ATT','OWN'],
+   how:'출석4주가 3 이상으로 든든한 아이 가운데, 나눔·기도에서 자기 말로 신앙을 표현하는 모습이 관찰되지 않은(자기말표현 0) 아이를 센다. 출석은 결과의 그림자라, 이 아이들이 전환기에 가장 먼저 무너진다. 기준(가정값): 열에 둘이면 주의, 셋을 넘으면 경고.',
+   unlock:'교사 관찰 한 장의 자기말표현 칸',
+   run:function(){
+     var base=students.filter(function(s){return s.att4>=3;});
+     if(!base.length)return {level:'good',read:'출석이 든든한 아이가 없어 이 검사는 비었다.'};
+     var hit=base.filter(function(s){return s.ownLow;});
+     var sh=hit.length/base.length;
+     return {level:sh>=0.35?'bad':sh>=0.2?'warn':'good',
+       read:'출석이 든든한 '+base.length+'명 가운데 <b>'+hit.length+'명</b>은 믿음을 자기 말로 표현하는 모습이 아직 관찰되지 않았다. '+ten(sh)+'이다.',
+       names:namesOf(hit)};
+   }},
+  {id:'F2',link:'form',name:'자기 말이 된 믿음',ask:'믿음을 자기 언어로 말하는 아이가 얼마나 되는가',
+   src:['teach','survey'],needs:['OWN'],
+   how:'교사가 본 자기말표현(0 없음, 1 가끔, 2 자주)의 분포를 본다. 학생 설문의 내면화점수(6문항 평균)가 있으면 그 값을 우선한다. 자기 언어로 고백하지 못하는 믿음은 빌려온 믿음이다(NSYR). 기준(가정값): 자주 표현이 열에 넷이면 양호, 둘 아래면 경고.',
+   unlock:'교사 관찰 한 장(자기말표현), 연 1회 학생 표본(내면화점수)',
+   run:function(){
+     var n=students.length;if(!n)return null;
+     var hi=students.filter(function(s){return s.ownHigh;}),lo=students.filter(function(s){return s.ownLow;});
+     var sh=hi.length/n;
+     var note=hasG('INTERN')?' 학생 설문(내면화점수)이 있어 교사 눈을 보정해 읽었다.':' 아직 교사의 눈으로만 본 값이다. 연 1회 학생 표본이 들어오면 눈금이 보정된다.';
+     return {level:sh>=0.4?'good':sh>=0.25?'warn':'bad',
+       read:'자기 말로 신앙을 표현하는 모습이 자주 보이는 아이가 '+n+'명 중 <b>'+hi.length+'명</b>('+ten(sh)+'), 한 번도 관찰되지 않은 아이가 <b>'+lo.length+'명</b>이다.'+note,
+       names:namesOf(lo)};
+   }},
+  {id:'F3',link:'form',name:'의심의 침묵',ask:'의심과 질문이 어른에게 닿고 있는가',
+   src:['teach'],needs:['DOUBT'],
+   how:'질문이나 의심을 어른에게 실제로 꺼낸 적이 있는가(의심질문 Y/N)를 센다. 의심은 해롭지 않다, 침묵이 해롭다(FYI). 꺼내지 못한 의심은 속에서 곪는다. 기준(가정값): 꺼낸 적 없는 아이가 열에 일곱이면 경고, 다섯이면 주의.',
+   unlock:'교사 관찰 한 장의 의심질문 칸',
+   run:function(){
+     var n=students.length;if(!n)return null;
+     var quiet=students.filter(function(s){return !s.doubtVoiced;});
+     var sh=quiet.length/n;
+     return {level:sh>=0.7?'bad':sh>=0.5?'warn':'good',
+       read:'의심이나 어려운 질문을 어른에게 꺼낸 적이 관찰된 아이는 '+(n-quiet.length)+'명, 꺼낸 적 없는 아이는 <b>'+quiet.length+'명</b>('+ten(sh)+')이다. 떠난 아이의 약 29%가 풀리지 않은 의심을 이유로 들었다(Lifeway 2019).',
+       names:namesOf(quiet)};
+   }},
+  {id:'F4',link:'form',name:'가정의 신앙 대화',ask:'가장 강한 전수 통로가 열려 있는가',
+   src:['survey'],needs:['TALK'],
+   how:'학부모가 답한 지난 한 주 신앙 대화 횟수(신앙대화 0~7)를 본다. 거의 모든 잔존 연구에서 자녀 신앙의 최강 예측 변수는 프로그램이 아니라 부모의 평소 신앙 대화다. 기준(가정값): 대화 0회 가정이 열에 다섯이면 경고, 셋이면 주의. 전국 조사에서는 "자주" 대화하는 가정이 12%뿐이다.',
+   unlock:'학부모 설문 한 장(다락방 모임에서 배포·회수)',
+   run:function(){
+     var got=students.filter(function(s){return s.talk!=null;});
+     if(!got.length)return null;
+     var zero=got.filter(function(s){return s.talk===0;});
+     var sh=zero.length/got.length;
+     var avg=got.reduce(function(x,s){return x+s.talk;},0)/got.length;
+     return {level:sh>=0.5?'bad':sh>=0.3?'warn':'good',
+       read:'설문이 돌아온 '+got.length+'가정 가운데 지난 한 주 신앙 대화가 <b>0회인 가정이 '+zero.length+'</b>('+ten(sh)+')이고, 평균은 주 '+Math.round(avg)+'회다.',
+       names:namesOf(zero)};
+   }},
+  {id:'T1',link:'stay',name:'출석의 맥',ask:'맥이 끊긴 아이가 얼마나 되는가',
+   src:['obs'],needs:['ATT'],
+   how:'출석부의 최근 4주 출석 횟수로 가른다. 0~1회는 끊김, 2회는 느슨, 3~4회는 든든. 기준(가정값): 끊김이 열에 둘이면 경고, 하나면 주의(수첩 신호등과 같은 눈금).',
+   unlock:'출석부의 출석4주 칸',
+   run:function(){
+     var n=students.length;if(!n)return null;
+     var br=students.filter(function(s){return s.att4<=1;}),ls=students.filter(function(s){return s.att4===2;});
+     var sh=br.length/n;
+     return {level:sh>=0.18?'bad':sh>=0.10?'warn':'good',
+       read:'든든 '+(n-br.length-ls.length)+'명, 느슨 '+ls.length+'명, <b>끊김 '+br.length+'명</b>. 끊긴 아이가 '+ten(sh)+'이다. 끊김이 12주를 넘으면 돌아오기 어렵다.',
+       names:namesOf(br)};
+   }},
+  {id:'T2',link:'stay',name:'홀로 있는 아이',ask:'한동안 안 나가면 찾아 줄 친구가 있는가',
+   src:['teach'],needs:['NET|NETALT'],
+   how:'교사가 적은 친구이름을 이름끼리 맞춰 실제 친구망을 만들고, 어느 쪽에서도 이어지지 않은 아이를 센다. 떠나는 아이의 큰 이유가 "더는 연결돼 있지 않아서"다. 또래 소속은 있어서 좋다기보다 없으면 빠진다. 기준(가정값): 열에 하나 반이면 경고.',
+   unlock:'교사 관찰 한 장의 친구이름 칸',
+   run:function(){
+     var got=students.filter(netObs);
+     if(!got.length)return null;
+     var al=got.filter(function(s){return s.friendN===0;});
+     var sh=al.length/got.length;
+     var estNote=hasG('NET')?'':' (지금은 숫자만 받은 추정이다. 친구이름을 받으면 실측 망이 된다.)';
+     var blind=students.length-got.length;
+     return {level:sh>=0.15?'bad':sh>=0.08?'warn':'good',
+       read:'친구 관찰이 있는 '+got.length+'명 가운데 어느 망에도 이어지지 않은 아이가 <b>'+al.length+'명</b>('+ten(sh)+')이다.'+(blind>0?' 아직 관찰이 없는 아이가 '+blind+'명 남아 있다.':'')+estNote,
+       names:namesOf(al)};
+   }},
+  {id:'T3',link:'stay',name:'전환기 학년 점검',ask:'절벽 앞에 약한 아이가 서 있는가',
+   src:['obs'],needs:['ATT'],
+   how:'한국 교회 다음세대 이탈의 최대 지점은 중3→고1 전환과 고3 졸업이다. 두 학년에서 출석이 느슨하거나 끊긴 아이를 따로 센다. 기준(가정값): 전환기 학년의 열에 넷이 약하면 경고.',
+   unlock:'출석부와 학년 칸',
+   run:function(){
+     var edge=students.filter(function(s){return s.grade===3||s.grade===6;});
+     if(!edge.length)return {level:'good',read:'지금 명단에는 전환기 학년(중3·고3)이 없다.'};
+     var weak=edge.filter(function(s){return s.att4<=2;});
+     var sh=weak.length/edge.length;
+     return {level:sh>=0.4?'bad':sh>=0.25?'warn':'good',
+       read:'전환기 학년(중3·고3) '+edge.length+'명 가운데 <b>'+weak.length+'명</b>이 출석부터 약하다('+ten(sh)+'). 이 아이들은 전환과 함께 버팀목이 한꺼번에 사라진다.',
+       names:namesOf(weak)};
+   }},
+  {id:'T4',link:'stay',name:'졸업 후에도 남는가',ask:'졸업생이 신앙을 들고 나갔는가',
+   src:['obs'],
+   how:'졸업 6개월·1년 뒤 한 번씩 연락해 출석·신앙을 기록한다. 모든 사역의 최종 성적표(북극성)인데, 지금은 어떤 장부에도 없다.',
+   naByDesign:true,unlock:'<b>졸업생 추적 장부</b>(연 2회 연락 기록) 한 권이면 열린다. 작년 졸업생부터 시작하라.',
+   run:function(){return null;}},
+  {id:'M1',link:'mult',name:'위기의 군집',ask:'흔들림이 한 덩어리로 모여 있는가',
+   src:['obs','teach'],needs:['NET','ATT'],
+   how:'실측 친구망 위에서 출석이 흔들리는(4주 중 2회 이하) 아이끼리 서로 이어진 덩어리를 찾는다. 한 아이가 흔들리면 친구도 흔들린다는 전제 아래, 군집은 따로 떨어진 위기보다 빠르게 번진다. 기준(가정값): 3명 이상 덩어리가 있으면 경고.',
+   unlock:'교사 관찰 한 장의 친구이름 칸(실측 망)',
+   run:function(){
+     var cl=clusters();
+     if(!cl.length)return {level:'good',read:'흔들리는 아이들이 서로 이어진 덩어리는 관찰되지 않았다. 위기가 흩어져 있어 번질 길이 좁다.'};
+     var big=cl[0];
+     return {level:big.length>=3?'bad':'warn',
+       read:'흔들리는 아이끼리 이어진 덩어리가 <b>'+cl.length+'곳</b> 있다. 가장 큰 덩어리는 '+big.length+'명이다. 덩어리는 한 명씩이 아니라 한꺼번에 움직인다.',
+       names:cl.map(function(c){return c.map(function(i){return students[i].name;}).join(' · ');})};
+   }},
+  {id:'M2',link:'mult',name:'연결점 점검',ask:'여럿이 매달린 아이가 흔들리고 있는가',
+   src:['teach'],needs:['NET','ATT'],
+   how:'다른 아이들이 친구로 지목한 수(받은 지목 2명 이상)를 연결점으로 본다. 연결점이 끊기면 매달린 아이들이 함께 흔들린다. 기준(가정값): 본인 출석이 끊긴 연결점이 둘이면 경고.',
+   unlock:'교사 관찰 한 장의 친구이름 칸',
+   run:function(){
+     var hubs=students.filter(function(s){return s.inDeg>=2;});
+     if(!hubs.length)return {level:'good',read:'아직 받은 지목이 2명을 넘는 연결점이 관찰되지 않았다. 관찰이 쌓이면 다시 보라.'};
+     var risky=hubs.filter(function(s){return s.att4<=1;});
+     var firm=hubs.filter(function(s){return s.att4>=3;});
+     return {level:risky.length>=2?'bad':risky.length===1?'warn':'good',
+       read:'여럿이 매달린 연결점이 '+hubs.length+'명이고, 그중 본인 출석이 끊긴 아이가 <b>'+risky.length+'명</b>이다. 든든히 서 있는 연결점은 '+firm.length+'명이다.',
+       names:namesOf(risky)};
+   }},
+  {id:'M3',link:'mult',name:'섬김의 사다리',ask:'학년이 오를수록 맡는 자리가 늘어나는가',
+   src:['obs'],needs:['SERVE'],
+   how:'봉사역할(행정 기록)의 비율을 중등(중1~3)과 고등(고1~3)으로 갈라 본다. 다음 리더가 자라는 부서는 학년이 오를수록 섬기는 비율이 오른다. 기준(가정값): 전체가 열에 하나가 안 되거나, 고등이 중등보다 낮으면 주의.',
+   unlock:'행정 기록의 봉사역할 칸',
+   run:function(){
+     var n=students.length;if(!n)return null;
+     var sv=students.filter(function(s){return s.serve;});
+     var mid=students.filter(function(s){return s.grade<=3;}),hi=students.filter(function(s){return s.grade>=4;});
+     var mr=mid.length?mid.filter(function(s){return s.serve;}).length/mid.length:null;
+     var hr=hi.length?hi.filter(function(s){return s.serve;}).length/hi.length:null;
+     var sh=sv.length/n,lv=sh<0.08?'bad':(sh<0.18||(mr!=null&&hr!=null&&hr<=mr))?'warn':'good';
+     var cmp=(mr!=null&&hr!=null)?' 중등 '+pctTxt(mr)+', 고등 '+pctTxt(hr)+(hr>mr?'로 사다리가 위로 열려 있다.':'로 학년이 올라도 자리가 늘지 않는다.'):'';
+     return {level:lv,read:'섬김·봉사 역할이 있는 아이가 '+n+'명 중 <b>'+sv.length+'명</b>('+ten(sh)+')이다.'+cmp,
+       names:[]};
+   }},
+  {id:'M4',link:'mult',name:'친구를 데려오는가',ask:'아이들이 전도의 통로가 되고 있는가',
+   src:['obs'],
+   how:'새 친구가 올 때 누가 데려왔는지 한 칸 적는다. 번짐의 직접 실측이다.',
+   naByDesign:true,unlock:'명단에 <b>누가 데려왔나(초청) 칸</b>을 더하면 열린다. 새생명축제 같은 행사 뒤에 특히 값지다.',
+   run:function(){return null;}},
+  {id:'C1',link:'cap',name:'반 담임의 하중',ask:'한 사람이 몇 아이를 지고 있는가',
+   src:['man'],
+   how:'재적을 반 담임 수로 나눈다. 기준(가정값, 수첩 엔진과 같은 눈금): 1인당 6명까지는 온전하고, 그 위로는 한 명당 돌봄이 새기 시작한다. 9명을 넘으면 경고.',
+   needsInput:'teachers',unlock:'아래에 반 담임 수를 넣으면 바로 열린다.',
+   run:function(){
+     if(!(inputs.tc>0))return null;
+     var ratio=students.length/inputs.tc;
+     return {level:ratio<=6?'good':ratio<=9?'warn':'bad',
+       read:'반 담임 '+inputs.tc+'명이 '+students.length+'명을 맡아, 1인당 <b>약 '+Math.round(ratio)+'명</b>이다. 6명을 넘는 만큼 돌봄이 샌다.'};
+   },
+   extra:function(){
+     return '<div class="den-grid noprint"><div class="den"><div class="k">반 담임 수(명) '+badge('man')+'</div><input type="number" min="0" id="in-tc" value="'+(inputs.tc||'')+'" placeholder="예: 18"></div></div>';}},
+  {id:'C2',link:'cap',name:'곁의 어른',ask:'부모 말고 이름을 알고 챙기는 어른이 있는가',
+   src:['teach'],needs:['ADULT'],
+   how:'교사가 본 챙기는어른 수(0~5)를 센다. 부모 외에 이름으로 알고 챙기는 어른이 여럿일수록 전환기를 잘 넘는다(Sticky Faith의 5:1 지향). 기준(가정값): 어른이 0명인 아이가 열에 셋이면 경고.',
+   unlock:'교사 관찰 한 장의 챙기는어른 칸',
+   run:function(){
+     var n=students.length;if(!n)return null;
+     var zero=students.filter(function(s){return s.adults===0&&!s.mentor;});
+     var sh=zero.length/n;
+     var avg=students.reduce(function(x,s){return x+s.adults;},0)/n;
+     return {level:sh>=0.3?'bad':sh>=0.15?'warn':'good',
+       read:'이름을 대고 챙겨 주는 어른이 한 명도 없는 아이가 <b>'+zero.length+'명</b>('+ten(sh)+')이다. 평균은 '+Math.round(avg*10)/10+'명으로, 다섯 명이라는 지향에는 멀다.',
+       names:namesOf(zero)};
+   }},
+  {id:'C3',link:'cap',name:'부모의 곁',ask:'가정이라는 버팀목이 서 있는가',
+   src:['obs'],needs:['DARA|PARENT'],
+   how:'다락방 출석부의 부모 참여와, 본 교회에 출석하는 부모 수(부모출석 0~2)를 본다. 부모가 살아나야 닿는 천장이 있다. 기준(가정값): 다락방 참여가 절반 아래면 주의, 셋에 하나 아래면 경고.',
+   unlock:'다락방 출석부와 교적의 부모출석 칸',
+   run:function(){
+     var L=[],lv=null;
+     var dk=students.filter(function(s){return s.dara!=null;});
+     if(hasG('DARA')&&dk.length){
+       var dy=dk.filter(function(s){return s.dara;});var dr=dy.length/dk.length;
+       L.push('부모의 다락방 참여가 '+dk.length+'가정 중 <b>'+dy.length+'</b>('+pctTxt(dr)+')이다.');
+       lv=lvWorst(lv,dr<1/3?'bad':dr<0.5?'warn':'good');}
+     if(hasG('PARENT')){
+       var po=students.filter(function(s){return s.parentFaith<=1;});var pr=po.length/students.length;
+       L.push('본 교회에 나오는 부모가 한 분도 없는 아이가 <b>'+po.length+'명</b>('+ten(pr)+')이다. 이 아이들에게 교회는 가정의 연장이 아니라 혼자 오는 곳이다.');
+       lv=lvWorst(lv,pr>=0.4?'warn':'good');}
+     if(!L.length)return null;
+     return {level:lv||'good',read:L.join('<br>')};
+   }}
+];
+function canRun(t){
+  if(t.naByDesign)return false;
+  if(t.needsInput==='denom')return inputs.ly>0||inputs.fk>0||inputs.ar>0;
+  if(t.needsInput==='teachers')return inputs.tc>0;
+  if(t.needs)return t.needs.every(hasG);
+  return true;
+}
+function runAll(){
+  T={};
+  TESTS.forEach(function(t){
+    if(!students.length){T[t.id]={na:true};return;}
+    if(!canRun(t)){T[t.id]={na:true};return;}
+    var r=t.run();
+    T[t.id]=r?r:{na:true};
+  });
+}
+
+/* ════════════════ 데이터 적재 ════════════════ */
+function loadMain(){
+  try{var raw=localStorage.getItem('woori_roster_v1');if(!raw)return null;var o=JSON.parse(raw);
+    if(o&&o.rows&&o.rows.length)return {rows:o.rows,cols:o.cols||[],sample:!!o.sample};}catch(e){}
+  return null;
+}
+function setData(r,c,src){rows=r;cols=c||[];source=src;selStud=null;recalc();}
+function recalc(){
+  buildStudents();applySymptoms();runAll();snapshot();renderAll();
+}
+
+/* ════════════════ 공유 렌더 조각 ════════════════ */
+function linkLevel(lk){
+  var lv=null,ran=0,tot=0;
+  TESTS.forEach(function(t){if(t.link!==lk)return;tot++;var r=T[t.id];
+    if(r&&!r.na){ran++;lv=lvWorst(lv,r.level);}});
+  return {level:lv,ran:ran,tot:tot};
+}
+function headlineHTML(){
+  var worst=null,blind=null;
+  LINKS.forEach(function(L){var s=linkLevel(L.k);
+    if(s.level&&(!worst||lvWorst(s.level,worst.lv)===s.level&&s.level!==worst.lv))worst={L:L,lv:s.level};
+    if(!blind||s.ran/s.tot<blind.r)blind={L:L,r:s.ran/s.tot,ran:s.ran,tot:s.tot};});
+  var hl='',same=worst&&blind&&blind.r<1&&worst.L.k===blind.L.k;
+  if(same&&worst.lv!=='good'){
+    hl='지금 가장 아픈 고리는 <span class="'+(worst.lv==='bad'?'hl-bad':'hl-warn')+'">'+worst.L.name+'</span>인데, 동시에 가장 안 보이는 고리(검사 '+blind.ran+'/'+blind.tot+')이기도 하다. 아픈 곳일수록 먼저 재야 한다.';
+  } else {
+    if(worst&&worst.lv==='bad')hl+='지금 가장 아픈 고리는 <span class="hl-bad">'+worst.L.name+'</span>이다. ';
+    else if(worst&&worst.lv==='warn')hl+='가장 먼저 살필 고리는 <span class="hl-warn">'+worst.L.name+'</span>이다. ';
+    else if(worst)hl+='측정된 범위에서는 큰 이상이 없다. ';
+    if(blind&&blind.r<1)hl+='가장 안 보이는 고리는 <span class="hl-na">'+blind.L.name+'</span>(검사 '+blind.ran+'/'+blind.tot+')이다. 안 보이는 것은 괜찮은 것이 아니라 모르는 것이다.';
+  }
+  return hl;
+}
+function chainSVG(big){
+  var LV_COL={good:'#34d399',warn:'#fbbf24',bad:'#f87171'};
+  var LV_BG={good:'rgba(52,211,153,.08)',warn:'rgba(251,191,36,.08)',bad:'rgba(248,113,113,.09)'};
+  var bw=big?172:164,gap=big?26:24,h=big?112:104,w=8*2+bw*5+gap*4;
+  var svg='<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="다섯 고리 사슬">';
+  LINKS.forEach(function(L,i){
+    var x=8+i*(bw+gap),s=linkLevel(L.k);
+    var col=s.level?LV_COL[s.level]:'#5b6680',bg=s.level?LV_BG[s.level]:'rgba(148,163,184,.05)';
+    var dash=s.level?'':' stroke-dasharray="5 4"';
+    var glow=s.level?' style="filter:drop-shadow(0 0 7px '+col+'66)"':'';
+    svg+='<g data-lk="'+L.k+'" style="cursor:pointer">';
+    svg+='<rect x="'+x+'" y="14" width="'+bw+'" height="'+(h-28)+'" rx="14" fill="'+bg+'" stroke="'+col+'" stroke-width="2"'+dash+glow+'/>';
+    svg+='<text x="'+(x+bw/2)+'" y="'+(big?48:44)+'" text-anchor="middle" font-size="'+(big?19:18)+'" font-weight="800" fill="#e8ecf4">'+L.name+'</text>';
+    var st=s.level==='bad'?'경고':s.level==='warn'?'주의':s.level==='good'?'양호':'안 보임';
+    svg+='<text x="'+(x+bw/2)+'" y="'+(big?72:68)+'" text-anchor="middle" font-size="12.5" fill="'+col+'" font-weight="700">'+st+' · 검사 '+s.ran+'/'+s.tot+'</text>';
+    svg+='</g>';
+    if(i<LINKS.length-1)svg+='<text x="'+(x+bw+gap/2)+'" y="'+(h/2+6)+'" text-anchor="middle" font-size="16" fill="#5b6680">→</text>';
+  });
+  svg+='</svg>';
+  return svg;
+}
+function studCardHTML(s){
+  var h='<div class="sc-name">'+esc(s.name)+' <span class="mut small">'+GRADE_LABELS[s.grade-1]+(s.svc?' · '+s.svc+'부':'')+'</span></div>';
+  function obsLine(lab,val,src){return '<div class="row"><span class="lab">'+lab+'</span>'+val+' '+badge(src)+'</div>';}
+  var facts='';
+  if(hasG('ATT'))facts+=obsLine('출석','4주 중 '+s.att4+'회 ('+(s.att4<=1?'끊김':s.att4===2?'느슨':'든든')+')','obs');
+  if(netObs(s)){
+    var fr=s.nbr.map(function(j){return esc(students[j].name);}).join(', ');
+    facts+=obsLine('친구',s.friendN===0?'관찰된 친구 없음':(s.friendN+'명'+(fr?' : '+fr:'')),hasG('NET')?'teach':'est');
+    if(s.inDeg>=2)facts+=obsLine('지목','다른 아이 '+s.inDeg+'명이 이 아이를 친구로 적었다','teach');
+  }
+  if(hasG('OWN'))facts+=obsLine('자기 말 표현',s.ownLow?'관찰 없음':s.ownHigh?'자주 보인다':'가끔 보인다',s.intern>0?'survey':'teach');
+  if(hasG('DOUBT'))facts+=obsLine('의심·질문',s.doubtVoiced?'어른에게 꺼낸 적 있다':'꺼낸 적이 관찰되지 않았다','teach');
+  if(hasG('BELONG'))facts+=obsLine('예배 후',s.belongQ<=2.6?'바로 간다':s.belongQ>=4.2?'남아서 어울린다':'가끔 머문다','teach');
+  if(hasG('ADULT'))facts+=obsLine('곁의 어른',s.adults+'명'+(s.mentor?' + 훈련(디모데·리더)':''),'teach');
+  var roles=[];if(s.sg)roles.push('반');if(s.mentor)roles.push('훈련');if(s.serve)roles.push('봉사');
+  facts+=obsLine('소속',roles.length?roles.join(' · '):'기록 없음','obs');
+  if(hasG('PARENT'))facts+=obsLine('부모 출석',s.parentFaith>=3?'두 분 다 본 교회에':s.parentFaith===2?'한 분이 본 교회에':'본 교회에 나오는 부모 없음','obs');
+  if(s.talk!=null)facts+=obsLine('신앙 대화','지난주 '+s.talk+'회','survey');
+  if(s.hw!=null)facts+=obsLine('가정예배','빈도 '+Math.round(s.hw)+'/5','survey');
+  if(s.dara!=null)facts+=obsLine('다락방',s.dara?'부모 참여':'참여 없음','obs');
+  h+='<h3 style="margin-top:8px">관찰된 사실</h3>'+facts;
+  h+='<h3>증상</h3><div>'+(s.sym.length?s.sym.map(function(y){return '<span class="symchip">'+esc(y)+'</span>';}).join(''):'<span class="symchip ok">관찰된 증상 없음</span>')+'</div>';
+  var blind=[];
+  if(!hasG('ATT'))blind.push('출석');
+  if(!netObs(s))blind.push('친구 관계');
+  if(!hasG('OWN'))blind.push('자기 말 표현');
+  if(!hasG('DOUBT'))blind.push('의심을 꺼내는지');
+  if(!hasG('ADULT'))blind.push('곁의 어른');
+  if(s.talk==null)blind.push('가정의 신앙 대화');
+  if(s.hw==null)blind.push('가정예배');
+  if(blind.length)h+='<h3>아직 못 본 것</h3><div class="small mut">'+blind.join(' · ')+'</div>';
+  var next=!netObs(s)?'주로 누구와 다니는지 한 줄 적기(친구이름)':
+    !hasG('OWN')?'나눔·기도에서 자기 말로 신앙을 말하는지 지켜보기':
+    !hasG('DOUBT')?'질문이나 의심을 꺼낸 적이 있는지 떠올려 적기':
+    s.talk==null?'학부모 설문 한 장 받기(신앙대화·가정예배)':
+    '관찰이 충분하다. 다음 학기에 갱신하라.';
+  h+='<h3>다음 관찰 한 가지</h3><div>'+next+'</div>';
+  return h;
+}
+function computePacks(){
+  var naT=TESTS.filter(function(t){return T[t.id]&&T[t.id].na;});
+  function pack(name,who,ids){
+    var open=naT.filter(function(t){return ids.indexOf(t.id)>=0;});
+    if(!open.length)return null;
+    return {name:name,who:who,open:open};
+  }
+  var packs=[
+    pack('교사 관찰 한 장','반 담임이 자기 반 6명만, 학기 1회',['F1','F2','F3','T2','M1','M2','C2']),
+    pack('학부모 설문 한 장','다락방 모임에서 배포·회수, 학기 1회',['F4','C3']),
+    pack('숫자 네 개 직접 입력','교역자가 위 칸에 입력, 연 1회',['R1','C1']),
+    pack('학생 표본 설문','연 1회, 수련회처럼 모인 자리에서',['F2']),
+    pack('장부에 새 칸 셋','등록연월 · 누가 데려왔나 · 졸업생 연락 기록',['R2','M4','T4'])
+  ].filter(Boolean);
+  packs.sort(function(a,b){return b.open.length-a.open.length;});
+  return packs;
+}
+
+/* ════════════════ 상황판 렌더 ════════════════ */
+function srcShort(){
+  var what=source==='main'?'우리 명단':source==='mainSample'?'수첩 예시':source==='csv'?'올린 CSV':'내장 예시';
+  var warnTxt=(source!=='main'&&source!=='csv')?' <span class="warn">예시 데이터</span>':'';
+  return what+' <b>'+students.length+'명</b>'+warnTxt+' · '+fidShort();
+}
+function fidShort(){
+  var ran=TESTS.filter(function(t){return T[t.id]&&!T[t.id].na;}).length;
+  var net=hasG('NET')?'친구망 실측':hasG('NETALT')?'친구망 추정':'친구망 없음';
+  return net+' · 검사 '+ran+'/'+TESTS.length;
+}
+function renderGauge(){
+  var ran=TESTS.filter(function(t){return T[t.id]&&!T[t.id].na;}).length;
+  var pct=ran/TESTS.length,r=24,c=2*Math.PI*r;
+  $('gauge-num').textContent=ran+'/'+TESTS.length;
+  $('gauge-ring').innerHTML='<svg width="62" height="62" viewBox="0 0 62 62">'
+    +'<circle cx="31" cy="31" r="'+r+'" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>'
+    +'<circle cx="31" cy="31" r="'+r+'" fill="none" stroke="#8b9dff" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+(c*pct)+' '+c+'" transform="rotate(-90 31 31)" style="filter:drop-shadow(0 0 6px rgba(139,157,255,.6))"/>'
+    +'<text x="31" y="36" text-anchor="middle" font-size="13" font-weight="800" fill="#e8ecf4">'+Math.round(pct*100)+'%</text></svg>';
+}
+function renderBoardVitals(){
+  var n=students.length,h='';
+  function vit(k,v,s,src,bar){h+='<div class="vital"><div class="k">'+k+' '+(src?badge(src):'')+'</div><div class="v">'+v+'</div><div class="s">'+(s||'')+'</div>'+(bar||'')+'</div>';}
+  function bar(sh,col){return '<div class="vbar"><i style="width:'+Math.round(clampn(sh,0,1)*100)+'%;background:'+col+'"></i></div>';}
+  vit('재적',n+'명','명단에 있는 아이','obs');
+  if(hasG('ATT')){
+    var avg=n?students.reduce(function(x,s){return x+s.att4;},0)/n/4:0;
+    vit('4주 출석률',pctTxt(avg),'최근 4주 평균','obs',bar(avg,'#8b9dff'));
+    var br=students.filter(function(s){return s.att4<=1;}).length;
+    vit('출석 끊김',br+'명','4주 중 1회 이하','obs',bar(n?br/n:0,'#f87171'));
+  } else vit('출석','미측정','출석4주 칸이 없다','est');
+  if(hasG('NET')||hasG('NETALT')){
+    var got=students.filter(netObs);
+    var al=got.filter(function(s){return s.friendN===0;}).length;
+    vit('홀로',al+'명','관찰된 친구 0명'+(n-got.length>0?' · 미관찰 '+(n-got.length)+'명':''),'teach',bar(got.length?al/got.length:0,'#fbbf24'));
+  } else vit('친구망','미측정','친구이름 칸이 없다','est');
+  var multi=students.filter(function(s){return s.sym.length>=2;}).length;
+  vit('증상 겹침',multi+'명','증상 2개 이상 겹친 아이','teach',bar(n?multi/n:0,'#fb923c'));
+  $('board-vitals').innerHTML=h;
+}
+function renderTiles(){
+  var h='';
+  LINKS.forEach(function(L){
+    h+='<div class="trow"><span class="trow-lab">'+L.name+'</span><div class="tiles">';
+    TESTS.forEach(function(t){
+      if(t.link!==L.k)return;
+      var r=T[t.id],na=!r||r.na;
+      var lv=na?'na':r.level;
+      var tip=na?('미검사 · '+String(t.unlock||'').replace(/<[^>]*>/g,'')):String(r.read||'').replace(/<[^>]*>/g,'');
+      h+='<button class="tile lv-'+lv+'" data-t="'+t.id+'" title="'+esc(tip)+'"><span class="st"></span>'+t.name+'</button>';
+    });
+    h+='</div></div>';
+  });
+  $('board-tests').innerHTML=h;
+}
+function renderBoardNext(){
+  var packs=computePacks();
+  if(!packs.length){$('board-next').innerHTML='<div class="sidebox"><div class="k">다음에 모을 것</div>지금 데이터로 열 수 있는 검사는 모두 가동 중이다.</div>';return;}
+  var p=packs[0];
+  $('board-next').innerHTML='<div class="sidebox hotline" id="next-hot"><div class="k">다음에 모을 것 (가장 값짐)</div>'
+    +'<b>'+p.name+'</b> <span class="mut small">('+p.who+')</span><br><b class="cnt">검사 '+p.open.length+'개</b>가 열린다 : '
+    +p.open.map(function(t){return t.name;}).join(' · ')
+    +' <a href="#" data-go="collect-card" class="small">전체 순서</a></div>';
+}
+function renderBoardVoice(){
+  var h='<div class="sidebox" id="voice-hot"><div class="k">어른들의 진단 일치</div>';
+  if(voices.length>=2){
+    var spreads=DQ.map(function(q,qi){var vals=voices.map(function(v){return v.d[qi];});return Math.max.apply(null,vals)-Math.min.apply(null,vals);});
+    var si=spreads.indexOf(Math.max.apply(null,spreads));
+    if(spreads[si]>=2)h+='목소리 '+voices.length+'개 가운데 가장 갈리는 곳은 <b style="color:var(--warn)">'+DQ[si].k+' '+DQ[si].link+'</b>(차 '+spreads[si]+'점)이다. ';
+    else h+='목소리 '+voices.length+'개가 크게 갈리지 않는다. ';
+  } else h+='아직 안 쟀다. 회의에서 다섯 문장에 답하게 하면, 같은 단어로 다른 병을 가리키는지 보인다. ';
+  h+='<a href="#" data-go="voices-card" class="small">불일치 지도</a></div>';
+  $('board-voice').innerHTML=h;
+}
+function renderBoardStud(){
+  var el=$('board-stud');
+  if(selStud==null||!students[selStud]){el.innerHTML='<div class="sidebox"><div class="k">아이 소견</div><span class="mut">왼쪽 관계망의 점을 누르면 그 아이의 소견이 여기 뜬다.</span></div>';return;}
+  el.innerHTML='<div class="sidebox"><div class="k">아이 소견</div>'+studCardHTML(students[selStud])+'</div>';
+}
+function renderBoardTrend(){
+  var el=$('board-trend');
+  if(source!=='main'){el.innerHTML='';return;}
+  var hist=[];try{hist=JSON.parse(localStorage.getItem('woori_diag_hist_v1')||'[]')||[];}catch(e){hist=[];}
+  if(hist.length<2){el.innerHTML='';return;}
+  var vals=hist.slice(-12).map(function(r){return r.att;});
+  var W=200,H=36,mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);var sp=(mx-mn)||1;
+  var pts=vals.map(function(v,i){return (i/(vals.length-1)*W).toFixed(1)+','+(H-4-(v-mn)/sp*(H-8)).toFixed(1);}).join(' ');
+  el.innerHTML='<div class="sidebox"><div class="k">출석률 맥박 (방문마다 한 점)</div>'
+    +'<svg width="'+W+'" height="'+H+'" style="display:block"><polyline points="'+pts+'" fill="none" stroke="#67e8f9" stroke-width="2" style="filter:drop-shadow(0 0 5px rgba(103,232,249,.5))"/></svg>'
+    +'<span class="small mut">'+hist[hist.length-1].d+' 기준 '+vals[vals.length-1]+'%</span></div>';
+}
+
+/* ── 늑대의 눈 : 같은 관찰 기록을 적의 정찰로 거꾸로 읽는다 (새 가정 0) ── */
+function renderWolf(){
+  var n=students.length;
+  if(!n){$('wolf-body').innerHTML='<div class="wolf-card">빈 우리에는 늑대도 오지 않는다. 명단부터 넣으라.</div>';return;}
+  function few(arr,k){k=k||4;var nm=arr.map(function(s){return esc(s.name);});return nm.length<=k?nm.join(', '):nm.slice(0,k).join(', ')+' 외 '+(nm.length-k)+'명';}
+  var h='';
+  // ① 내가 보는 것 : 공격 순서 (각 절은 해당 관찰이 있을 때만 선다)
+  h+='<div class="wolf-sec">내가 보는 것</div>';
+  var sawAny=false;
+  if(hasG('NET')&&hasG('ATT')){
+    var hubsBroken=students.filter(function(s){return s.inDeg>=2&&s.att4<=1;});
+    if(hubsBroken.length){sawAny=true;
+      h+='<div class="wolf-card"><span class="wn">다리부터 끊는다.</span> 나는 양을 한 마리씩 쫓지 않는다. 여럿이 매달린 다리가 이미 흔들리고 있다 : <b>'+few(hubsBroken)+'</b>. 다리가 무너지면 매달린 양들은 내가 건드리지 않아도 흩어진다.<span class="wm">근거 : 연결점 점검(M2) 결과를 거꾸로 읽음</span></div>';}
+    var cl=clusters();
+    if(cl.length){sawAny=true;
+      h+='<div class="wolf-card"><span class="wn">너희는 명단으로 세지만 나는 덩어리로 사냥한다.</span> 흔들리는 양들이 서로 기대어 묶인 덩어리가 '+cl.length+'곳, 가장 큰 것은 <b>'+cl[0].length+'마리</b>다. 하나가 넘어지면 나머지는 따라온다. 한 마리 값으로 '+cl[0].length+'마리를 얻는 자리다.<span class="wm">근거 : 위기의 군집(M1)</span></div>';}
+  }
+  if(hasG('DOUBT')){
+    var quiet=students.filter(function(s){return !s.doubtVoiced;});
+    if(quiet.length){sawAny=true;
+      h+='<div class="wolf-card"><span class="wn">말해진 의심은 내게 쓸모가 없다.</span> 곪는 의심이 내 양식이다. 의심을 입 밖에 내 본 적 없는 양이 <b>'+quiet.length+'마리</b>다. 나는 그 침묵 곁에 앉아서 기다리기만 하면 된다.<span class="wm">근거 : 의심의 침묵(F3)</span></div>';}
+  }
+  if(hasG('ATT')){
+    var g3=students.filter(function(s){return s.grade===6&&s.att4<=2;});
+    if(g3.length){sawAny=true;
+      h+='<div class="wolf-card"><span class="wn">나는 서두르지 않는다. 너희 달력이 내 작전 계획이다.</span> 졸업이 <b>'+g3.length+'마리</b>를 제 발로 우리 밖까지 데려다 준다. 울타리가 한꺼번에 사라지는 날짜가 이미 정해져 있다. 나는 졸업식 다음 주에 만나러 간다.<span class="wm">근거 : 전환기 학년 점검(T3)의 고3</span></div>';}
+  }
+  if(hasG('PARENT')){
+    var po=students.filter(function(s){return s.parentFaith<=1;});
+    if(po.length){sawAny=true;
+      h+='<div class="wolf-card"><span class="wn">혼자 오는 양이 가장 가볍다.</span> 가정이라는 우리 없이 혼자 다니는 양이 <b>'+po.length+'마리</b>다. 집에 돌아가도 아무도 묻지 않는다. 빠져도 아무도 모른다.<span class="wm">근거 : 부모의 곁(C3)</span></div>';}
+  }
+  // ② 어둠 : 재지 않는 곳이 내 길이다 (미검사를 적의 통로로 읽음)
+  var dark=TESTS.filter(function(t){return T[t.id]&&T[t.id].na;});
+  if(dark.length){sawAny=true;
+    h+='<div class="wolf-card"><span class="wn">그리고 무엇보다, 너희가 재지 않는 곳으로 다닌다.</span> 불 꺼진 검사가 <b>'+dark.length+'개</b>다 : '+dark.map(function(t){return t.name;}).join(' · ')+'. 졸업한 양이 어디로 갔는지 너희는 모른다. 나는 안다. 너희 어둠의 목록이 곧 내 지도다.<span class="wm">근거 : 미검사 목록 그대로</span></div>';}
+  if(!sawAny)h+='<div class="wolf-card">보이는 것이 적다. 그것이 너희에게 좋은 소식이라는 뜻은 아니다. 관찰이 없어 나도 너희도 이 우리를 모른다.</div>';
+  // ③ 내가 두려워하는 것 : 같은 검사를 방어선으로 읽음
+  h+='<div class="wolf-sec">내가 두려워하는 것</div>';
+  h+='<div class="wolf-card fear"><span class="wn">이름.</span> 목자가 양을 이름으로 부르면 나는 비킨다(요 10:3). 점이 아니라 이름으로 불리는 양은 잡기 어렵다.</div>';
+  if(hasG('DOUBT')){
+    var voiced=students.filter(function(s){return s.doubtVoiced;}).length;
+    if(voiced)h+='<div class="wolf-card fear"><span class="wn">말해진 의심.</span> 이미 <b>'+voiced+'마리</b>가 어른 앞에서 입을 열었다. 꺼내어진 의심은 빛에서 마른다. 그 양들은 내가 포기했다.</div>';
+  }
+  if(hasG('NET')){
+    var got=students.filter(netObs),al=got.filter(function(s){return s.friendN===0;}).length;
+    if(got.length&&al===0)h+='<div class="wolf-card fear"><span class="wn">서로 묶인 떼.</span> 관찰된 양 가운데 홀로 다니는 양이 없다. 성가신 울타리다. 나는 묶인 떼에서 끈이 풀리기를 기다릴 수밖에 없다.</div>';
+  }
+  var ran=TESTS.filter(function(t){return T[t.id]&&!T[t.id].na;}).length;
+  h+='<div class="wolf-card fear"><span class="wn">켜진 불.</span> 너희가 검사 '+ran+'개에 불을 켜 두었다. 불이 켜질 때마다 내 길이 하나씩 지워진다. 학부모 설문 한 장, 졸업생 장부 한 권이 내게는 철조망이다.</div>';
+  h+='<div class="wolf-end">늑대가 보는 것을 목자가 먼저 보면, <span class="wolf-vs">늑대는 굶는다.</span><br><span class="small mut" style="font-weight:400">삯꾼은 늑대가 오는 것을 보면 도망하나, 목자는 양을 알고 양도 목자를 안다(요 10:12~14). 근신하라 깨어라(벧전 5:8).</span></div>';
+  $('wolf-body').innerHTML=h;
+}
+
+/* ── 실측 관계망 (force 레이아웃 캔버스) ── */
+var net={n:[],e:[],bb:null,t:0,raf:0,hov:null};
+function buildNet(){
+  net.n=students.map(function(s){return {i:s.i,x:0,y:0,vx:0,vy:0,phase:(s.i*2.399)%6.283};});
+  net.e=[];
+  students.forEach(function(s){s.nbr.forEach(function(j){if(j>s.i)net.e.push([s.i,j]);});});
+  net.n.forEach(function(p){var s=students[p.i];var a=(s.grade-1)/6*6.283+((p.i*0.733)%1-0.5)*0.9;var r=70+((p.i*0.37)%1)*130;
+    p.x=Math.cos(a)*r;p.y=Math.sin(a)*r;});
+  for(var k=0;k<240;k++)netStep();
+  var xs=net.n.map(function(p){return p.x;}),ys=net.n.map(function(p){return p.y;});
+  net.bb={x0:Math.min.apply(null,xs),x1:Math.max.apply(null,xs),y0:Math.min.apply(null,ys),y1:Math.max.apply(null,ys)};
+  var cv=$('net');cv.setAttribute('data-n',String(net.n.length));cv.setAttribute('data-e',String(net.e.length));
+  $('net-empty').style.display=net.e.length?'none':'flex';
+  if(!net.e.length)$('net-empty').textContent=students.length?'친구이름 관찰이 아직 없어 선이 없다. 교사 관찰 한 장이 들어오면 진짜 망이 그려진다.':'명단이 비어 있다.';
+}
+function netStep(){
+  var REP=1500,LEN=52,SPR=0.05,GRAV=0.012,i,j;
+  for(i=0;i<net.n.length;i++){var a=net.n[i];
+    for(j=i+1;j<net.n.length;j++){var b=net.n[j];
+      var dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy+0.01,d=Math.sqrt(d2);
+      var f=Math.min(REP/d2,8);dx/=d;dy/=d;
+      a.vx+=dx*f;a.vy+=dy*f;b.vx-=dx*f;b.vy-=dy*f;}}
+  net.e.forEach(function(ed){var a=net.n[ed[0]],b=net.n[ed[1]];
+    var dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy)+0.01;
+    var f=(d-LEN)*SPR;dx/=d;dy/=d;
+    a.vx+=dx*f;a.vy+=dy*f;b.vx-=dx*f;b.vy-=dy*f;});
+  net.n.forEach(function(p){p.vx-=p.x*GRAV;p.vy-=p.y*GRAV;
+    p.x+=p.vx;p.y+=p.vy;p.vx*=0.6;p.vy*=0.6;});
+}
+function netSize(){
+  var cv=$('net'),dpr=window.devicePixelRatio||1;
+  var W=cv.clientWidth||600,H=470;
+  if(cv.width!==Math.round(W*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+  return {W:W,H:H,dpr:dpr};
+}
+function mapP(p,W,H){
+  var pad=30,bw=(net.bb.x1-net.bb.x0)||1,bh=(net.bb.y1-net.bb.y0)||1;
+  var sc=Math.min((W-2*pad)/bw,(H-2*pad)/bh,4);
+  var cx=(net.bb.x0+net.bb.x1)/2,cy=(net.bb.y0+net.bb.y1)/2;
+  return {x:W/2+(p.x-cx)*sc+Math.sin(net.t*0.9+p.phase)*1.6,
+          y:H/2+(p.y-cy)*sc+Math.cos(net.t*0.7+p.phase)*1.6};
+}
+function drawNet(){
+  if(!net.bb)return;
+  var cv=$('net'),sz=netSize(),ctx=cv.getContext('2d');
+  ctx.setTransform(sz.dpr,0,0,sz.dpr,0,0);
+  ctx.clearRect(0,0,sz.W,sz.H);
+  var P=net.n.map(function(p){return mapP(p,sz.W,sz.H);});
+  // 선
+  net.e.forEach(function(ed){
+    var a=students[ed[0]],b=students[ed[1]];
+    var shaky=a.att4<=2&&b.att4<=2;
+    var selEdge=selStud!=null&&(ed[0]===selStud||ed[1]===selStud);
+    ctx.strokeStyle=selEdge?'rgba(232,236,244,.65)':shaky?'rgba(248,113,113,.38)':'rgba(139,157,255,.16)';
+    ctx.lineWidth=selEdge?1.6:1;
+    ctx.beginPath();ctx.moveTo(P[ed[0]].x,P[ed[0]].y);ctx.lineTo(P[ed[1]].x,P[ed[1]].y);ctx.stroke();
+  });
+  // 점
+  net.n.forEach(function(p,i){
+    var s=students[i],pt=P[i];
+    var r=4.5+Math.min(s.inDeg,4)*1.1;
+    var col=symColor(s.sym.length);
+    ctx.shadowColor=col;ctx.shadowBlur=i===selStud?14:6;
+    ctx.fillStyle=col;
+    ctx.beginPath();ctx.arc(pt.x,pt.y,r,0,6.283);ctx.fill();
+    ctx.shadowBlur=0;
+    if(s.covMax&&s.cov/s.covMax<0.5){
+      ctx.setLineDash([2,2]);ctx.strokeStyle='rgba(170,180,200,.8)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(pt.x,pt.y,r+2.6,0,6.283);ctx.stroke();ctx.setLineDash([]);
+    }
+    if(i===selStud){
+      ctx.strokeStyle='#e8ecf4';ctx.lineWidth=1.6;
+      ctx.beginPath();ctx.arc(pt.x,pt.y,r+4,0,6.283);ctx.stroke();
+    }
+  });
+  // 호버·선택 라벨
+  var lab=net.hov!=null?net.hov:selStud;
+  if(lab!=null&&students[lab]){
+    var pt=P[lab];
+    ctx.font='700 12px Pretendard,system-ui,sans-serif';
+    ctx.fillStyle='rgba(232,236,244,.95)';
+    ctx.fillText(students[lab].name,pt.x+10,pt.y-8);
+  }
+  net._P=P;
+}
+function netLoop(){
+  net.t+=0.016;
+  if(view==='board'&&!document.hidden)drawNet();
+  net.raf=requestAnimationFrame(netLoop);
+}
+function netHit(ev){
+  var cv=$('net'),rc=cv.getBoundingClientRect();
+  var mx=ev.clientX-rc.left,my=ev.clientY-rc.top;
+  if(!net._P)return null;
+  var best=null,bd=144;
+  net._P.forEach(function(pt,i){
+    var dx=pt.x-mx,dy=pt.y-my,d=dx*dx+dy*dy;
+    if(d<bd){bd=d;best=i;}});
+  return best;
+}
+
+/* ════════════════ 자세히 렌더 ════════════════ */
+function srcLine(){
+  var n=students.length;
+  var what=source==='main'?'목회 수첩에 저장된 우리 명단':source==='mainSample'?'목회 수첩의 예시 명단':source==='csv'?'방금 올린 CSV 파일':'내장 예시 명단';
+  var warnTxt=(source==='sample'||source==='mainSample')?' <b style="color:var(--warn)">예시 데이터다. 진짜 진단이 아니라 화면을 보여 주기 위한 가짜 아이들이다.</b>':'';
+  return what+' <b>'+n+'명</b>을 읽고 있다.'+badge('obs')+warnTxt;
+}
+function fidLine(){
+  var s2=['친구이름','자기말표현','의심질문','예배후머묾','챙기는어른'].filter(function(c){return cols.indexOf(c)>=0;}).length;
+  var s3=['신앙대화','가정예배','다락방'].filter(function(c){return cols.indexOf(c)>=0;}).length;
+  var s4=['내면화점수','부모관계'].filter(function(c){return cols.indexOf(c)>=0;}).length;
+  var net2=hasG('NET')?'친구망 실측'+badge('teach'):hasG('NETALT')?'친구망 숫자만'+badge('est'):'친구망 미관찰'+badge('est');
+  var ran=TESTS.filter(function(t){return T[t.id]&&!T[t.id].na;}).length;
+  return ['1단계 행정 '+(hasG('ATT')?'✓':'아직'),'2단계 교사 '+(s2>=5?'✓':s2+'/5'),'3단계 학부모 '+(s3>=3?'✓':s3+'/3'),'4단계 학생 '+(s4>=2?'✓':s4+'/2'),net2,'검사 '+ran+'/'+TESTS.length+' 가동'].join(' · ');
+}
+function namesHtml(arr,label){
+  if(!arr||!arr.length)return '';
+  var cap=14,shown=arr.slice(0,cap);
+  var inner=shown.map(function(nm){
+    var st=students.filter(function(s){return s.name===nm;})[0];
+    return st?'<span class="nm" data-i="'+st.i+'">'+esc(nm)+'</span>':'<span class="nm" style="cursor:default">'+esc(nm)+'</span>';
+  }).join('');
+  if(arr.length>cap)inner+='<span class="mut small"> 외 '+(arr.length-cap)+'명</span>';
+  return '<details class="names"><summary>'+(label||('해당 아이 '+arr.length+'명'))+'</summary><div class="namelist">'+inner+'</div></details>';
+}
+function renderPanels(){
+  var h='';
+  LINKS.forEach(function(L,li){
+    h+='<section class="card link-panel" id="lk-'+L.k+'">';
+    h+='<div class="lk-head"><span class="lk-num">'+(li+1)+'</span><h2>'+L.name+'</h2><span class="lk-q">'+L.q+'</span>'
+      +'<span class="lk-meta">분모 '+L.den+' · 시계 '+L.clock+' · 우리 손 안 '+L.ctl+'</span></div>';
+    TESTS.forEach(function(t){
+      if(t.link!==L.k)return;
+      var r=T[t.id],na=!r||r.na;
+      var lv=na?'na':r.level;
+      var lab=na?'미검사':lv==='bad'?'경고':lv==='warn'?'주의':'양호';
+      h+='<div class="test lv-'+lv+'" id="t-'+t.id+'">';
+      h+='<div class="t-head"><span class="chip lv-'+lv+'">'+lab+'</span><b>'+t.name+'</b><span class="t-ask">'+t.ask+'</span></div>';
+      if(!na){
+        h+='<div class="t-read">'+r.read+'</div>';
+        if(r.names&&r.names.length)h+=namesHtml(r.names);
+      } else {
+        h+='<div class="t-unlock">여는 법: '+t.unlock+'</div>';
+      }
+      h+='<div class="t-how"><span class="lab">어떻게 재나</span> '+(t.src||[]).map(badge).join('')+' '+t.how+'</div>';
+      if(t.extra)h+=t.extra();
+      h+='</div>';
+    });
+    h+='<div class="gate">🔒 처방의 문. 이 고리가 올해 좇을 한두 고리로 합의되면, 그때 목회 수첩의 계획·전망이 이 자리에 이어진다. 지금은 재기만 한다.</div>';
+    h+='</section>';
+  });
+  $('panels').innerHTML=h;
+  [['in-ly','ly'],['in-fk','fk'],['in-ar','ar'],['in-tc','tc']].forEach(function(p){
+    var el=$(p[0]);if(!el)return;
+    el.addEventListener('change',function(){inputs[p[1]]=Math.max(0,num(el.value,0));saveInputs();recalc();});
+  });
+}
+function dotClass(s){
+  var n=s.sym.length;
+  var c=n<=0?'c0':n===1?'c1':n===2?'c2':'c3';
+  var low=s.covMax?(s.cov/s.covMax<0.5):true;
+  return 'dot '+c+(low?' lowcov':'');
+}
+function renderMap(){
+  var grades=[];students.forEach(function(s){if(grades.indexOf(s.grade)<0)grades.push(s.grade);});
+  grades.sort(function(a,b){return a-b;});
+  var h='';
+  grades.forEach(function(g){
+    var kids=students.filter(function(s){return s.grade===g;});
+    kids.sort(function(a,b){return (a.svc||0)-(b.svc||0)||b.sym.length-a.sym.length;});
+    h+='<div class="gcol"><div class="gl">'+GRADE_LABELS[g-1]+' <span class="mut">'+kids.length+'</span></div><div class="dots">';
+    kids.forEach(function(s){
+      h+='<span class="'+dotClass(s)+'" data-i="'+s.i+'" title="'+esc(s.name)+' · '+GRADE_LABELS[s.grade-1]+(s.svc?' '+s.svc+'부':'')+(s.sym.length?' · '+s.sym.length+'증상':'')+'"></span>';
+    });
+    h+='</div></div>';
+  });
+  $('map').innerHTML=h||'<span class="mut">명단이 비어 있다.</span>';
+  renderStud();renderTriage();
+}
+function renderStud(){
+  var box=$('stud-card');
+  if(selStud==null||!students[selStud]){box.style.display='none';return;}
+  box.innerHTML=studCardHTML(students[selStud]);box.style.display='block';
+}
+function renderTriage(){
+  var multi=students.filter(function(s){return s.sym.length>=2;});
+  multi.sort(function(a,b){return b.sym.length-a.sym.length;});
+  if(!multi.length){$('triage').innerHTML='';return;}
+  var h='<h3>증상이 겹치는 아이 '+multi.length+'명 : 먼저 살필 차례</h3><div class="small mut" style="margin-bottom:5px">점수가 아니라 겹침이다. 증상이 포개진 아이부터 들여다본다.</div>';
+  h+=multi.slice(0,12).map(function(s){
+    return '<div style="margin:4px 0;font-size:13px"><span class="nm" data-i="'+s.i+'">'+esc(s.name)+'</span> <span class="mut small">'+GRADE_LABELS[s.grade-1]+'</span> · '+s.sym.map(esc).join(' · ')+'</div>';
+  }).join('');
+  if(multi.length>12)h+='<div class="small mut">외 '+(multi.length-12)+'명</div>';
+  $('triage').innerHTML=h;
+}
+function renderCollect(){
+  var packs=computePacks();
+  if(!packs.length){$('collect').innerHTML='<div class="small" style="color:var(--good)">지금 데이터로 열 수 있는 검사는 모두 가동 중이다. 남은 일은 갱신 주기를 지키는 것이다.</div>';return;}
+  $('collect').innerHTML=packs.map(function(p){
+    return '<div class="unlockrow"><b>'+p.name+'</b> <span class="mut small">('+p.who+')</span><br>'
+      +'<b class="cnt">검사 '+p.open.length+'개</b>가 열린다 : '+p.open.map(function(t){return t.name;}).join(' · ')+'</div>';
+  }).join('');
+}
+function renderGuide(){
+  function names(ids){return ids.map(function(id){var t=TESTS.filter(function(x){return x.id===id;})[0];
+    var on=T[t.id]&&!T[t.id].na;return (on?'✓ ':'○ ')+t.name;}).join(' · ');}
+  $('g-s1').innerHTML=names(['T1','T3','M3','C3','R1']);
+  $('g-s2').innerHTML=names(['F1','F2','F3','T2','M1','M2','C2']);
+  $('g-s3').innerHTML=names(['F4','C3']);
+  $('g-s4').innerHTML=names(['F2']);
+  $('g-s5').innerHTML=names(['R1','C1']);
+  $('g-s6').innerHTML=names(['R2','M4','T4']);
+}
+
+/* ════════════════ 불일치 지도 ════════════════ */
+var DQ=[
+  {k:'D1',link:'닿음',t:'문제는 올 아이 자체가 준 것이다'},
+  {k:'D2',link:'양육',t:'문제는 오는 아이도 신앙이 자기 것이 안 되는 것이다'},
+  {k:'D3',link:'잔존',t:'문제는 잘 자란 아이도 전환점에서 떨어져 나가는 것이다'},
+  {k:'D4',link:'번짐',t:'문제는 친구를 데려오지도, 다음 리더로 서지도 않는 것이다'},
+  {k:'D5',link:'역량',t:'문제는 교사·부모 등 떠받칠 어른이 모자란 것이다'}
+];
+var VCOLORS=['#8b9dff','#67e8f9','#fbbf24','#34d399','#f87171','#d8b4fe','#94a3b8'];
+var voices=[];
+try{voices=JSON.parse(localStorage.getItem('woori_diag_voices_v1')||'[]')||[];}catch(e){voices=[];}
+function saveVoices(){try{localStorage.setItem('woori_diag_voices_v1',JSON.stringify(voices));}catch(e){}}
+function renderVoiceForm(){
+  $('vf-sliders').innerHTML=DQ.map(function(q,i){
+    return '<div class="fcol" title="'+esc(q.t)+'">'+q.k+' '+q.link+'<input type="range" min="0" max="4" step="1" value="2" id="vf-d'+i+'"></div>';
+  }).join('');
+}
+function renderVoices(){
+  if(!voices.length){
+    $('voices-plot').innerHTML='<div class="small mut" style="margin-top:6px">아직 기록된 목소리가 없다. 회의 자리에서 한 사람씩 다섯 문장에 답하게 하고 여기에 적으라. 두 사람만 모여도 그림이 나온다.</div>';
+    $('voices-find').innerHTML='';$('voices-list').innerHTML='';return;
+  }
+  var h='';
+  DQ.forEach(function(q,qi){
+    var vals=voices.map(function(v){return v.d[qi];});
+    var spread=Math.max.apply(null,vals)-Math.min.apply(null,vals);
+    h+='<div class="dq-row"><div class="dq-lab"><b>'+q.k+' '+q.link+'</b><br><span class="mut small">'+q.t+'</span></div><div class="dq-track">';
+    voices.forEach(function(v,vi){
+      h+='<div class="dq-dot" style="left:'+(6+v.d[qi]/4*88)+'%;background:'+VCOLORS[vi%VCOLORS.length]+'" title="'+esc(v.role+(v.name?' '+v.name:''))+' : '+v.d[qi]+'"></div>';
+    });
+    h+='</div><div class="dq-spread'+(spread>=2&&voices.length>=2?' hot':'')+'">차 '+spread+'점</div></div>';
+  });
+  $('voices-plot').innerHTML=h;
+  var find='';
+  if(voices.length>=2){
+    var means=DQ.map(function(q,qi){return voices.reduce(function(x,v){return x+v.d[qi];},0)/voices.length;});
+    var spreads=DQ.map(function(q,qi){var vals=voices.map(function(v){return v.d[qi];});return Math.max.apply(null,vals)-Math.min.apply(null,vals);});
+    var mi=means.indexOf(Math.max.apply(null,means));
+    var si=spreads.indexOf(Math.max.apply(null,spreads));
+    find='다들 가장 무겁게 보는 곳은 <b>'+DQ[mi].k+' '+DQ[mi].link+'</b>이다. ';
+    if(spreads[si]>=2)find+='가장 갈리는 곳은 <b>'+DQ[si].k+' '+DQ[si].link+'</b>(점수 차 '+spreads[si]+')이다. 지금 같은 단어로 서로 다른 교회학교를 말하고 있다. 합의는 이 표를 함께 보는 데서 시작한다.';
+    else find+='다섯 물음이 크게 갈리지 않는다. 이 합의 위에서 올해 좇을 한두 고리를 고르면 된다.';
+  } else find='한 사람의 답만 있다. 다른 역할의 답이 더해져야 흩어짐이 보인다.';
+  $('voices-find').innerHTML='<div class="vfind">'+find+'</div>';
+  $('voices-list').innerHTML='기록: '+voices.map(function(v,vi){
+    return '<span style="color:'+VCOLORS[vi%VCOLORS.length]+'">●</span> '+esc(v.role+(v.name?' '+v.name:''))+'<span class="vx noprint" data-v="'+vi+'" title="지우기">×</span>';
+  }).join(' &nbsp; ');
+  renderBoardVoice();
+}
+
+/* ════════════════ 추세(맥박) ════════════════ */
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function snapshot(){
+  if(source!=='main')return;
+  if(!students.length||!hasG('ATT'))return;
+  var hist=[];try{hist=JSON.parse(localStorage.getItem('woori_diag_hist_v1')||'[]')||[];}catch(e){hist=[];}
+  var n=students.length;
+  var rec={d:todayStr(),n:n,
+    att:Math.round(students.reduce(function(x,s){return x+s.att4;},0)/n/4*100),
+    broken:students.filter(function(s){return s.att4<=1;}).length,
+    alone:(hasG('NET')||hasG('NETALT'))?students.filter(netObs).filter(function(s){return s.friendN===0;}).length:null};
+  var last=hist[hist.length-1];
+  if(last&&last.d===rec.d)hist[hist.length-1]=rec;else hist.push(rec);
+  if(hist.length>40)hist=hist.slice(-40);
+  try{localStorage.setItem('woori_diag_hist_v1',JSON.stringify(hist));}catch(e){}
+}
+function renderTrend(){
+  var hist=[];try{hist=JSON.parse(localStorage.getItem('woori_diag_hist_v1')||'[]')||[];}catch(e){hist=[];}
+  if(source!=='main'){
+    $('trend').innerHTML='<p class="small mut">예시 명단은 추세를 쌓지 않는다. 수첩에 우리 명단을 넣고 이 화면을 열 때마다, 그날의 읽기가 자동으로 한 줄씩 쌓인다. 명단을 갱신하는 학기마다 들르면 맥박이 보인다.</p>';return;
+  }
+  if(hist.length<2){
+    $('trend').innerHTML='<p class="small mut">오늘의 읽기를 적어 두었다('+(hist.length?hist[hist.length-1].d:'')+'). 다음에 명단을 갱신하고 다시 열면 변화가 이 자리에 줄로 쌓인다. 진단은 한 번의 사진이 아니라 맥박이다.</p>';return;
+  }
+  var rows10=hist.slice(-8);
+  var h='<table class="trend"><tr><th>날짜</th><th>재적</th><th>4주 출석률</th><th>끊김</th><th>홀로</th></tr>';
+  rows10.forEach(function(r,i){
+    function delta(k,goodDown){
+      if(i===0)return '';
+      var p=rows10[i-1][k];if(p==null||r[k]==null)return '';
+      var d=r[k]-p;if(!d)return '';
+      var good=goodDown?d<0:d>0;
+      return ' <span class="'+(good?'up':'dn')+'">('+(d>0?'+':'')+d+')</span>';
+    }
+    h+='<tr><td>'+r.d+'</td><td>'+r.n+delta('n',false)+'</td><td>'+r.att+'%'+delta('att',false)+'</td><td>'+r.broken+'명'+delta('broken',true)+'</td><td>'+(r.alone==null?'·':r.alone+'명'+delta('alone',true))+'</td></tr>';
+  });
+  h+='</table>';
+  $('trend').innerHTML=h;
+}
+
+/* ════════════════ 화면 전환·전체 그리기·이벤트 ════════════════ */
+function setView(v){
+  view=v;
+  $('view-board').style.display=v==='board'?'':'none';
+  $('view-detail').style.display=v==='detail'?'':'none';
+  document.querySelectorAll('.vtab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-v')===v);});
+}
+function goDetail(id,flash){
+  setView('detail');
+  setTimeout(function(){var el=$(id);if(!el)return;
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+    if(flash){el.classList.add('flash');setTimeout(function(){el.classList.remove('flash');},1400);}},60);
+}
+function renderAll(){
+  // 상황판
+  $('headline-big').innerHTML=headlineHTML();
+  renderGauge();
+  $('chain-hero').innerHTML=chainSVG(true);
+  $('data-pill').innerHTML=srcShort();
+  renderBoardVitals();renderTiles();renderBoardNext();renderBoardVoice();renderBoardStud();renderBoardTrend();
+  buildNet();
+  // 자세히
+  $('src-line').innerHTML=srcLine();
+  $('fid-line').innerHTML=fidLine();
+  $('headline').innerHTML=headlineHTML();
+  $('chain').innerHTML=chainSVG(false);
+  renderPanels();renderMap();renderCollect();renderGuide();renderVoices();renderTrend();
+}
+document.addEventListener('click',function(e){
+  var t=e.target;
+  var lk=t.closest?t.closest('[data-lk]'):null;
+  if(lk){goDetail('lk-'+lk.getAttribute('data-lk'));return;}
+  var tl=t.closest?t.closest('[data-t]'):null;
+  if(tl){goDetail('t-'+tl.getAttribute('data-t'),true);return;}
+  var go=t.closest?t.closest('[data-go]'):null;
+  if(go){e.preventDefault();goDetail(go.getAttribute('data-go'));return;}
+  if(t.classList&&(t.classList.contains('dot')||t.classList.contains('nm'))){
+    var i=t.getAttribute('data-i');
+    if(i!=null){selStud=+i;renderStud();renderBoardStud();$('stud-card').scrollIntoView({behavior:'smooth',block:'nearest'});}
+  }
+  if(t.classList&&t.classList.contains('vx')){
+    var vi=+t.getAttribute('data-v');voices.splice(vi,1);saveVoices();renderVoices();
+  }
+});
+document.querySelectorAll('.vtab').forEach(function(b){
+  b.addEventListener('click',function(){setView(b.getAttribute('data-v'));});
+});
+$('data-pill').addEventListener('click',function(){goDetail('data-card');});
+(function(){
+  var cv=$('net');
+  cv.addEventListener('mousemove',function(ev){
+    var hit=netHit(ev);net.hov=hit;
+    var tip=$('net-tip');
+    if(hit!=null){
+      var s=students[hit];
+      tip.innerHTML='<b>'+esc(s.name)+'</b> · '+GRADE_LABELS[s.grade-1]+(s.svc?' '+s.svc+'부':'')
+        +(s.sym.length?'<br><span style="color:#f8b4b4">'+s.sym.slice(0,3).map(esc).join(' · ')+(s.sym.length>3?' 외':'')+'</span>':'<br><span style="color:#86e8c2">관찰된 증상 없음</span>');
+      tip.style.display='block';tip.style.left=(ev.clientX+14)+'px';tip.style.top=(ev.clientY+10)+'px';
+      cv.style.cursor='pointer';
+    } else {tip.style.display='none';cv.style.cursor='default';}
+  });
+  cv.addEventListener('mouseleave',function(){net.hov=null;$('net-tip').style.display='none';});
+  cv.addEventListener('click',function(ev){
+    var hit=netHit(ev);
+    if(hit!=null){selStud=hit;renderBoardStud();renderStud();}
+  });
+})();
+window.addEventListener('resize',function(){if(view==='board')drawNet();});
+$('btn-print').addEventListener('click',function(){window.print();});
+$('btn-wolf').addEventListener('click',function(){renderWolf();$('wolf').style.display='block';$('wolf').scrollTop=0;});
+$('wolf-close').addEventListener('click',function(){$('wolf').style.display='none';});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')$('wolf').style.display='none';});
+$('btn-sample').addEventListener('click',function(){var r=sampleRoster();setData(r,r._cols,'sample');});
+$('btn-main').addEventListener('click',function(){
+  var m=loadMain();
+  if(m)setData(m.rows,m.cols,m.sample?'mainSample':'main');
+  else alert('수첩(index.html)에 저장된 명단이 없다. 수첩에서 명단을 올리고 다시 오라.');
+});
+$('csv-file').addEventListener('change',function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){var r=parseCSV(rd.result);
+    if(!r.length){alert('읽을 수 있는 줄이 없다. 첫 줄이 열 이름인지 확인하라.');return;}
+    setData(r,r._cols,'csv');};
+  rd.readAsText(f,'utf-8');
+  e.target.value='';
+});
+$('vf-add').addEventListener('click',function(){
+  var d=DQ.map(function(q,i){return +$('vf-d'+i).value;});
+  voices.push({role:$('vf-role').value,name:$('vf-name').value.trim(),d:d});
+  saveVoices();renderVoices();
+  $('vf-name').value='';DQ.forEach(function(q,i){$('vf-d'+i).value=2;});
+});
+$('dl-template').addEventListener('click',function(e){
+  e.preventDefault();
+  var csv='﻿'+TEMPLATE_COLS.join(',')+'\n'+'김민준,고1,1,3,Y,N,N,1,Y,박지호 이서연,1,N,1,2,3,3,,'+'\n';
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='collection-template.csv';a.click();
+});
+
+/* 시험·접근성 훅 : 캔버스 점을 못 누르는 환경에서도 소견을 연다 */
+window.__diag={pick:function(i){if(students[i]){selStud=i;renderBoardStud();renderStud();}},
+  state:function(){return {n:students.length,edges:net.e.length,view:view};}};
+
+/* 시작 : 수첩 명단이 있으면 그것부터, 없으면 내장 예시 */
+renderVoiceForm();
+var m=loadMain();
+if(m)setData(m.rows,m.cols,m.sample?'mainSample':'main');
+else {var r=sampleRoster();setData(r,r._cols,'sample');}
+netLoop();
+})();
+</script>
+</body>
+</html>
