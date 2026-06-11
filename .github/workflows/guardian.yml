@@ -1,0 +1,106 @@
+name: guardian
+
+# 24/7 파수꾼: 사람이 안 건드려도 매일 밤 스모크 테스트를 돌려
+# index.html / diagnosis.html 가 조용히 깨졌는지 잡아낸다. 실패하면
+# 추적 이슈 하나를 열거나(이미 있으면) 댓글로 갱신한다 — 새 이슈로 도배하지 않는다.
+
+on:
+  schedule:
+    # 매일 18:00 UTC = 03:00 KST (한가한 시간). cron 은 UTC 기준이다.
+    - cron: '0 18 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  guardian:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        working-directory: tests
+        run: npm install
+
+      - name: Install Chromium
+        working-directory: tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        id: smoke
+        working-directory: tests
+        # 실패해도 워크플로를 멈추지 않고, 결과를 파일로 남겨 다음 단계가 읽게 한다.
+        run: |
+          set +e
+          npx playwright test 2>&1 | tee ../guardian-output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Report regression
+        if: steps.smoke.outputs.exit_code != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let log = '';
+            try { log = fs.readFileSync('guardian-output.txt', 'utf8'); } catch (e) {}
+            // 콘솔/테스트 출력은 길 수 있으니 마지막 8000자만 싣는다.
+            const tail = log.length > 8000 ? log.slice(-8000) : log;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const today = new Date().toISOString().slice(0, 10);
+            const label = 'ci-guardian';
+
+            // 라벨이 없으면 만든다(처음 한 번).
+            try {
+              await github.rest.issues.getLabel({ owner: context.repo.owner, repo: context.repo.repo, name: label });
+            } catch (e) {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner, repo: context.repo.repo,
+                name: label, color: 'b60205',
+                description: '야간 파수꾼 스모크 테스트 실패 추적'
+              });
+            }
+
+            const body = [
+              `야간 파수꾼 스모크 테스트가 실패했다 (${today}).`,
+              '',
+              `- 실행 로그: ${runUrl}`,
+              '',
+              '<details><summary>출력 마지막 부분</summary>',
+              '',
+              '```',
+              tail.trim(),
+              '```',
+              '',
+              '</details>'
+            ].join('\n');
+
+            // 이미 열린 추적 이슈가 있으면 댓글로 갱신, 없으면 새로 연다.
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: label, per_page: 1
+            });
+
+            if (existing.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.data[0].number, body
+              });
+              core.notice(`기존 이슈 #${existing.data[0].number} 에 갱신을 남겼다.`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: `파수꾼: 스모크 테스트 실패 (${today})`,
+                labels: [label], body
+              });
+              core.notice(`이슈 #${created.data.number} 를 새로 열었다.`);
+            }
+
+      - name: Fail the job on regression
+        if: steps.smoke.outputs.exit_code != '0'
+        run: exit 1
